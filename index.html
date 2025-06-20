@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - VigiOn</title>
+    <!-- Inclui o Tailwind CSS para estilização rápida e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inclui a fonte Poppins, como no modelo fornecido -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Definição das cores personalizadas com base nas suas preferências */
+        .custom-bg-primary {
+            background-color: #6200EE; /* Sua cor primária */
+        }
+        .custom-text-primary {
+            color: #6200EE; /* Sua cor primária para texto/ícones */
+        }
+        .custom-bg-secondary {
+            background-color: #5A73D4; /* Sua cor secundária/de destaque para hover/focus */
+        }
+        .custom-text-secondary {
+            color: #5A73D4; /* Sua cor secundária/de destaque para texto/links */
+        }
+        .custom-bg-light {
+            background-color: #E0E0E0; /* Um cinza claro para fundos leves (ex: rodapé) */
+        }
+        
+        /* Aplica a fonte Poppins a todo o corpo do documento */
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        /* Estilo para o texto do logo */
+        .logo-text {
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        /* Estilo para foco em inputs (cores ajustadas para suas primárias/secundárias) */
+        .input-focus:focus {
+            border-color: #5A73D4; /* Cor secundária para o foco da borda */
+            box-shadow: 0 0 0 3px rgba(90, 115, 212, 0.2); /* Sombra de foco com transparência */
+        }
+        /* Estilo para hover do botão (cores ajustadas para suas primárias/secundárias) */
+        .btn-hover:hover {
+            background-color: #5A73D4; /* Cor secundária no hover */
+            transform: translateY(-2px); /* Efeito de elevação sutil */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra no hover */
+        }
+        /* Estilo para o botão ativo (ao clicar) */
+        .btn-active:active {
+            transform: translateY(0); /* Retorna à posição original */
+        }
+
+        /* Estilos para o Modal de Mensagens */
+        .message-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .message-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .message-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .message-modal-overlay.show .message-modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        /* Estilos para o spinner de carregamento */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6200EE; /* Cor primária */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Cabeçalho com Logo -->
+    <header class="custom-bg-primary py-6 shadow-md">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-center">
+                <div class="flex items-center">
+                    <!-- Ícone SVG representando a marca VigiOn (exemplo de localização/segurança) -->
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 custom-text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                        </svg>
+                    </div>
+                    <!-- Título do logo -->
+                    <h1 class="text-white text-2xl font-bold logo-text">VigiOn</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal - Formulário de Login -->
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-md space-y-8">
+            <div class="text-center">
+                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Acesse sua conta</h2>
+                <p class="mt-2 text-sm text-gray-600">Insira suas credenciais para acessar o sistema</p>
+            </div>
+            
+            <!-- Formulário de Login -->
+            <form class="mt-8 space-y-6" id="loginForm">
+                <div class="rounded-md shadow-sm space-y-4">
+                    <!-- Campo de Usuário -->
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Informe seu nome</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <input id="username" name="username" type="text" required 
+                                class="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 input-focus focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm" 
+                                placeholder="Digite seu nome completo">
+                        </div>
+                    </div>
+                    
+                    <!-- Campo de Empresa -->
+                    <div>
+                        <label for="company" class="block text-sm font-medium text-gray-700 mb-1">Informe o nome da empresa</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <input id="company" name="company" type="text" required 
+                                class="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 input-focus focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm" 
+                                placeholder="Digite o nome da sua empresa">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opções de Lembrar-me -->
+                <div class="flex items-center justify-start">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" 
+                            class="h-4 w-4 custom-text-primary focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-900">Lembrar-me</label>
+                    </div>
+                </div>
+
+                <!-- Botão de Acesso -->
+                <div>
+                    <button type="submit" id="accessButton"
+                        class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white custom-bg-primary btn-hover btn-active focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3" id="buttonIcon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <span id="buttonText">Acessar sistema</span>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Link para Cadastro REMOVIDO -->
+        </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="custom-bg-light py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-700 text-sm mb-4 md:mb-0">© 2023 VigiOn. Todos os direitos reservados.</p>
+                <!-- Apenas o ícone do LinkedIn mantido -->
+                <div class="flex space-x-6">
+                    <a href="https://www.linkedin.com/in/mateus-leidnei-souza-cruz-702654298/" target="_blank" rel="noopener noreferrer" class="text-gray-700 hover:text-gray-900" aria-label="LinkedIn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2 16h-2v-6h2v6zm-1-6.891c-.607 0-1.1-.496-1.1-1.109 0-.612.492-1.109 1.1-1.109s1.1.497 1.1 1.109c0 .613-.493 1.109-1.1 1.109zm8 6.891h-1.998v-2.861c0-1.881-2.002-1.722-2.002 0v2.861h-2v-6h2v1.093c.872-1.616 4-1.736 4 1.548v3.359z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal para Mensagens de Erro/Validação -->
+    <div id="messageModal" class="message-modal-overlay">
+        <div class="message-modal-content">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Atenção!</h3>
+            <p id="modalMessageText" class="text-gray-700 mb-6"></p>
+            <button id="closeModalButton" class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // URL da sua API do Google Apps Script para autenticação/cadastro de usuários
+        const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbyXZCDKbOMQhHTVJRP5J3n9AbIatRGlcDV3CKxEfQF5Owzv7QMSieNp0DJFrX_Tx8G5/exec";
+
+        // Elementos do DOM
+        const usernameInput = document.getElementById('username');
+        const companyInput = document.getElementById('company');
+        const rememberMeCheckbox = document.getElementById('remember-me');
+        const loginForm = document.getElementById('loginForm');
+        const accessButton = document.getElementById('accessButton');
+        const buttonText = document.getElementById('buttonText');
+        const buttonIcon = document.getElementById('buttonIcon');
+
+        // Função para mostrar a caixa de mensagem customizada
+        function showMessageModal(message) {
+            const modalOverlay = document.getElementById('messageModal');
+            const modalMessageText = document.getElementById('modalMessageText');
+            
+            modalMessageText.textContent = message; // Define o texto da mensagem
+            modalOverlay.classList.add('show'); // Mostra o modal
+        }
+
+        // Event Listener para fechar o modal
+        document.getElementById('closeModalButton').addEventListener('click', function() {
+            const modalOverlay = document.getElementById('messageModal');
+            modalOverlay.classList.remove('show'); // Esconde o modal
+        });
+
+        // Função para gerar um ID de dispositivo único (ou recuperar se já existe)
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('vigion_device_id');
+            if (!deviceId) {
+                deviceId = crypto.randomUUID(); // Gera um UUID único para o dispositivo/navegador
+                localStorage.setItem('vigion_device_id', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Função para carregar as credenciais salvas
+        function loadRememberedCredentials() {
+            const savedUsername = localStorage.getItem('vigion_username');
+            const savedCompany = localStorage.getItem('vigion_company');
+
+            if (savedUsername && savedCompany) {
+                usernameInput.value = savedUsername;
+                companyInput.value = savedCompany;
+                rememberMeCheckbox.checked = true; // Marca o checkbox se houver dados salvos
+            }
+        }
+
+        // Função para formatar a data/hora no formato esperado pelo Apps Script
+        function formatDateTime(date) {
+            const pad = (num) => String(num).padStart(2, '0');
+            const month = pad(date.getMonth() + 1);
+            const day = pad(date.getDate());
+            const year = date.getFullYear();
+            let hours = date.getHours();
+            const minutes = pad(date.getMinutes());
+            const seconds = pad(date.getSeconds());
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // A hora '0' deve ser '12'
+            return `${month}/${day}/${year} ${pad(hours)}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        // Adiciona um listener para carregar as credenciais assim que o DOM for carregado
+        document.addEventListener('DOMContentLoaded', loadRememberedCredentials);
+
+        // Validação e lógica de autenticação do formulário
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // Impede o envio padrão do formulário
+            
+            const username = usernameInput.value.trim();
+            const company = companyInput.value.trim();
+            const rememberMe = rememberMeCheckbox.checked;
+            const deviceId = getDeviceId(); // Obtém o ID do dispositivo
+            const currentDateTime = formatDateTime(new Date()); // Obtém e formata a data/hora atual
+
+            if (!username || !company) {
+                showMessageModal('Por favor, preencha todos os campos obrigatórios.');
+                return; // Para a execução se os campos estiverem vazios
+            }
+
+            // Desabilita o botão e mostra spinner
+            accessButton.disabled = true;
+            buttonText.textContent = 'Verificando...';
+            buttonIcon.innerHTML = '<div class="spinner"></div>'; // Adiciona o spinner
+
+            // Lógica para "Lembrar-me" (salva antes da requisição)
+            if (rememberMe) {
+                localStorage.setItem('vigion_username', username);
+                localStorage.setItem('vigion_company', company);
+            } else {
+                localStorage.removeItem('vigion_username');
+                localStorage.removeItem('vigion_company');
+            }
+
+            // Constrói a URL da API com os parâmetros
+            const params = new URLSearchParams({
+                check_id: deviceId,
+                nome: username,
+                empresa: company,
+                DataHora: currentDateTime
+            }).toString();
+            const apiUrlWithParams = `${APPS_SCRIPT_AUTH_URL}?${params}`;
+
+            try {
+                const response = await fetch(apiUrlWithParams);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json(); // Espera uma resposta JSON
+
+                if (data.error) {
+                    showMessageModal(`Erro na API: ${data.error}`);
+                } else if (data.status === "sucesso") {
+                    // Novo usuário cadastrado OU usuário existente atualizado (autenticacao = NAO)
+                    showMessageModal('Seu dispositivo foi registrado/atualizado. Aguardando autenticação do administrador para acesso completo.');
+                } else if (data.status === "encontrado") {
+                    if (data.autenticado) {
+                        // Usuário encontrado e AUTENTICADO
+                        localStorage.setItem('vigion_user_data', JSON.stringify({
+                            deviceId: data.deviceId,
+                            tipoAcesso: data.tipoAcesso,
+                            statusUsuario: data.statusUsuario,
+                            username: username, // Mantém o nome informado no login
+                            company: company // Mantém a empresa informada no login
+                        }));
+                        showMessageModal(`Login bem-sucedido! Bem-vindo, ${username}. Acessando o sistema como ${data.tipoAcesso}.`);
+                        // Simular um redirecionamento para a página principal/dashboard
+                        setTimeout(() => {
+                            window.location.href = '/dashboard.html'; // Exemplo: redirecionar para dashboard.html
+                        }, 2000);
+                    } else {
+                        // Usuário encontrado mas NAO AUTENTICADO
+                        showMessageModal('Seu dispositivo está registrado, mas ainda não foi autenticado. Por favor, entre em contato com o administrador.');
+                    }
+                } else if (data.status === "nao_encontrado") {
+                    // Embora a lógica acima deveria cobrir isso com "sucesso",
+                    // é um fallback caso a API retorne explicitamente "nao_encontrado"
+                    // sem os parâmetros de cadastro.
+                    showMessageModal('Dispositivo não registrado. Por favor, entre em contato com o administrador para solicitar acesso.');
+                } else {
+                    showMessageModal('Resposta da API desconhecida.');
+                }
+
+            } catch (error) {
+                console.error('Erro ao fazer requisição de login:', error);
+                showMessageModal(`Ocorreu um erro ao tentar acessar o sistema. Tente novamente mais tarde. Detalhes: ${error.message}`);
+            } finally {
+                // Reabilita o botão e restaura o texto/ícone
+                accessButton.disabled = false;
+                buttonText.textContent = 'Acessar sistema';
+                buttonIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                        </svg>`;
+            }
+        });
+    </script>
+</body>
+</html>
