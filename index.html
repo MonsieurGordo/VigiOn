@@ -194,7 +194,7 @@
     <footer class="custom-bg-light py-6">
         <div class="container mx-auto px-4">
             <div class="flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-700 text-sm mb-4 md:mb-0">© 2023 VigiOn. Todos os direitos reservados.</p>
+                <p class="text-gray-700 text-sm mb-4 md:mb-0">© 2025 VigiOn. Todos os direitos reservados.</p>
                 <!-- Apenas o ícone do LinkedIn mantido -->
                 <div class="flex space-x-6">
                     <a href="https://www.linkedin.com/in/mateus-leidnei-souza-cruz-702654298/" target="_blank" rel="noopener noreferrer" class="text-gray-700 hover:text-gray-900" aria-label="LinkedIn">
@@ -220,7 +220,7 @@
 
     <script>
         // URL da sua API do Google Apps Script para autenticação/cadastro de usuários
-        const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbyXZCDKbOMQhHTVJRP5J3n9AbIatRGlcDV3CKxEfQF5Owzv7QMSieNp0DJFrX_Tx8G5/exec";
+        const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbyXZCDKbOMQhHTVJRP5J3n9AbIatRGlcDV3CKxEfQFmOwzv7QMSieNp0DJFrX_Tx8G5/exec";
 
         // Elementos do DOM
         const usernameInput = document.getElementById('username');
@@ -246,16 +246,6 @@
             modalOverlay.classList.remove('show'); // Esconde o modal
         });
 
-        // Função para gerar um ID de dispositivo único (ou recuperar se já existe)
-        function getDeviceId() {
-            let deviceId = localStorage.getItem('vigion_device_id');
-            if (!deviceId) {
-                deviceId = crypto.randomUUID(); // Gera um UUID único para o dispositivo/navegador
-                localStorage.setItem('vigion_device_id', deviceId);
-            }
-            return deviceId;
-        }
-
         // Função para carregar as credenciais salvas
         function loadRememberedCredentials() {
             const savedUsername = localStorage.getItem('vigion_username');
@@ -268,19 +258,19 @@
             }
         }
 
-        // Função para formatar a data/hora no formato esperado pelo Apps Script
+        // Função para formatar a data/hora no formato dd/MM/yyyy hh:mm:ss a
         function formatDateTime(date) {
             const pad = (num) => String(num).padStart(2, '0');
-            const month = pad(date.getMonth() + 1);
             const day = pad(date.getDate());
+            const month = pad(date.getMonth() + 1); // Mês é 0-indexado
             const year = date.getFullYear();
             let hours = date.getHours();
             const minutes = pad(date.getMinutes());
             const seconds = pad(date.getSeconds());
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // A hora '0' deve ser '12'
-            return `${month}/${day}/${year} ${pad(hours)}:${minutes}:${seconds} ${ampm}`;
+            hours = hours ? hours : 12; // A hora '0' (meia-noite/meio-dia) deve ser '12'
+            return `${day}/${month}/${year} ${pad(hours)}:${minutes}:${seconds} ${ampm}`;
         }
 
         // Adiciona um listener para carregar as credenciais assim que o DOM for carregado
@@ -293,7 +283,6 @@
             const username = usernameInput.value.trim();
             const company = companyInput.value.trim();
             const rememberMe = rememberMeCheckbox.checked;
-            const deviceId = getDeviceId(); // Obtém o ID do dispositivo
             const currentDateTime = formatDateTime(new Date()); // Obtém e formata a data/hora atual
 
             if (!username || !company) {
@@ -301,12 +290,19 @@
                 return; // Para a execução se os campos estiverem vazios
             }
 
+            // --- LÓGICA PARA GERAR O CHECK_ID (primeiro_nome.nome.da.empresa) ---
+            const firstName = username.split(' ')[0].toLowerCase(); // Pega apenas o primeiro nome e o torna minúsculo
+            // Remove espaços extras e divide o nome da empresa por espaços para juntar com pontos, tudo em minúsculas
+            const companyParts = company.replace(/\s+/g, ' ').trim().split(' ').map(part => part.toLowerCase()).join('.');
+            const checkId = `${firstName}.${companyParts}`; 
+            // --- FIM DA LÓGICA DO CHECK_ID ---
+
             // Desabilita o botão e mostra spinner
             accessButton.disabled = true;
             buttonText.textContent = 'Verificando...';
             buttonIcon.innerHTML = '<div class="spinner"></div>'; // Adiciona o spinner
 
-            // Lógica para "Lembrar-me" (salva antes da requisição)
+            // Lógica para "Lembrar-me"
             if (rememberMe) {
                 localStorage.setItem('vigion_username', username);
                 localStorage.setItem('vigion_company', company);
@@ -315,53 +311,81 @@
                 localStorage.removeItem('vigion_company');
             }
 
-            // Constrói a URL da API com os parâmetros
-            const params = new URLSearchParams({
-                check_id: deviceId,
-                nome: username,
-                empresa: company,
-                DataHora: currentDateTime
-            }).toString();
-            const apiUrlWithParams = `${APPS_SCRIPT_AUTH_URL}?${params}`;
-
             try {
-                const response = await fetch(apiUrlWithParams);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json(); // Espera uma resposta JSON
+                // PRIMEIRO PASSO: Consultar o status atual do perfil APENAS com o check_id
+                const initialParams = new URLSearchParams({ check_id: checkId }).toString();
+                const initialApiUrl = `${APPS_SCRIPT_AUTH_URL}?${initialParams}`;
 
-                if (data.error) {
-                    showMessageModal(`Erro na API: ${data.error}`);
-                } else if (data.status === "sucesso") {
-                    // Novo usuário cadastrado OU usuário existente atualizado (autenticacao = NAO)
-                    showMessageModal('Seu dispositivo foi registrado/atualizado. Aguardando autenticação do administrador para acesso completo.');
-                } else if (data.status === "encontrado") {
-                    if (data.autenticado) {
-                        // Usuário encontrado e AUTENTICADO
+                const initialResponse = await fetch(initialApiUrl);
+                if (!initialResponse.ok) {
+                    throw new Error(`Erro na consulta inicial (HTTP status: ${initialResponse.status})`);
+                }
+                const initialData = await initialResponse.json();
+
+                if (initialData.error) {
+                    showMessageModal(`Erro na API (consulta inicial): ${initialData.error}`);
+                    return; // Interrompe
+                }
+
+                // --- LÓGICA DE AUTENTICAÇÃO E REDIRECIONAMENTO ---
+                if (initialData.status === "encontrado") {
+                    if (initialData.autenticado) {
+                        // Perfil encontrado e AUTENTICADO
                         localStorage.setItem('vigion_user_data', JSON.stringify({
-                            deviceId: data.deviceId,
-                            tipoAcesso: data.tipoAcesso,
-                            statusUsuario: data.statusUsuario,
-                            username: username, // Mantém o nome informado no login
-                            company: company // Mantém a empresa informada no login
+                            checkId: checkId,
+                            tipoAcesso: initialData.tipoAcesso,
+                            statusUsuario: initialData.statusUsuario,
+                            username: username,
+                            company: company
                         }));
-                        showMessageModal(`Login bem-sucedido! Bem-vindo, ${username}. Acessando o sistema como ${data.tipoAcesso}.`);
-                        // Simular um redirecionamento para a página principal/dashboard
+                        showMessageModal(`Login bem-sucedido! Bem-vindo, ${username}. Acessando o sistema como ${initialData.tipoAcesso}.`);
                         setTimeout(() => {
-                            window.location.href = '/dashboard.html'; // Exemplo: redirecionar para dashboard.html
+                            window.location.href = 'dashboard.html'; // Caminho relativo para dashboard.html
                         }, 2000);
+                        return; // Interrompe a execução
                     } else {
-                        // Usuário encontrado mas NAO AUTENTICADO
-                        showMessageModal('Seu dispositivo está registrado, mas ainda não foi autenticado. Por favor, entre em contato com o administrador.');
+                        // Perfil encontrado mas NÃO AUTENTICADO
+                        // Força uma atualização na planilha para registrar o último acesso, mas mantém AUTENTICACAO = NAO
+                        const fullParams = new URLSearchParams({
+                            check_id: checkId,
+                            nome: username,
+                            empresa: company,
+                            DataHora: currentDateTime
+                        }).toString();
+                        const fullApiUrl = `${APPS_SCRIPT_AUTH_URL}?${fullParams}`;
+                        await fetch(fullApiUrl); // Dispara a atualização, sem esperar a resposta específica aqui
+
+                        showMessageModal('Seu perfil está registrado, mas ainda não foi autenticado. Por favor, entre em contato com o administrador.');
+                        return; // Interrompe a execução
                     }
-                } else if (data.status === "nao_encontrado") {
-                    // Embora a lógica acima deveria cobrir isso com "sucesso",
-                    // é um fallback caso a API retorne explicitamente "nao_encontrado"
-                    // sem os parâmetros de cadastro.
-                    showMessageModal('Dispositivo não registrado. Por favor, entre em contato com o administrador para solicitar acesso.');
+                } else if (initialData.status === "nao_encontrado") {
+                    // Perfil NÃO ENCONTRADO, então procede com o cadastro (a API vai definir autenticação como NÃO)
+                    const fullParams = new URLSearchParams({
+                        check_id: checkId,
+                        nome: username,
+                        empresa: company,
+                        DataHora: currentDateTime
+                    }).toString();
+                    const fullApiUrl = `${APPS_SCRIPT_AUTH_URL}?${fullParams}`;
+
+                    const fullResponse = await fetch(fullApiUrl);
+                    if (!fullResponse.ok) {
+                        throw new Error(`Erro no cadastro (HTTP status: ${fullResponse.status})`);
+                    }
+                    const fullData = await fullResponse.json(); // Pega a resposta do cadastro
+
+                    if (fullData.error) {
+                        showMessageModal(`Erro na API (cadastro): ${fullData.error}`);
+                    } else if (fullData.status === "sucesso") {
+                        // Novo usuário cadastrado (com autenticacao = NAO)
+                        showMessageModal('Seu perfil foi registrado. Aguardando autenticação do administrador para acesso completo.');
+                    } else {
+                        showMessageModal('Resposta da API de cadastro desconhecida.');
+                    }
+                    return; // Interrompe a execução
                 } else {
-                    showMessageModal('Resposta da API desconhecida.');
+                    showMessageModal('Resposta da API desconhecida durante a consulta inicial.');
+                    return; // Interrompe
                 }
 
             } catch (error) {
