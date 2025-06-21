@@ -158,8 +158,6 @@
         </div>
         <button id="loginButton" class="login-button">Entrar</button>
         
-        <!-- A label "Não tem uma conta? Cadastre-se" foi removida conforme solicitado -->
-
         <p class="footer-text">© 2025 VigiOn. Todos os direitos reservados.</p>
     </div>
 
@@ -176,7 +174,7 @@
 
     <script>
         // URL da sua API do Google Apps Script para AUTENTICAÇÃO E LOGIN (apenas).
-        // Esta URL foi atualizada com base na sua implantação mais recente.
+        // Atualizada com a URL mais recente que você forneceu.
         const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
 
         // Referências aos elementos HTML
@@ -216,6 +214,7 @@
             if (savedUserDataString) {
                 try {
                     const savedUserData = JSON.parse(savedUserDataString);
+                    // Verifica se 'rememberMe' está true e se o username está salvo
                     if (savedUserData.rememberMe === true && savedUserData.username) {
                         usernameInput.value = savedUserData.username;
                         rememberMeCheckbox.checked = true;
@@ -241,28 +240,11 @@
             loginButton.disabled = true;
 
             try {
-                // Gera um check_id (UUID v4) para a validação no dashboard
-                // Este check_id será salvo no localStorage junto com os dados do usuário.
-                // A API do Apps Script (apps_script_pure_login) não usa o check_id no momento do login,
-                // mas ele é essencial para a validação de segurança no dashboard.
                 const checkId = crypto.randomUUID(); 
                 
-                // A data/hora atual é usada para o registro de último acesso na planilha, se o script Apps Script for atualizado para isso
-                const currentDateTime = new Date().toLocaleString("pt-BR", {
-                    year: 'numeric', month: '2-digit', day: '2-digit',
-                    hour: '2-digit', minute: '2-digit', second: '2-digit',
-                    hour12: false 
-                }).replace(/\//g, '-').replace(/,/, ''); 
-
                 const params = new URLSearchParams({
-                    username: username, // O usuário fornecido no campo (ID da planilha)
-                    password: password  // A senha fornecida no campo
-                    // O Apps Script 'apps_script_pure_login' não precisa de 'action' ou 'check_id'
-                    // para a função de login principal, nem DataHora, a menos que você adicione.
-                    // Mas mantê-los aqui é inofensivo e pode ser útil para futuras versões do script.
-                    // action: 'login', // Removido pois o script atual não usa action
-                    // check_id: checkId, // Removido pois o script atual não usa check_id
-                    // DataHora: currentDateTime // Removido pois o script atual não usa DataHora
+                    username: username,
+                    password: password
                 });
 
                 console.log("URL da requisição API (Login):", `${APPS_SCRIPT_AUTH_URL}?${params.toString()}`); 
@@ -280,27 +262,20 @@
 
                 if (responseData.status === "sucesso" && responseData.data.autenticado === true) {
                     // Armazena os dados completos do usuário retornados pela API no localStorage.
-                    // Isso inclui 'id', 'nome', 'empresa', 'tipoAcesso', etc.
+                    // Incluindo a senha para a validação no dashboard e futuras edições de perfil.
                     const userDataToStore = {
-                        username: responseData.data.id, // ID do usuário retornado pela API
-                        nomeCompleto: responseData.data.nome, // Nome completo retornado pela API
-                        company: responseData.data.empresa || 'N/A', // Empresa retornada pela API
-                        checkId: checkId, // O ID gerado para a validação no dashboard
-                        autenticado: responseData.data.autenticado, // True, retornado pela API
-                        tipoAcesso: responseData.data.tipoAcesso || 'Visitante', // Tipo de acesso retornado pela API
-                        statusUsuario: responseData.data.statusUsuario || 'N/A' // Status do usuário retornado pela API
+                        username: responseData.data.id, 
+                        password: password, // <-- AQUI: SALVANDO A SENHA NO LOCALSTORAGE
+                        nomeCompleto: responseData.data.nome, 
+                        company: responseData.data.empresa || 'N/A', 
+                        checkId: checkId, 
+                        autenticado: responseData.data.autenticado, 
+                        tipoAcesso: responseData.data.tipoAcesso || 'Visitante', 
+                        statusUsuario: responseData.data.statusUsuario || 'N/A',
+                        rememberMe: rememberMeCheckbox.checked // Salva o estado do checkbox
                     };
                     localStorage.setItem('vigion_user_data', JSON.stringify(userDataToStore));
 
-                    // Lógica para "Lembrar-me" - salva apenas o username (id) para pré-preenchimento
-                    if (rememberMeCheckbox.checked) {
-                        localStorage.setItem('vigion_username', username); // Salva o username digitado para pré-preenchimento
-                        localStorage.setItem('vigion_remember_me', 'true');
-                    } else {
-                        localStorage.removeItem('vigion_username');
-                        localStorage.setItem('vigion_remember_me', 'false');
-                    }
-                    
                     showMessage("Login Bem-Sucedido", "Redirecionando para o Dashboard...", () => {
                         window.location.replace('dashboard.html'); 
                     });
