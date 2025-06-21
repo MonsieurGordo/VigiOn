@@ -331,7 +331,7 @@
 
   <script>
     // URL da sua API do Google Apps Script para autenticação/cadastro de usuários
-    const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbyXZCDKbOMQhHTVJRP5J3n9AbIatRGlcDV3CKxEfQFmOwzv7QMSieNp0DJFrX_Tx8G5/exec";
+    const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbzS0IeUW4m7stLNPXjMuScTJNodWmUC73JxlM3knnwNF9_gMRoDqKy30-OFzMY6_Dd4/exec";
 
     // Variáveis globais para o mapa e marcadores (apenas declaração para evitar ReferenceError)
     let map;
@@ -340,7 +340,7 @@
     let historicoMarkers = []; 
 
     // ID da sua planilha e nomes das abas (apenas declaração para evitar ReferenceError)
-    const SHEET_ID = '1C8RlFUa9FEmiAUVrNYC7PTRUTGepkVXXwsND5Oo7C1Y'; 
+    const SHEET_ID = '1C8RlFUa9FEmiAUVrNYC7PTRUTGepkVXXwsND5OoC1Y'; // Este ID será o ID da sua planilha real
     const SHEET_NAME_LOCAL = 'Localizações';
     const SHEET_NAME_HIST = 'Historico';
 
@@ -479,7 +479,6 @@
             return false;
         }
 
-        // Se por algum motivo o checkId não estiver nos dados (deveria estar)
         if (!userData.checkId) {
             console.log("checkId ausente nos dados do usuário. Redirecionando para login.");
             localStorage.clear();
@@ -488,8 +487,6 @@
         }
 
         try {
-            // Faz a requisição à API para verificar o status de autenticação.
-            // A API de login (doGet) é configurada para retornar "true" ou "false" se apenas check_id for enviado.
             const apiUrl = `${APPS_SCRIPT_AUTH_URL}?check_id=${encodeURIComponent(userData.checkId)}`;
             const response = await fetch(apiUrl);
 
@@ -498,21 +495,20 @@
                 throw new Error('Falha na comunicação com o servidor de autenticação.');
             }
 
-            const responseText = await response.text();
-            console.log("Resposta da API de autenticação do dashboard:", responseText); // Para depuração
+            const responseData = await response.json(); // Agora espera JSON da API
+            console.log("Resposta da API de autenticação do dashboard:", responseData); // Para depuração
 
-            // A API apps_script_doget_cadastro retorna "true" ou "false" em texto plano
-            // Por favor, CONFIRME o formato exato da sua API. Se ela retorna JSON (ex: {"autenticado": true}),
-            // a linha abaixo precisará ser ajustada para: const data = JSON.parse(responseText); if (data.autenticado === true)
-            if (responseText.toLowerCase() === "true") {
-                // Usuário autenticado, atualiza info na sidebar (se já não estiver atualizada)
+            if (responseData.status === "encontrado" && responseData.autenticado === true) {
+                // Usuário autenticado, atualiza info na sidebar (garante que os dados mais recentes da API sejam usados)
+                // Usamos os dados do localStorage para username/company (conforme o que o usuário digitou/lembrou)
+                // e os dados da API para tipoAcesso (que é o que o Apps Script valida).
                 document.getElementById('loggedInUsername').textContent = userData.username || 'N/A';
                 document.getElementById('loggedInCompany').textContent = userData.company || 'N/A';
-                document.getElementById('loggedInAccessType').textContent = userData.tipoAcesso || 'Visitante';
+                document.getElementById('loggedInAccessType').textContent = responseData.tipoAcesso || 'Visitante';
                 console.log("Autenticação do dashboard verificada com sucesso.");
                 return true; // Autenticado
             } else {
-                console.log("Usuário não autenticado pela API. Redirecionando para login.");
+                console.log("Usuário não autenticado ou não encontrado pela API. Redirecionando para login.");
                 localStorage.clear(); // Limpa tudo se a autenticação falhar
                 window.location.replace('index.html');
                 return false;
@@ -531,17 +527,7 @@
     function initMap() {
       // Placeholder para inicialização do mapa
       console.log("Mapa Leaflet inicializado (apenas placeholder no layout).");
-      // map = L.map('map', { zoomControl: false }).setView([-15.6, -56.1], 12); 
-      // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
-      // markersLayer = L.layerGroup().addTo(map); 
-      // setInterval(fetchLocalizacoes, 60000); 
     }
-
-    // Removidas as funções de dados e mapa (`parseSerializedDate`, `formatDateTime`, `createPinIcon`, `fetchLocalizacoes`,
-    // `performSearch`, `showHistoricoUI`, `performHistoricoSearch`, `showRotaUI`, `performRotaSearch`,
-    // `haversineDistance`, `exportarPdfHistorico`, `window.addEventListener('keydown')`)
-    // para manter apenas o layout e a segurança, conforme solicitado.
-
 
     // --- Inicialização ao Carregar a Página ---
     window.addEventListener('load', async () => {
