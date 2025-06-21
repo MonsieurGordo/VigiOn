@@ -711,9 +711,10 @@
             console.log("Resposta da API (Atualização de Perfil):", responseData);
 
             if (responseData.status === "sucesso") {
-                // Atualização bem-sucedida, força novo login
+                // Fechar o popup, limpar localStorage e redirecionar para login
+                profileModal.classList.remove('show'); // Fechar o modal
                 showMessageModal("Sucesso", "Seu perfil foi atualizado! Por favor, faça login novamente.", () => {
-                    logout(); // Redireciona para o login
+                    logout(); // Isso já limpa o localStorage e redireciona
                 });
             } else {
                 showMessageModal("Erro na Atualização", responseData.message || "Ocorreu um erro ao atualizar o perfil. Tente novamente.");
@@ -738,8 +739,13 @@
       const isAuthenticated = await checkDashboardAuth();
 
       if (isAuthenticated) {
-        // Se autenticado, carrega a view 'Localizar Equipe' por padrão.
-        loadView('localizar'); 
+        // Se autenticado, não carrega a view 'Localizar Equipe' automaticamente,
+        // apenas garante que o 'search-input' esteja vazio ao iniciar.
+        // A view será carregada apenas quando o botão 'Localizar Equipe' for clicado.
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.value = ''; // Garante que o campo esteja vazio
+        }
       }
       // Se não autenticado, checkDashboardAuth já terá redirecionado
     });
