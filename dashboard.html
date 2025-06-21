@@ -447,9 +447,10 @@
 
   <script>
     // URL da sua API do Google Apps Script para AUTENTICAÇÃO E LOGIN (apenas).
+    // Atualizada com a URL mais recente que você forneceu.
     const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
     // URL da sua API do Google Apps Script para ATUALIZAR PERFIL.
-    // Esta URL foi obtida da sua última resposta para o script de atualização.
+    // Atualizada com a URL mais recente que você forneceu.
     const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brgSr5mAYMNOj9eXDdixQ/exec";
 
 
@@ -571,8 +572,7 @@
       // Limpa todos os dados de sessão/lembrar-me
       localStorage.removeItem('vigion_user_data');
       localStorage.removeItem('vigion_username');
-      // A empresa não é mais salva separadamente, mas como parte de vigion_user_data
-      // localStorage.removeItem('vigion_company'); 
+      localStorage.removeItem('vigion_company'); 
       // Redireciona para a tela de login
       window.location.replace('index.html'); 
     }
@@ -603,7 +603,7 @@
         }
 
         // Verifica se os dados essenciais para o dashboard estão presentes
-        // Certifique-se que o 'password' é salvo no localStorage pelo index.html
+        // Agora, incluímos 'password' na verificação, pois ele será salvo no index.html
         if (!userData || !userData.checkId || !userData.nomeCompleto || !userData.autenticado || !userData.username || !userData.password) {
             console.log("Dados essenciais do usuário incompletos no localStorage. Redirecionando para login.");
             localStorage.clear();
@@ -720,9 +720,10 @@
             }
 
         } catch (error) {
-            console.error("Erro durante a requisição de atualização de perfil:", error);
-            showMessageModal("Erro de Conexão", "Não foi possível conectar ou processar a atualização do perfil. Tente novamente mais tarde.");
-        } finally {
+                // Aqui capturamos erros de rede, JSON inválido ou outros erros na fetch
+                console.error("Erro durante a requisição de atualização de perfil:", error);
+                showMessageModal("Erro de Conexão", "Não foi possível conectar ou processar a atualização do perfil. Tente novamente mais tarde.");
+            } finally {
             updateButton.textContent = "Atualizar";
             updateButton.disabled = false;
         }
