@@ -331,7 +331,8 @@
 
   <script>
     // URL da sua API do Google Apps Script para autenticação/cadastro de usuários
-    const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbzS0IeUW4m7stLNPXjMuScTJNodWmUC73JxlM3knnwNF9_gMRoDqKy30-OFzMY6_Dd4/exec";
+    // Esta URL agora aponta para o script de autenticação pura.
+    const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
 
     // Variáveis globais para o mapa e marcadores (apenas declaração para evitar ReferenceError)
     let map;
@@ -340,7 +341,8 @@
     let historicoMarkers = []; 
 
     // ID da sua planilha e nomes das abas (apenas declaração para evitar ReferenceError)
-    const SHEET_ID = '1C8RlFUa9FEmiAUVrNYC7PTRUTGepkVXXwsND5OoC1Y'; // Este ID será o ID da sua planilha real
+    // OBS: O dashboard no modo layout/segurança não usa estas URLs, mas são mantidas como placeholders.
+    const SHEET_ID = '1C8RlFUa9FEmiAUVrNYC7PTRUTGepkVXXwsND5OoC1Y'; 
     const SHEET_NAME_LOCAL = 'Localizações';
     const SHEET_NAME_HIST = 'Historico';
 
@@ -451,18 +453,20 @@
       // Limpa todos os dados de sessão/lembrar-me
       localStorage.removeItem('vigion_user_data');
       localStorage.removeItem('vigion_username');
-      localStorage.removeItem('vigion_company');
+      localStorage.removeItem('vigion_company'); // Remover apenas se não estiver mais sendo salvo
       // Redireciona para a tela de login
       window.location.replace('index.html'); 
     }
 
     /**
      * Verifica a autenticação do usuário ao carregar a página do dashboard.
-     * Faz uma requisição à API para confirmar o status de autenticação.
-     * Se não autenticado, redireciona para a tela de login.
+     * Agora, ela usará os dados do localStorage salvos no login
+     * e os exibirá nas labels da sidebar.
+     * Se os dados não existirem ou estiverem incompletos, redireciona para o login.
      */
     async function checkDashboardAuth() {
         const userDataString = localStorage.getItem('vigion_user_data');
+        
         if (!userDataString) {
             console.log("Nenhum dado de usuário encontrado no localStorage. Redirecionando para login.");
             window.location.replace('index.html'); 
@@ -479,48 +483,23 @@
             return false;
         }
 
-        if (!userData.checkId) {
-            console.log("checkId ausente nos dados do usuário. Redirecionando para login.");
+        // Verifica se os dados essenciais para o dashboard estão presentes
+        if (!userData || !userData.checkId || !userData.nomeCompleto || !userData.autenticado) {
+            console.log("Dados essenciais do usuário incompletos no localStorage. Redirecionando para login.");
             localStorage.clear();
             window.location.replace('index.html');
             return false;
         }
 
-        try {
-            const apiUrl = `${APPS_SCRIPT_AUTH_URL}?check_id=${encodeURIComponent(userData.checkId)}`;
-            const response = await fetch(apiUrl);
-
-            if (!response.ok) {
-                console.error(`Erro HTTP na verificação de autenticação: ${response.status}`);
-                throw new Error('Falha na comunicação com o servidor de autenticação.');
-            }
-
-            const responseData = await response.json(); // Agora espera JSON da API
-            console.log("Resposta da API de autenticação do dashboard:", responseData); // Para depuração
-
-            if (responseData.status === "encontrado" && responseData.autenticado === true) {
-                // Usuário autenticado, atualiza info na sidebar (garante que os dados mais recentes da API sejam usados)
-                // Usamos os dados do localStorage para username/company (conforme o que o usuário digitou/lembrou)
-                // e os dados da API para tipoAcesso (que é o que o Apps Script valida).
-                document.getElementById('loggedInUsername').textContent = userData.username || 'N/A';
-                document.getElementById('loggedInCompany').textContent = userData.company || 'N/A';
-                document.getElementById('loggedInAccessType').textContent = responseData.tipoAcesso || 'Visitante';
-                console.log("Autenticação do dashboard verificada com sucesso.");
-                return true; // Autenticado
-            } else {
-                console.log("Usuário não autenticado ou não encontrado pela API. Redirecionando para login.");
-                localStorage.clear(); // Limpa tudo se a autenticação falhar
-                window.location.replace('index.html');
-                return false;
-            }
-
-        } catch (error) {
-            console.error('Erro durante a verificação de autenticação do dashboard:', error);
-            showMessageModal(`Erro de segurança: ${error.message}. Redirecionando.`);
-            localStorage.clear();
-            window.location.replace('index.html');
-            return false;
-        }
+        // Agora, os dados já estão no localStorage, e a API do Apps Script de login já validou as credenciais.
+        // Podemos preencher as labels diretamente com os dados do localStorage.
+        // A empresa e o tipo de acesso vêm do JSON retornado pelo script de login, salvo no localStorage.
+        document.getElementById('loggedInUsername').textContent = userData.nomeCompleto || 'N/A';
+        document.getElementById('loggedInCompany').textContent = userData.company || 'N/A'; // Pode ser 'N/A' se o script não retornar empresa
+        document.getElementById('loggedInAccessType').textContent = userData.tipoAcesso || 'Visitante';
+        
+        console.log("Usuário autenticado via localStorage.");
+        return true; 
     }
 
     /** Inicializa mapa com Leaflet sem controles nativos */
