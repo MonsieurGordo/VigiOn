@@ -174,7 +174,6 @@
 
     <script>
         // URL da sua API do Google Apps Script para AUTENTICAÇÃO E LOGIN (apenas).
-        // Atualizada com a URL mais recente que você forneceu.
         const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
 
         // Referências aos elementos HTML
@@ -193,16 +192,35 @@
         });
 
         // Função para exibir o modal de mensagens
-        function showMessage(title, message, callback = null) {
+        // O callback agora é executado automaticamente após um pequeno atraso,
+        // se o modal não for um erro ou aviso que exija interação.
+        function showMessage(title, message, callback = null, autoClose = true) {
             modalTitle.textContent = title;
             modalMessageText.textContent = message;
             messageModal.classList.add('show');
-            if (callback) {
-                closeModalButton.removeEventListener('click', closeModalCallback);
-                closeModalButton.addEventListener('click', closeModalCallback);
-                function closeModalCallback() {
+
+            // Remove listeners anteriores para evitar múltiplos disparos
+            closeModalButton.removeEventListener('click', modalCallbackHandler);
+
+            if (autoClose && callback) {
+                // Se for para fechar automaticamente e tem um callback, executa o callback após um tempo
+                setTimeout(() => {
                     messageModal.classList.remove('show');
-                    closeModalButton.removeEventListener('click', closeModalCallback);
+                    callback();
+                }, 1500); // Exibe a mensagem por 1.5 segundos antes de redirecionar
+            } else if (!autoClose && callback) {
+                // Se não for para fechar automaticamente, mas tem um callback (para quando o usuário clicar OK)
+                closeModalButton.addEventListener('click', modalCallbackHandler);
+            } else {
+                // Se não tem callback ou não é autoClose, o botão OK apenas fecha o modal
+                closeModalButton.addEventListener('click', () => messageModal.classList.remove('show'));
+            }
+
+            // Handler para o botão 'OK' do modal quando não é autoClose
+            function modalCallbackHandler() {
+                messageModal.classList.remove('show');
+                closeModalButton.removeEventListener('click', modalCallbackHandler);
+                if (callback) {
                     callback();
                 }
             }
@@ -232,7 +250,7 @@
             const password = passwordInput.value.trim(); 
             
             if (!username || !password) {
-                showMessage("Erro de Login", "Por favor, preencha todos os campos.");
+                showMessage("Erro de Login", "Por favor, preença todos os campos.", null, false); // Não auto-fecha para erros de validação
                 return;
             }
 
@@ -261,32 +279,30 @@
                 console.log("Dados recebidos da API (Login):", responseData); 
 
                 if (responseData.status === "sucesso" && responseData.data.autenticado === true) {
-                    // Armazena os dados completos do usuário retornados pela API no localStorage.
-                    // Incluindo a senha para a validação no dashboard e futuras edições de perfil.
                     const userDataToStore = {
                         username: responseData.data.id, 
-                        password: password, // <-- AQUI: SALVANDO A SENHA NO LOCALSTORAGE
+                        password: password, 
                         nomeCompleto: responseData.data.nome, 
                         company: responseData.data.empresa || 'N/A', 
                         checkId: checkId, 
                         autenticado: responseData.data.autenticado, 
                         tipoAcesso: responseData.data.tipoAcesso || 'Visitante', 
                         statusUsuario: responseData.data.statusUsuario || 'N/A',
-                        rememberMe: rememberMeCheckbox.checked // Salva o estado do checkbox
+                        rememberMe: rememberMeCheckbox.checked 
                     };
                     localStorage.setItem('vigion_user_data', JSON.stringify(userDataToStore));
 
                     showMessage("Login Bem-Sucedido", "Redirecionando para o Dashboard...", () => {
                         window.location.replace('dashboard.html'); 
-                    });
+                    }, true); // Agora auto-fecha e redireciona
 
                 } else {
-                    showMessage("Erro de Login", responseData.message || "Credenciais inválidas. Tente novamente.");
+                    showMessage("Erro de Login", responseData.message || "Credenciais inválidas. Tente novamente.", null, false); // Não auto-fecha para erros de login
                 }
 
             } catch (error) {
                 console.error("Erro durante a requisição ou processamento (Login):", error); 
-                showMessage("Erro de Conexão", "Não foi possível conectar ou processar a resposta do servidor. Tente novamente mais tarde.");
+                showMessage("Erro de Conexão", "Não foi possível conectar ou processar a resposta do servidor. Tente novamente mais tarde.", null, false); // Não auto-fecha para erros de conexão
             } finally {
                 loginButton.textContent = "Entrar";
                 loginButton.disabled = false;
