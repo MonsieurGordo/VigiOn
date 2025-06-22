@@ -470,6 +470,11 @@
     const SHEET_URL_HIST = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME_HIST)}`;
 
 
+    // Variável para o temporizador de inatividade
+    let inactivityTimer;
+    // Tempo limite de inatividade em milissegundos (30 minutos)
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos * 60 segundos * 1000 milissegundos
+
     /** Funções do Modal de Mensagens */
     function showMessageModal(message) {
         const modalOverlay = document.getElementById('messageModal');
@@ -523,6 +528,11 @@
           </div>
         `;
         // Adicionar listeners básicos para o layout (sem funcionalidade real)
+        // Garante que o campo de busca esteja vazio ao carregar a view.
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.value = ''; // Campo vazio
+        }
         document.getElementById('search-input').focus();
         document.getElementById('btn-search').onclick = () => showMessageModal('Funcionalidade de busca não implementada neste layout.');
         document.getElementById('search-input').addEventListener('keyup', (e) => {
@@ -628,6 +638,9 @@
 
     // --- Funções do Modal de Edição de Perfil ---
     function openProfileEditModal() {
+        // Redefine o temporizador de inatividade quando o modal é aberto
+        resetInactivityTimer();
+
         const profileModal = document.getElementById('profileEditModal');
         const userDataString = localStorage.getItem('vigion_user_data');
         if (!userDataString) {
@@ -649,6 +662,8 @@
 
     function cancelProfileEdit() {
         document.getElementById('profileEditModal').classList.remove('show');
+        // Redefine o temporizador de inatividade ao fechar o modal
+        resetInactivityTimer();
     }
 
     document.getElementById('updateProfileButton').addEventListener('click', async () => {
@@ -730,6 +745,21 @@
         }
     });
 
+    /**
+     * Reinicia o temporizador de inatividade.
+     * Chama logout() se o tempo limite for atingido.
+     */
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer); // Limpa qualquer temporizador existente
+        // Define um novo temporizador
+        inactivityTimer = setTimeout(() => {
+            console.log("Usuário inativo por mais de 30 minutos. Deslogando...");
+            showMessageModal("Sessão Expirada", "Você foi desconectado devido à inatividade.", () => {
+                logout(); // Chama a função de logout
+            });
+        }, INACTIVITY_TIMEOUT);
+    }
+
     // --- Inicialização ao Carregar a Página ---
     window.addEventListener('load', async () => {
       // 1. Inicializa o mapa (placeholder) e as camadas primeiro.
@@ -746,6 +776,16 @@
         if (searchInput) {
             searchInput.value = ''; // Garante que o campo esteja vazio
         }
+        // Inicia o temporizador de inatividade apenas se o usuário estiver autenticado
+        resetInactivityTimer();
+
+        // Adiciona event listeners para reiniciar o temporizador em qualquer interação
+        document.addEventListener('mousemove', resetInactivityTimer);
+        document.addEventListener('keypress', resetInactivityTimer);
+        document.addEventListener('click', resetInactivityTimer);
+        document.addEventListener('scroll', resetInactivityTimer);
+        document.addEventListener('touchstart', resetInactivityTimer); // Para dispositivos touch
+        document.addEventListener('touchmove', resetInactivityTimer); // Para dispositivos touch
       }
       // Se não autenticado, checkDashboardAuth já terá redirecionado
     });
