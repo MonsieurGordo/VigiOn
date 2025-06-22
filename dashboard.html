@@ -476,18 +476,34 @@
     const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos * 60 segundos * 1000 milissegundos
 
     /** Funções do Modal de Mensagens */
-    function showMessageModal(message) {
+    function showMessageModal(title, message, callback = null) {
         const modalOverlay = document.getElementById('messageModal');
+        const modalTitle = modalOverlay.querySelector('h3'); // Seleciona o h3 dentro do modal
         const modalMessageText = document.getElementById('modalMessageText');
+        const closeModalButton = document.getElementById('closeModalButton');
         
+        modalTitle.textContent = title;
         modalMessageText.textContent = message;
         modalOverlay.classList.add('show');
+
+        // Remove listeners anteriores para evitar múltiplos disparos
+        closeModalButton.removeEventListener('click', modalCallbackHandler);
+
+        // Adiciona o novo handler para o botão 'OK' do modal
+        closeModalButton.addEventListener('click', modalCallbackHandler);
+
+        // Define a função de callback a ser executada quando o modal for fechado (pelo clique no OK)
+        function modalCallbackHandler() {
+            modalOverlay.classList.remove('show');
+            closeModalButton.removeEventListener('click', modalCallbackHandler); // Remove o listener temporário
+            if (callback) {
+                callback();
+            }
+        }
     }
 
-    document.getElementById('closeModalButton').addEventListener('click', function() {
-        const modalOverlay = document.getElementById('messageModal');
-        modalOverlay.classList.remove('show');
-    });
+    // Removido o listener direto do closeModalButton aqui, pois showMessageModal o gerencia.
+    // document.getElementById('closeModalButton').addEventListener('click', function() { /* ... */ });
 
     /** Alterna a visibilidade da sidebar */
     function toggleSidebar() {
@@ -726,10 +742,11 @@
             console.log("Resposta da API (Atualização de Perfil):", responseData);
 
             if (responseData.status === "sucesso") {
-                // Fechar o popup, limpar localStorage e redirecionar para login
-                profileModal.classList.remove('show'); // Fechar o modal
+                // Fechar o popup imediatamente
+                profileModal.classList.remove('show'); 
+                // Exibir mensagem de sucesso e depois deslogar
                 showMessageModal("Sucesso", "Seu perfil foi atualizado! Por favor, faça login novamente.", () => {
-                    logout(); // Isso já limpa o localStorage e redireciona
+                    logout(); // Limpa o localStorage e redireciona
                 });
             } else {
                 showMessageModal("Erro na Atualização", responseData.message || "Ocorreu um erro ao atualizar o perfil. Tente novamente.");
@@ -754,9 +771,13 @@
         // Define um novo temporizador
         inactivityTimer = setTimeout(() => {
             console.log("Usuário inativo por mais de 30 minutos. Deslogando...");
-            showMessageModal("Sessão Expirada", "Você foi desconectado devido à inatividade.", () => {
-                logout(); // Chama a função de logout
-            });
+            // Primeiro, exibe a mensagem para o usuário
+            showMessageModal("Sessão Expirada", "Você foi desconectado devido à inatividade.");
+            // Em seguida, após um breve atraso para o modal ser visível, força o logout.
+            // Isso garante que o usuário veja a mensagem antes de ser redirecionado.
+            setTimeout(() => {
+                logout(); // Isso já limpa o localStorage e redireciona.
+            }, 500); // Atraso de 500ms
         }, INACTIVITY_TIMEOUT);
     }
 
