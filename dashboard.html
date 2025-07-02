@@ -5,10 +5,10 @@
   <title>VigiOn – Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet CSS (apenas para o estilo base do mapa, sem funcionalidade ainda) -->
+  <!-- Leaflet CSS para exibir o mapa -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  <!-- jsPDF + AutoTable (para geração de PDF) - Permanecem nos links, mas as funções JS serão removidas por ora -->
+  <!-- jsPDF + AutoTable (para geração de PDF) - Permanecem nos links, mas as funções JS serão implementadas depois -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
@@ -39,6 +39,8 @@
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: 0; /* Garante que o mapa fique abaixo da sidebar */
+      width: 100%; /* Torna o mapa responsivo na largura */
+      height: 100%; /* Torna o mapa responsivo na altura */
     }
 
     /* Sidebar (Menu lateral) */
@@ -360,6 +362,82 @@
         background-color: #5A73D4;
     }
 
+    /* Estilos para o novo Modal de Configurações do Mapa */
+    .settings-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .settings-modal-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    .settings-modal-content {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        text-align: left;
+        max-width: 400px;
+        width: 90%;
+        transform: translateY(-30px);
+        opacity: 0;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .settings-modal-overlay.show .settings-modal-content {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    .settings-modal-content h3 {
+        color: #333;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    .settings-modal-content .radio-group label {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        font-weight: 400;
+        color: #4A5568;
+    }
+    .settings-modal-content .radio-group input[type="radio"] {
+        margin-right: 0.75rem;
+        accent-color: #6200EE;
+        transform: scale(1.2); /* Aumenta um pouco o tamanho do radio button */
+    }
+    .settings-modal-content button {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        width: 100%;
+        background-color: #6200EE;
+        color: white;
+        margin-top: 1rem;
+    }
+    .settings-modal-content button:hover {
+        background-color: #5A73D4;
+    }
+
+
   </style>
 </head>
 
@@ -396,6 +474,13 @@
         </button>
       </li>
       <li id="rota-placeholder"></li>
+
+      <!-- NOVO: Botão de Configurações -->
+      <li>
+        <button onclick="openSettingsModal()" id="btn-settings">
+          Configurações
+        </button>
+      </li>
     </ul>
 
     <!-- Área de informação do usuário logado -->
@@ -422,7 +507,7 @@
       </div>
   </div>
 
-  <!-- NOVO: Modal de Edição de Perfil -->
+  <!-- Modal de Edição de Perfil -->
   <div id="profileEditModal" class="profile-modal-overlay">
       <div class="profile-modal-content">
           <h3>Editar Perfil</h3>
@@ -442,38 +527,76 @@
       </div>
   </div>
 
-  <!-- Leaflet JS - Mantido o link, mas a inicialização será um placeholder por ora -->
+  <!-- NOVO: Modal de Configurações do Mapa -->
+  <div id="settingsModal" class="settings-modal-overlay">
+      <div class="settings-modal-content">
+          <h3>Configurações do Mapa</h3>
+          <div class="radio-group">
+              <label>
+                  <input type="radio" name="mapView" value="default" checked> Padrão
+              </label>
+              <label>
+                  <input type="radio" name="mapView" value="satellite"> Satélite
+              </label>
+              <!-- Opção "Relevo (Ruas/Bairros)" foi removida conforme solicitado -->
+          </div>
+          <button onclick="applyMapSettings()">Aplicar</button>
+      </div>
+  </div>
+
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
     // URL da sua API do Google Apps Script para AUTENTICAÇÃO E LOGIN (apenas).
-    // Atualizada com a URL mais recente que você forneceu.
     const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
     // URL da sua API do Google Apps Script para ATUALIZAR PERFIL.
-    // Atualizada com a URL mais recente que você forneceu.
     const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brgSr5mAYMNOj9eXDdixQ/exec";
+    // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
+    // ATENÇÃO: SUBSTITUA ESTA URL PELA URL REAL DO WEB APP DO SEU NOVO SCRIPT apps_script_fetch_localizacoes!
+    const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbz-ILoRIHtJ4gnVCSXO7U3fr1vPusg68znBh5rD-VDGoGKyKXvdGTUNsR8J2MLqzMFuVQ/exec"; 
 
-
-    // Variáveis globais para o mapa e marcadores (apenas declaração para evitar ReferenceError)
+    // Variáveis globais para o mapa Leaflet
     let map;
-    let markersLayer; 
-    let allMarkers = []; 
-    let historicoMarkers = []; 
+    let currentTileLayer; // Para gerenciar a camada de tiles atual
+    let markersLayer; // Camada para marcadores de localização atual
+    let allMarkers = []; // Armazena todos os dados de marcadores atuais (Localizações)
+    let historicoMarkers = []; // Armazena marcadores do histórico
+
+    // Definição das camadas de mapa
+    const tileLayers = {
+        default: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }),
+        satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        })
+    };
+
+    // Coordenadas de Cuiabá - MT (Centro aproximado)
+    const CUIABA_LAT = -15.6014;
+    const CUIABA_LON = -56.0979;
+    const INITIAL_ZOOM = 13; // Nível de zoom razoável para a cidade
 
     // ID da sua planilha e nomes das abas (apenas declaração para evitar ReferenceError)
+    // Estas constantes não são mais usadas diretamente no frontend para buscar dados,
+    // mas são mantidas para referência ou futuras implementações de PDF/Histórico que as usem.
     const SHEET_ID = '1C8RlFUa9FEmiAUVrNYC7PTRUTGepkVXXwsND5OoC1Y'; 
     const SHEET_NAME_LOCAL = 'Localizações';
     const SHEET_NAME_HIST = 'Historico';
 
-    // URLs para as APIs Google Sheets (Query Language) (apenas declaração para evitar ReferenceError)
-    const SHEET_URL_LOCAL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME_LOCAL)}`;
-    const SHEET_URL_HIST = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME_HIST)}`;
-
+    // URLs para as APIs Google Sheets (Query Language) - Não mais usadas para fetch de localização
+    // const SHEET_URL_LOCAL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME_LOCAL)}`;
+    // const SHEET_URL_HIST = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME_HIST)}`;
 
     // Variável para o temporizador de inatividade
     let inactivityTimer;
     // Tempo limite de inatividade em milissegundos (30 minutos)
     const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos * 60 segundos * 1000 milissegundos
+
+    // Variável para o temporizador de atualização do mapa
+    let mapUpdateInterval;
+    const MAP_UPDATE_INTERVAL_MS = 60 * 1000; // 60 segundos
 
     /** Funções do Modal de Mensagens */
     function showMessageModal(title, message, callback = null) {
@@ -501,9 +624,6 @@
             }
         }
     }
-
-    // Removido o listener direto do closeModalButton aqui, pois showMessageModal o gerencia.
-    // document.getElementById('closeModalButton').addEventListener('click', function() { /* ... */ });
 
     /** Alterna a visibilidade da sidebar */
     function toggleSidebar() {
@@ -550,10 +670,13 @@
             searchInput.value = ''; // Campo vazio
         }
         document.getElementById('search-input').focus();
-        document.getElementById('btn-search').onclick = () => showMessageModal('Funcionalidade de busca não implementada neste layout.');
+        // A funcionalidade de busca será implementada, por enquanto, apenas o mapa é atualizado.
+        document.getElementById('btn-search').onclick = () => showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo e atualizando!');
         document.getElementById('search-input').addEventListener('keyup', (e) => {
-          if (e.key === 'Enter') showMessageModal('Funcionalidade de busca não implementada neste layout.');
+          if (e.key === 'Enter') showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo e atualizando!');
         });
+        // Inicia a atualização do mapa para a view "Localizar Equipe"
+        startMapUpdates();
 
       } else if (view === 'historico') {
         document.getElementById('btn-historico').classList.add('active');
@@ -568,13 +691,21 @@
         `;
         // Adicionar listeners básicos para o layout
         document.getElementById('hist-latlng').focus();
-        document.getElementById('btn-historico-buscar').onclick = () => showMessageModal('Funcionalidade de histórico não implementada neste layout.');
-        document.getElementById('btn-historico-pdf').onclick = () => showMessageModal('Funcionalidade de PDF não implementada neste layout.');
+        showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
+        document.getElementById('btn-historico-buscar').onclick = () => showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
+        document.getElementById('btn-historico-pdf').onclick = () => showMessageModal('Funcionalidade de PDF', 'A geração de PDF será implementada em breve.');
         ['hist-latlng','hist-date-start','hist-date-end'].forEach(id => {
           document.getElementById(id).addEventListener('keyup', e => {
-            if (e.key === 'Enter') showMessageModal('Funcionalidade de histórico não implementada neste layout.');
+            if (e.key === 'Enter') showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
           });
         });
+        // Para a atualização do mapa ao sair da view "Localizar Equipe"
+        stopMapUpdates();
+        // Limpa os marcadores do mapa
+        markersLayer.clearLayers();
+        allMarkers = [];
+        historicoMarkers.forEach(m => map.removeLayer(m));
+        historicoMarkers = [];
 
       } else if (view === 'rota') {
         document.getElementById('btn-rota').classList.add('active');
@@ -586,10 +717,18 @@
         `;
         // Adicionar listeners básicos para o layout
         document.getElementById('rota-latlng').focus();
-        document.getElementById('btn-rota-buscar').onclick = () => showMessageModal('Funcionalidade de rota não implementada neste layout.');
+        showMessageModal('Funcionalidade de Rota', 'A funcionalidade de criação de rotas será implementada em breve. O mapa já está ativo!');
+        document.getElementById('btn-rota-buscar').onclick = () => showMessageModal('Funcionalidade de Rota', 'A funcionalidade de criação de rotas será implementada em breve. O mapa já está ativo!');
         document.getElementById('rota-latlng').addEventListener('keyup', e => {
-          if (e.key === 'Enter') showMessageModal('Funcionalidade de rota não implementada neste layout.');
+          if (e.key === 'Enter') showMessageModal('Funcionalidade de Rota', 'A funcionalidade de criação de rotas será implementada em breve. O mapa já está ativo!');
         });
+        // Para a atualização do mapa ao sair da view "Localizar Equipe"
+        stopMapUpdates();
+        // Limpa os marcadores do mapa
+        markersLayer.clearLayers();
+        allMarkers = [];
+        historicoMarkers.forEach(m => map.removeLayer(m));
+        historicoMarkers = [];
       }
     }
 
@@ -599,6 +738,8 @@
       localStorage.removeItem('vigion_user_data');
       localStorage.removeItem('vigion_username');
       localStorage.removeItem('vigion_company'); 
+      // Para a atualização do mapa
+      stopMapUpdates();
       // Redireciona para a tela de login
       window.location.replace('index.html'); 
     }
@@ -646,10 +787,223 @@
         return true; 
     }
 
-    /** Inicializa mapa com Leaflet sem controles nativos */
+    /** Inicializa mapa com Leaflet */
     function initMap() {
-      // Placeholder para inicialização do mapa
-      console.log("Mapa Leaflet inicializado (apenas placeholder no layout).");
+      // Cria o mapa e centraliza em Cuiabá-MT
+      // Remove os controles de zoom padrão ao inicializar o mapa
+      map = L.map('map', { zoomControl: false }).setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM);
+
+      // Define a camada padrão ao iniciar, ou a salva no localStorage
+      const savedMapType = localStorage.getItem('vigion_map_type') || 'default';
+      currentTileLayer = tileLayers[savedMapType];
+      currentTileLayer.addTo(map);
+
+      // Altera a atribuição do Leaflet para o canto inferior direito e garante o formato "Leaflet | leaflet"
+      // Conforme a imagem, apenas "Leaflet" é o link, "leaflet" é texto simples sem link.
+      map.attributionControl.setPrefix('<a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> | leaflet');
+
+      markersLayer = L.layerGroup().addTo(map); // Inicializa a camada de marcadores
+
+      // Garante que o mapa se redimensione corretamente se o contêiner mudar de tamanho
+      map.invalidateSize(); 
+
+      // Listener para redimensionamento da janela (opcional, Leaflet já lida bem com isso)
+      window.addEventListener('resize', () => {
+        map.invalidateSize();
+      });
+
+      console.log("Mapa Leaflet inicializado em Cuiabá-MT.");
+    }
+
+    /** Converte a string de data serializada do Google Sheets para um objeto JS Date */
+    function parseSerializedDate(serializedDate) {
+      // Formato esperado: Date(YYYY,MM,DD,hh,mm,ss)
+      const match = serializedDate.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
+      if (!match) return null;
+      // Note: month is 0-indexed in JS Date, so we subtract 1
+      const [_, year, month, day, hour, minute, second] = match.map(Number);
+      return new Date(year, month, day, hour, minute, second);
+    }
+
+    /** Formata um objeto JS Date ou string serializada para “dd/MM/yyyy hh:mm:ss AM/PM” */
+    function formatDateTime(dateInput) {
+      let date;
+      if (typeof dateInput === 'string' && dateInput.startsWith('Date(')) {
+          date = parseSerializedDate(dateInput);
+      } else if (dateInput instanceof Date) {
+          date = dateInput;
+      } else {
+          return dateInput; // Retorna o original se não for string serializada ou Date object
+      }
+
+      if (!date) return dateInput;
+
+      const pad = n => n.toString().padStart(2, '0');
+      const day = pad(date.getDate());
+      const month = pad(date.getMonth() + 1);
+      const year = date.getFullYear();
+      let hrs24 = date.getHours();
+      const h12 = hrs24 % 12 || 12; // Converte 0 para 12 para AM/PM
+      const ampm = hrs24 >= 12 ? 'PM' : 'AM';
+      const mins = pad(date.getMinutes());
+      const secs = pad(date.getSeconds());
+      return `${day}/${month}/${year} ${pad(h12)}:${mins}:${secs} ${ampm}`;
+    }
+
+    /** Cria ícone tipo pin SVG com cor e tamanho ajustados */
+    function createPinIcon(color) {
+      // Tamanho do SVG e anchor point ajustados para um visual melhor
+      const iconSize = [36, 60]; // Reduzido um pouco para ser menos intrusivo
+      const iconAnchor = [18, 58]; // Ponta inferior do pin
+      const popupAnchor = [0, -50]; // Posição do pop-up acima do pin
+
+      const svg = `
+        <svg width="${iconSize[0]}" height="${iconSize[1]}" viewBox="0 0 24 40" xmlns="http://www.w3.org/2000/svg">
+          <path fill="${color}" stroke="black" stroke-width="0.8"
+                d="M12,2C8.13,2,5,5.13,5,9c0,5.25,7,13,7,13s7-7.75,7-13C19,5.13,15.87,2,12,2z"/>
+          <circle fill="white" cx="12" cy="9" r="2.5"/>
+        </svg>
+      `;
+      return L.divIcon({
+        className: 'svg-pin-icon',
+        html: svg,
+        iconSize: iconSize,
+        iconAnchor: iconAnchor,
+        popupAnchor: popupAnchor
+      });
+    }
+
+    /**
+     * Busca os dados de localização via Google Apps Script e atualiza os marcadores no mapa.
+     * @param {boolean} onlyActive - Se true, filtra para exibir apenas marcadores com STATUS 'Ativo'.
+     */
+    async function fetchLocalizacoes(onlyActive = false) {
+      if (!map || !markersLayer) {
+          console.warn("Mapa ou camada de marcadores não inicializados. Pulando fetchLocalizacoes.");
+          return;
+      }
+
+      const userDataString = localStorage.getItem('vigion_user_data');
+      if (!userDataString) {
+          console.error("Dados do usuário não encontrados no localStorage para buscar localizações.");
+          showMessageModal("Erro", "Sua sessão expirou. Por favor, faça login novamente.");
+          logout();
+          return;
+      }
+      const userData = JSON.parse(userDataString);
+      const username = userData.username;
+      const password = userData.password; // A senha é necessária para autenticação no Apps Script
+
+      if (!username || !password) {
+          console.error("Username ou password ausentes nos dados do usuário para buscar localizações.");
+          showMessageModal("Erro", "Dados de login incompletos. Por favor, faça login novamente.");
+          logout();
+          return;
+      }
+
+      const params = new URLSearchParams({
+          username: username,
+          password: password
+      });
+
+      try {
+        const response = await fetch(`${APPS_SCRIPT_FETCH_LOCATIONS_URL}?${params.toString()}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
+        }
+        const result = await response.json();
+
+        if (result.status === "sucesso") {
+            markersLayer.clearLayers(); // Limpa todos os marcadores existentes
+            allMarkers = []; // Reseta o array de marcadores
+
+            let bounds = L.latLngBounds([]); // Para ajustar o zoom do mapa
+
+            result.data.forEach(location => {
+                // Filtra por 'Ativo' se onlyActive for true (para a função de rota, por exemplo)
+                if (onlyActive && String(location.estado).toLowerCase() !== 'ativo') {
+                    return;
+                }
+
+                if (location.latitude == null || location.longitude == null || isNaN(location.latitude) || isNaN(location.longitude)) {
+                    console.warn(`Pulando localização inválida para ${location.nome}: Latitude/Longitude inválidas.`);
+                    return;
+                }
+
+                let color = '#757575'; // Cor padrão (cinza)
+                const lowerEstado = String(location.estado).toLowerCase();
+                if      (lowerEstado === 'ativo')     color = '#5A73D4'; // Azul (cor secundária)
+                else if (lowerEstado === 'atencao' || lowerEstado === 'atenção') color = '#FFC107'; // Laranja
+                else if (lowerEstado === 'critico'  || lowerEstado === 'crítico') color = '#F44336'; // Vermelho
+                else if (lowerEstado === 'inativo')  color = '#757575'; // Cinza
+
+                const pinIcon = createPinIcon(color);
+                const marker = L.marker([location.latitude, location.longitude], { icon: pinIcon }).addTo(markersLayer);
+
+                // Conteúdo do tooltip (rótulo permanente)
+                marker.bindTooltip(`<div class="marker-label-popup">${location.nome}</div>`, {
+                  permanent: true,
+                  direction: 'top',
+                  offset: [0, -55], // Ajusta offset para o novo tamanho do pin
+                  opacity: 0.9
+                }).openTooltip();
+
+                // Conteúdo do popup (clicável)
+                marker.bindPopup(`
+                  <strong>Nome:</strong> ${location.nome}<br>
+                  <strong>Data/Hora:</strong> ${formatDateTime(location.dataHora)}<br>
+                  <strong>Latitude:</strong> ${location.latitude}<br>
+                  <strong>Longitude:</strong> ${location.longitude}<br>
+                  <strong>Endereço:</strong> ${location.endereco}<br>
+                  <strong>Estado do Técnico:</strong> ${location.estado}<br>
+                  <strong>Protocolo:</strong> ${location.protocolo}<br>
+                  <strong>Status do Dispositivo:</strong> ${location.statusDispositivo}<br>
+                  <strong>Observações:</strong> ${location.observacoes}
+                `);
+
+                allMarkers.push({ marker, nome: location.nome, lat: location.latitude, lng: location.longitude, estado: location.estado });
+                bounds.extend([location.latitude, location.longitude]); // Estende o limite para o zoom
+            });
+
+            // Ajusta o mapa para mostrar todos os marcadores, se houver
+            if (markersLayer.getLayers().length > 0) {
+                map.fitBounds(bounds, { padding: [20, 20] });
+            } else {
+                // Se não houver marcadores, volta para a visão padrão de Cuiabá
+                map.setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM);
+            }
+            console.log(`Localizações atualizadas. ${markersLayer.getLayers().length} marcadores exibidos.`);
+        } else {
+            console.error("Erro no Apps Script ao buscar localizações:", result.message);
+            showMessageModal("Erro na Busca", result.message || "Não foi possível carregar as localizações.");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar localizações:", error);
+        showMessageModal("Erro de Conexão", `Não foi possível carregar as localizações: ${error.message}.`);
+      }
+    }
+
+    /** Inicia o temporizador para atualização do mapa a cada 60 segundos. */
+    function startMapUpdates() {
+        // Limpa qualquer intervalo existente para evitar duplicação
+        if (mapUpdateInterval) {
+            clearInterval(mapUpdateInterval);
+        }
+        // Inicia a primeira busca imediatamente
+        fetchLocalizacoes();
+        // Configura o intervalo para buscas futuras
+        mapUpdateInterval = setInterval(fetchLocalizacoes, MAP_UPDATE_INTERVAL_MS);
+        console.log("Atualização automática do mapa iniciada.");
+    }
+
+    /** Para o temporizador de atualização do mapa. */
+    function stopMapUpdates() {
+        if (mapUpdateInterval) {
+            clearInterval(mapUpdateInterval);
+            mapUpdateInterval = null;
+            console.log("Atualização automática do mapa parada.");
+        }
     }
 
     // --- Funções do Modal de Edição de Perfil ---
@@ -781,18 +1135,52 @@
         }, INACTIVITY_TIMEOUT);
     }
 
+    // --- Funções do Modal de Configurações do Mapa ---
+    function openSettingsModal() {
+        // Redefine o temporizador de inatividade quando o modal é aberto
+        resetInactivityTimer();
+
+        const settingsModal = document.getElementById('settingsModal');
+        // Pre-seleciona a opção atual do mapa, se houver uma salva
+        const currentMapType = localStorage.getItem('vigion_map_type') || 'default';
+        document.querySelector(`input[name="mapView"][value="${currentMapType}"]`).checked = true;
+
+        settingsModal.classList.add('show');
+    }
+
+    function applyMapSettings() {
+        const settingsModal = document.getElementById('settingsModal');
+        const selectedMapType = document.querySelector('input[name="mapView"]:checked').value;
+
+        if (map) { // Verifica se o mapa foi inicializado
+            // Remove a camada atual
+            if (currentTileLayer) {
+                map.removeLayer(currentTileLayer);
+            }
+            // Adiciona a nova camada selecionada
+            currentTileLayer = tileLayers[selectedMapType];
+            currentTileLayer.addTo(map);
+            // Salva a preferência do usuário
+            localStorage.setItem('vigion_map_type', selectedMapType);
+            console.log(`Tipo de mapa alterado para: ${selectedMapType}`);
+        } else {
+            console.warn("Mapa não inicializado. Não foi possível aplicar as configurações.");
+        }
+
+        settingsModal.classList.remove('show');
+        resetInactivityTimer(); // Reinicia o temporizador ao fechar o modal
+    }
+
     // --- Inicialização ao Carregar a Página ---
     window.addEventListener('load', async () => {
-      // 1. Inicializa o mapa (placeholder) e as camadas primeiro.
+      // 1. Inicializa o mapa e as camadas primeiro.
       initMap();
 
       // 2. Em seguida, executa a verificação de autenticação do dashboard.
       const isAuthenticated = await checkDashboardAuth();
 
       if (isAuthenticated) {
-        // Se autenticado, não carrega a view 'Localizar Equipe' automaticamente,
-        // apenas garante que o 'search-input' esteja vazio ao iniciar.
-        // A view será carregada apenas quando o botão 'Localizar Equipe' for clicado.
+        // Se autenticado, garante que o 'search-input' esteja vazio ao iniciar.
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
             searchInput.value = ''; // Garante que o campo esteja vazio
@@ -807,6 +1195,9 @@
         document.addEventListener('scroll', resetInactivityTimer);
         document.addEventListener('touchstart', resetInactivityTimer); // Para dispositivos touch
         document.addEventListener('touchmove', resetInactivityTimer); // Para dispositivos touch
+
+        // Inicia a busca de localizações e o intervalo de atualização para a view padrão (Localizar Equipe)
+        startMapUpdates();
       }
       // Se não autenticado, checkDashboardAuth já terá redirecionado
     });
