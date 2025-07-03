@@ -578,16 +578,8 @@
     const CUIABA_LON = -56.0979;
     const INITIAL_ZOOM = 13; // Nível de zoom razoável para a cidade
 
-    // ID da sua planilha e nomes das abas (apenas declaração para evitar ReferenceError)
-    // Estas constantes não são mais usadas diretamente no frontend para buscar dados,
-    // mas são mantidas para referência ou futuras implementações de PDF/Histórico que as usem.
-    const SHEET_ID = '1C8RlFUa9FEmiAUVrNYC7PTRUTGepkVXXwsND5OoC1Y'; 
-    const SHEET_NAME_LOCAL = 'Localizações';
-    const SHEET_NAME_HIST = 'Historico';
-
-    // URLs para as APIs Google Sheets (Query Language) - Não mais usadas para fetch de localização
-    // const SHEET_URL_LOCAL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME_LOCAL)}`;
-    // const SHEET_URL_HIST = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME_HIST)}`;
+    // As constantes SHEET_ID, SHEET_NAME_LOCAL, SHEET_NAME_HIST, SHEET_URL_LOCAL, SHEET_URL_HIST
+    // foram removidas daqui, pois o acesso à planilha é feito via Apps Script.
 
     // Variável para o temporizador de inatividade
     let inactivityTimer;
