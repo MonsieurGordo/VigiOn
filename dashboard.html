@@ -924,11 +924,14 @@
                 }
 
                 let color = '#757575'; // Cor padrão (cinza)
-                const lowerEstado = String(location.estado).toLowerCase();
+                // ALTERADO: Usando EXCLUSIVAMENTE location.estado para determinar a cor do marcador
+                const lowerEstado = String(location.estado || '').toLowerCase(); // Garante que 'estado' é usado
+
                 if      (lowerEstado === 'ativo')     color = '#5A73D4'; // Azul (cor secundária)
                 else if (lowerEstado === 'atencao' || lowerEstado === 'atenção') color = '#FFC107'; // Laranja
                 else if (lowerEstado === 'critico'  || lowerEstado === 'crítico') color = '#F44336'; // Vermelho
                 else if (lowerEstado === 'inativo')  color = '#757575'; // Cinza
+                // Se o estado não corresponder a nenhum dos acima, ele permanecerá cinza (padrão)
 
                 const pinIcon = createPinIcon(color);
                 const marker = L.marker([location.latitude, location.longitude], { icon: pinIcon }).addTo(markersLayer);
@@ -954,7 +957,7 @@
                   <strong>Observações:</strong> ${location.observacoes}
                 `);
 
-                allMarkers.push({ marker, nome: location.nome, lat: location.latitude, lng: location.longitude, estado: location.estado });
+                allMarkers.push({ marker, nome: location.nome, lat: location.latitude, lng: location.longitude, estado: location.estado, protocolo: location.protocolo }); // Adicionado protocolo ao allMarkers
                 bounds.extend([location.latitude, location.longitude]); // Estende o limite para o zoom
             });
 
