@@ -113,13 +113,13 @@
       flex-grow: 1; /* Permite que a lista ocupe espaço disponível */
     }
     .sidebar li {
-      margin-bottom: 0.75rem; /* Mais espaço entre os itens */
+      margin-bottom: 0.75rem; /* Más espaço entre os itens */
     }
     .sidebar li:last-child {
       margin-bottom: 0;
     }
     .sidebar button {
-      width: 100%; padding: 0.8rem; /* Mais padding para botões */
+      width: 100%; padding: 0.8rem; /* Más padding para botões */
       background: #5A73D4; /* Cor secundária para botões de menu */
       border: none;
       color: white;
@@ -201,12 +201,12 @@
     .marker-label-popup {
       font-weight: bold;
       color: #333;
-      padding: 4px 8px; /* Mais padding */
+      padding: 4px 8px; /* Más padding */
       background-color: white;
       border: 1px solid #ccc;
-      border-radius: 6px; /* Cantos mais arredondados */
+      border-radius: 6px; /* Cantos más arredondados */
       font-size: 14px; /* Fonte um pouco maior */
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2); /* Sombra mais suave */
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2); /* Sombra más suave */
       white-space: nowrap;
     }
     .leaflet-popup-content-wrapper {
@@ -220,7 +220,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.6); /* Fundo mais escuro */
+        background-color: rgba(0, 0, 0, 0.6); /* Fundo más escuro */
         display: flex;
         justify-content: center;
         align-items: center;
@@ -236,8 +236,8 @@
     .message-modal-content {
         background-color: white;
         padding: 2rem;
-        border-radius: 0.75rem; /* Mais arredondado */
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); /* Sombra mais pronunciada */
+        border-radius: 0.75rem; /* Más arredondado */
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); /* Sombra más pronunciada */
         text-align: center;
         max-width: 450px; /* Um pouco maior */
         width: 90%;
@@ -253,7 +253,7 @@
         color: #333; /* Cor escura para o título */
     }
     .message-modal-content p {
-        color: #555; /* Cor mais suave para o texto */
+        color: #555; /* Cor más suave para o texto */
     }
     .message-modal-content button {
         background-color: #6200EE; /* Botão OK com cor primária */
@@ -437,6 +437,90 @@
         background-color: #5A73D4;
     }
 
+    /* NOVO: Estilos para o Modal de Atalhos */
+    .shortcuts-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .shortcuts-modal-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    .shortcuts-modal-content {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        text-align: left;
+        max-width: 500px;
+        width: 90%;
+        transform: translateY(-30px);
+        opacity: 0;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .shortcuts-modal-overlay.show .shortcuts-modal-content {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    .shortcuts-modal-content h3 {
+        color: #333;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .shortcuts-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .shortcuts-list li {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .shortcuts-list .shortcut-key {
+        font-weight: 600;
+        color: #6200EE;
+        background-color: #F3F4F6;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.375rem;
+        white-space: nowrap;
+        min-width: 120px; /* Garante largura mínima para as teclas */
+        text-align: center;
+    }
+    .shortcuts-list .shortcut-description {
+        color: #4A5568;
+        font-size: 0.95rem;
+        flex-grow: 1;
+    }
+    .shortcuts-modal-content button {
+        margin-top: 2rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        width: 100%;
+        background-color: #6200EE;
+        color: white;
+    }
+    .shortcuts-modal-content button:hover {
+        background-color: #5A73D4;
+    }
 
   </style>
 </head>
@@ -475,10 +559,17 @@
       </li>
       <li id="rota-placeholder"></li>
 
-      <!-- NOVO: Botão de Configurações -->
+      <!-- Botão de Configurações -->
       <li>
         <button onclick="openSettingsModal()" id="btn-settings">
           Configurações
+        </button>
+      </li>
+
+      <!-- NOVO: Botão de Controles -->
+      <li>
+        <button onclick="openShortcutsModal()" id="btn-controles">
+          Controles
         </button>
       </li>
     </ul>
@@ -527,7 +618,7 @@
       </div>
   </div>
 
-  <!-- NOVO: Modal de Configurações do Mapa -->
+  <!-- Modal de Configurações do Mapa -->
   <div id="settingsModal" class="settings-modal-overlay">
       <div class="settings-modal-content">
           <h3>Configurações do Mapa</h3>
@@ -544,6 +635,25 @@
       </div>
   </div>
 
+  <!-- NOVO: Modal de Atalhos -->
+  <div id="shortcutsModal" class="shortcuts-modal-overlay">
+      <div class="shortcuts-modal-content">
+          <h3>Atalhos de Teclado</h3>
+          <ul class="shortcuts-list">
+              <li>
+                  <span class="shortcut-key">Ctrl + R</span>
+                  <span class="shortcut-description">Atualiza os marcadores do mapa sem alterar o foco ou o zoom atual do usuário.</span>
+              </li>
+              <li>
+                  <span class="shortcut-key">Ctrl + P</span>
+                  <span class="shortcut-description">Imprime o relatório de histórico (Em desenvolvimento).</span>
+              </li>
+              <!-- Adicionar mais atalhos aqui no futuro -->
+          </ul>
+          <button onclick="closeShortcutsModal()">Fechar</button>
+      </div>
+  </div>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -553,7 +663,6 @@
     // URL da sua API do Google Apps Script para ATUALIZAR PERFIL.
     const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brgSr5mAYMNOj9eXDdixQ/exec";
     // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
-    // ATENÇÃO: SUBSTITUA ESTA URL PELA URL REAL DO WEB APP DO SEU NOVO SCRIPT apps_script_fetch_localizacoes!
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
 
     // Variáveis globais para o mapa Leaflet
@@ -662,13 +771,12 @@
             searchInput.value = ''; // Campo vazio
         }
         document.getElementById('search-input').focus();
-        // A funcionalidade de busca será implementada, por enquanto, apenas o mapa é atualizado.
         document.getElementById('btn-search').onclick = () => showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo e atualizando!');
         document.getElementById('search-input').addEventListener('keyup', (e) => {
           if (e.key === 'Enter') showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo e atualizando!');
         });
         // Inicia a atualização do mapa para a view "Localizar Equipe"
-        startMapUpdates();
+        startMapUpdates(true); // Inicia com recentralização
 
       } else if (view === 'historico') {
         document.getElementById('btn-historico').classList.add('active');
@@ -867,9 +975,10 @@
 
     /**
      * Busca os dados de localização via Google Apps Script e atualiza os marcadores no mapa.
-     * @param {boolean} onlyActive - Se true, filtra para exibir apenas marcadores com STATUS 'Ativo'.
+     * @param {boolean} recenterMap - Se true, o mapa será recentralizado e ajustado aos marcadores.
+     * Se false, apenas os marcadores serão atualizados sem mudar o foco do mapa.
      */
-    async function fetchLocalizacoes(onlyActive = false) {
+    async function fetchLocalizacoes(recenterMap = true) {
       if (!map || !markersLayer) {
           console.warn("Mapa ou camada de marcadores não inicializados. Pulando fetchLocalizacoes.");
           return;
@@ -914,9 +1023,8 @@
 
             result.data.forEach(location => {
                 // Filtra por 'Ativo' se onlyActive for true (para a função de rota, por exemplo)
-                if (onlyActive && String(location.estado).toLowerCase() !== 'ativo') {
-                    return;
-                }
+                // Esta lógica de filtro foi movida para o Apps Script ou deve ser adicionada aqui se necessário.
+                // Por enquanto, todos os estados são processados para coloração.
 
                 if (location.latitude == null || location.longitude == null || isNaN(location.latitude) || isNaN(location.longitude)) {
                     console.warn(`Pulando localização inválida para ${location.nome}: Latitude/Longitude inválidas.`);
@@ -963,10 +1071,14 @@
 
             // Ajusta o mapa para mostrar todos os marcadores, se houver
             if (markersLayer.getLayers().length > 0) {
-                map.fitBounds(bounds, { padding: [20, 20] });
+                if (recenterMap) { // Apenas recentraliza se recenterMap for true
+                    map.fitBounds(bounds, { padding: [20, 20] });
+                }
             } else {
-                // Se não houver marcadores, volta para a visão padrão de Cuiabá
-                map.setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM);
+                // Se não houver marcadores, volta para a visão padrão de Cuiabá APENAS se recenterMap for true
+                if (recenterMap) {
+                    map.setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM);
+                }
             }
             console.log(`Localizações atualizadas. ${markersLayer.getLayers().length} marcadores exibidos.`);
         } else {
@@ -979,16 +1091,19 @@
       }
     }
 
-    /** Inicia o temporizador para atualização do mapa a cada 60 segundos. */
-    function startMapUpdates() {
+    /**
+     * Inicia o temporizador para atualização do mapa.
+     * @param {boolean} initialRecenter - Se true, força a recentralização na primeira chamada.
+     */
+    function startMapUpdates(initialRecenter = false) {
         // Limpa qualquer intervalo existente para evitar duplicação
         if (mapUpdateInterval) {
             clearInterval(mapUpdateInterval);
         }
-        // Inicia a primeira busca imediatamente
-        fetchLocalizacoes();
-        // Configura o intervalo para buscas futuras
-        mapUpdateInterval = setInterval(fetchLocalizacoes, MAP_UPDATE_INTERVAL_MS);
+        // Inicia a primeira busca. Se for a carga inicial, recentraliza.
+        fetchLocalizacoes(initialRecenter);
+        // Configura o intervalo para buscas futuras, SEMPRE sem recentralizar
+        mapUpdateInterval = setInterval(() => fetchLocalizacoes(false), MAP_UPDATE_INTERVAL_MS);
         console.log("Atualização automática do mapa iniciada.");
     }
 
@@ -1166,6 +1281,17 @@
         resetInactivityTimer(); // Reinicia o temporizador ao fechar o modal
     }
 
+    // --- NOVO: Funções do Modal de Atalhos ---
+    function openShortcutsModal() {
+        resetInactivityTimer(); // Redefine o temporizador de inatividade
+        document.getElementById('shortcutsModal').classList.add('show');
+    }
+
+    function closeShortcutsModal() {
+        document.getElementById('shortcutsModal').classList.remove('show');
+        resetInactivityTimer(); // Reinicia o temporizador ao fechar o modal
+    }
+
     // --- Inicialização ao Carregar a Página ---
     window.addEventListener('load', async () => {
       // 1. Inicializa o mapa e as camadas primeiro.
@@ -1192,9 +1318,30 @@
         document.addEventListener('touchmove', resetInactivityTimer); // Para dispositivos touch
 
         // Inicia a busca de localizações e o intervalo de atualização para a view padrão (Localizar Equipe)
-        startMapUpdates();
+        // A primeira chamada (no carregamento) deve recentralizar o mapa.
+        startMapUpdates(true); 
       }
       // Se não autenticado, checkDashboardAuth já terá redirecionado
+    });
+
+    // Listener para detectar Ctrl+R e atualizar os marcadores sem recentralizar
+    document.addEventListener('keydown', (event) => {
+        // Verifica se é 'r' ou 'R' e se Ctrl (Windows/Linux) ou Cmd (Mac) está pressionado
+        if ((event.key === 'r' || event.key === 'R') && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault(); // Previne o comportamento padrão do navegador (recarregar a página)
+            console.log("Atualização manual acionada (Ctrl+R). Atualizando marcadores sem recentralizar.");
+            fetchLocalizacoes(false); // Atualiza os marcadores sem recentralizar o mapa
+        }
+        // NOVO: Listener para detectar Ctrl+P e exibir mensagem de "Em desenvolvimento"
+        if ((event.key === 'p' || event.key === 'P') && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault(); // Previne o comportamento padrão do navegador (imprimir)
+            console.log("Atalho para Imprimir Relatório acionado (Ctrl+P). Funcionalidade em desenvolvimento.");
+            showMessageModal("Funcionalidade em Desenvolvimento", "A impressão de relatórios de histórico está em desenvolvimento e será disponibilizada em breve.", null, false);
+        }
+        // Nota: Interceptar a tecla F5 diretamente para impedir o recarregamento total da página
+        // não é possível na maioria dos navegadores por razões de segurança e controle do navegador.
+        // Ao pressionar F5, a página será totalmente recarregada e o script será reiniciado,
+        // resultando no comportamento de recentralização inicial.
     });
   </script>
 </body>
