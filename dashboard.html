@@ -2048,10 +2048,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // URL da sua API do Google Apps Script para AUTENTICAÇÃO E LOGIN (apenas).
+    // URL da sua API do Google Apps Script para AUTENTICAÇÃO, LOGIN E ATUALIZAÇÃO DE PERFIL.
     const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
-    // URL da sua API do Google Apps Script para ATUALIZAR PERFIL.
-    const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brS_r5mAYMNOj9eXDdixQ/exec";
+    // A URL APPS_SCRIPT_UPDATE_PROFILE_URL foi removida, pois a APPS_SCRIPT_AUTH_URL agora centraliza a funcionalidade.
     // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
 
@@ -2226,7 +2225,7 @@
         document.getElementById('search-input').focus();
         document.getElementById('btn-search').onclick = () => showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo e atualizando!');
         document.getElementById('search-input').addEventListener('keyup', (e) => {
-          if (e.key === 'Enter') showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo e atualizando!');
+          if (e.key === 'Enter') showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo!');
         });
         // Inicia a atualização do mapa para a view "Localizar Equipe"
         startMapUpdates(true); // Inicia com recentralização
@@ -2324,7 +2323,7 @@
 
         // Verifica se os dados essenciais para o dashboard estão presentes
         // Agora, incluímos 'password' na verificação, pois ele será salvo no index.html
-        if (!userData || !userData.checkId || !userData.nomeCompleto || !userData.autenticado || !userData.username || !userData.password) {
+        if (!userData || !userData.id || !userData.nome || !userData.autenticado || !userData.username || !userData.password) {
             console.log("Dados essenciais do usuário incompletos no localStorage. Redirecionando para login.");
             localStorage.clear();
             window.location.replace('index.html');
@@ -2332,8 +2331,8 @@
         }
 
         // Preenche as labels diretamente com os dados do localStorage.
-        document.getElementById('loggedInUsername').textContent = userData.nomeCompleto || 'N/A';
-        document.getElementById('loggedInCompany').textContent = userData.company || 'N/A';
+        document.getElementById('loggedInUsername').textContent = userData.nome || 'N/A';
+        document.getElementById('loggedInCompany').textContent = userData.empresa || 'N/A';
         document.getElementById('loggedInAccessType').textContent = userData.tipoAcesso || 'Visitante';
         
         console.log("Usuário autenticado via localStorage.");
@@ -2399,6 +2398,7 @@
       const h12 = hrs24 % 12 || 12; // Converte 0 para 12 para AM/PM
       const mins = pad(date.getMinutes());
       const secs = pad(date.getSeconds());
+      const ampm = hrs24 >= 12 ? 'PM' : 'AM'; // Define AM/PM
       return `${day}/${month}/${year} ${pad(h12)}:${mins}:${secs} ${ampm}`;
     }
 
@@ -2444,7 +2444,7 @@
           return;
       }
       const userData = JSON.parse(userDataString);
-      const username = userData.username;
+      const username = userData.id; // Usar 'id' do userData para o Apps Script
       const password = userData.password; // A senha é necessária para autenticação no Apps Script
 
       if (!username || !password) {
@@ -2474,10 +2474,6 @@
             let bounds = L.latLngBounds([]); // Para ajustar o zoom do mapa
 
             result.data.forEach(location => {
-                // Filtra por 'Ativo' se onlyActive for true (para a função de rota, por exemplo)
-                // Esta lógica de filtro foi movida para o Apps Script ou deve ser adicionada aqui se necessário.
-                // Por enquanto, todos os estados são processados para coloração.
-
                 if (location.latitude == null || location.longitude == null || isNaN(location.latitude) || isNaN(location.longitude)) {
                     console.warn(`Pulando localização inválida para ${location.nome}: Latitude/Longitude inválidas.`);
                     return;
@@ -2583,8 +2579,8 @@
         const userData = JSON.parse(userDataString);
 
         // Preenche os campos do modal com os dados atuais do usuário
-        document.getElementById('editProfileName').value = userData.nomeCompleto || '';
-        document.getElementById('editProfileCompany').value = userData.company || '';
+        document.getElementById('editProfileName').value = userData.nome || '';
+        document.getElementById('editProfileCompany').value = userData.empresa || '';
         // A senha não é preenchida por segurança, o usuário deve digitá-la para alterar
         // ou deixá-la em branco para manter a atual.
         document.getElementById('editProfilePassword').value = ''; 
@@ -2609,8 +2605,8 @@
         }
         const userData = JSON.parse(userDataString);
 
-        const id = userData.username; // O ID é o username salvo no login (Coluna A)
-        const oldName = userData.nomeCompleto; // O nome completo atual (Coluna B)
+        const id = userData.id; // O ID é o 'id' salvo no login
+        const oldName = userData.nome; // O nome completo atual (Coluna B)
         const newName = document.getElementById('editProfileName').value.trim();
         const newCompany = document.getElementById('editProfileCompany').value.trim();
         let newPassword = document.getElementById('editProfilePassword').value.trim();
@@ -2637,6 +2633,7 @@
 
         try {
             const params = new URLSearchParams({
+                action: 'updateProfile', // Adiciona o parâmetro de ação
                 id: id,
                 oldName: oldName,
                 newName: newName,
@@ -2644,9 +2641,9 @@
                 newPassword: newPassword
             });
 
-            console.log("URL de Atualização de Perfil:", `${APPS_SCRIPT_UPDATE_PROFILE_URL}?${params.toString()}`);
+            console.log("URL de Atualização de Perfil:", `${APPS_SCRIPT_AUTH_URL}?${params.toString()}`);
 
-            const response = await fetch(`${APPS_SCRIPT_UPDATE_PROFILE_URL}?${params.toString()}`);
+            const response = await fetch(`${APPS_SCRIPT_AUTH_URL}?${params.toString()}`);
             
             if (!response.ok) {
                 const errorText = await response.text();
