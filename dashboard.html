@@ -554,7 +554,7 @@
     const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brgSr5mAYMNOj9eXDdixQ/exec";
     // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
     // ATENÇÃO: SUBSTITUA ESTA URL PELA URL REAL DO WEB APP DO SEU NOVO SCRIPT apps_script_fetch_localizacoes!
-    const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbz-ILoRIHtJ4gnVCSXO7U3fr1vPusg68znBh5rD-VDGoGKyKXvdGTUNsR8J2MLqzMFuVQ/exec"; 
+    const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
 
     // Variáveis globais para o mapa Leaflet
     let map;
@@ -924,7 +924,7 @@
                 }
 
                 let color = '#757575'; // Cor padrão (cinza)
-                // ALTERADO: Usando EXCLUSIVAMENTE location.estado para determinar a cor do marcador
+                // Usando EXCLUSIVAMENTE location.estado para determinar a cor do marcador
                 const lowerEstado = String(location.estado || '').toLowerCase(); // Garante que 'estado' é usado
 
                 if      (lowerEstado === 'ativo')     color = '#5A73D4'; // Azul (cor secundária)
