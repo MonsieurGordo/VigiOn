@@ -1274,7 +1274,7 @@
         }
     }
 
-    /* Estilos para o novo Modal de Adição de Permissão */
+    /* NOVO: Estilos para o Modal de Adição de Permissão */
     .add-permission-modal-overlay {
         position: fixed;
         top: 0;
@@ -2050,7 +2050,6 @@
   <script>
     // URL da sua API do Google Apps Script para AUTENTICAÇÃO, LOGIN E ATUALIZAÇÃO DE PERFIL.
     const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
-    // A URL APPS_SCRIPT_UPDATE_PROFILE_URL foi removida, pois a APPS_SCRIPT_AUTH_URL agora centraliza a funcionalidade.
     // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
 
@@ -2075,9 +2074,6 @@
     const CUIABA_LAT = -15.6014;
     const CUIABA_LON = -56.0979;
     const INITIAL_ZOOM = 13; // Nível de zoom razoável para a cidade
-
-    // As constantes SHEET_ID, SHEET_NAME_LOCAL, SHEET_NAME_HIST, SHEET_URL_LOCAL, SHEET_URL_HIST
-    // foram removidas daqui, pois o acesso à planilha é feito via Apps Script.
 
     // Variável para o temporizador de inatividade
     let inactivityTimer;
@@ -2323,7 +2319,7 @@
 
         // Verifica se os dados essenciais para o dashboard estão presentes
         // Agora, incluímos 'password' na verificação, pois ele será salvo no index.html
-        if (!userData || !userData.id || !userData.nome || !userData.autenticado || !userData.username || !userData.password) {
+        if (!userData || !userData.id || !userData.nomeCompleto || !userData.autenticado || !userData.username || !userData.password) {
             console.log("Dados essenciais do usuário incompletos no localStorage. Redirecionando para login.");
             localStorage.clear();
             window.location.replace('index.html');
@@ -2331,8 +2327,8 @@
         }
 
         // Preenche as labels diretamente com os dados do localStorage.
-        document.getElementById('loggedInUsername').textContent = userData.nome || 'N/A';
-        document.getElementById('loggedInCompany').textContent = userData.empresa || 'N/A';
+        document.getElementById('loggedInUsername').textContent = userData.nomeCompleto || 'N/A';
+        document.getElementById('loggedInCompany').textContent = userData.company || 'N/A';
         document.getElementById('loggedInAccessType').textContent = userData.tipoAcesso || 'Visitante';
         
         console.log("Usuário autenticado via localStorage.");
@@ -2579,8 +2575,8 @@
         const userData = JSON.parse(userDataString);
 
         // Preenche os campos do modal com os dados atuais do usuário
-        document.getElementById('editProfileName').value = userData.nome || '';
-        document.getElementById('editProfileCompany').value = userData.empresa || '';
+        document.getElementById('editProfileName').value = userData.nomeCompleto || '';
+        document.getElementById('editProfileCompany').value = userData.company || '';
         // A senha não é preenchida por segurança, o usuário deve digitá-la para alterar
         // ou deixá-la em branco para manter a atual.
         document.getElementById('editProfilePassword').value = ''; 
@@ -2606,7 +2602,7 @@
         const userData = JSON.parse(userDataString);
 
         const id = userData.id; // O ID é o 'id' salvo no login
-        const oldName = userData.nome; // O nome completo atual (Coluna B)
+        const oldName = userData.nomeCompleto; // O nome completo atual (Coluna B)
         const newName = document.getElementById('editProfileName').value.trim();
         const newCompany = document.getElementById('editProfileCompany').value.trim();
         let newPassword = document.getElementById('editProfilePassword').value.trim();
@@ -2633,7 +2629,7 @@
 
         try {
             const params = new URLSearchParams({
-                action: 'updateProfile', // Adiciona o parâmetro de ação
+                action: 'updateProfile', // Adiciona o parâmetro de ação para o Apps Script
                 id: id,
                 oldName: oldName,
                 newName: newName,
