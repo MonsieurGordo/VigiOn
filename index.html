@@ -43,7 +43,7 @@
             padding: 0.8rem 1rem; /* Mais padding */
             margin-bottom: 1rem;
             border: 1px solid #CBD5E0; /* Cor de borda mais suave */
-            border-radius: 0.5rem; /* Mais arredondado */
+            border-radius: 0.5rem; /* Más arredondado */
             font-size: 1rem;
             transition: all 0.3s ease;
             box-sizing: border-box; /* Garante que padding não adicione à largura total */
@@ -174,6 +174,7 @@
 
     <script>
         // URL da sua API do Google Apps Script para AUTENTICAÇÃO, LOGIN E ATUALIZAÇÃO DE PERFIL.
+        // Esta URL agora aponta para o script unificado que usa doPost.
         const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
 
         // Referências aos elementos HTML
@@ -250,16 +251,23 @@
             loginButton.disabled = true;
 
             try {
-                // Adiciona o parâmetro 'action: login'
+                // Prepara os parâmetros para a requisição POST
                 const params = new URLSearchParams({
-                    action: 'login', // <--- Adicionado o parâmetro 'action'
+                    action: 'login', // Ação para o Apps Script
                     username: username,
                     password: password
                 });
 
-                console.log("URL da requisição API (Login):", `${APPS_SCRIPT_AUTH_URL}?${params.toString()}`); 
+                console.log("Enviando requisição POST para: ", APPS_SCRIPT_AUTH_URL); 
+                console.log("Corpo da requisição: ", params.toString());
 
-                const response = await fetch(`${APPS_SCRIPT_AUTH_URL}?${params.toString()}`);
+                const response = await fetch(APPS_SCRIPT_AUTH_URL, {
+                    method: 'POST', // Define o método como POST
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded', // Define o tipo de conteúdo
+                    },
+                    body: params.toString(), // Envia os parâmetros no corpo da requisição
+                });
                 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -272,9 +280,9 @@
 
                 if (responseData.status === "sucesso" && responseData.data.autenticado === true) {
                     const userDataToStore = {
-                        id: responseData.data.id, // O ID real do usuário
-                        username: responseData.data.id, // Mantém para compatibilidade com o que era usado antes
-                        password: password, 
+                        id: responseData.data.id, // O ID real do usuário do Apps Script
+                        username: responseData.data.id, // Mantém para compatibilidade
+                        password: password, // Salva a senha para re-autenticação após atualização de perfil
                         nomeCompleto: responseData.data.nome, 
                         company: responseData.data.empresa || 'N/A', 
                         autenticado: responseData.data.autenticado, 
