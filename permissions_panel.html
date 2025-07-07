@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VigiOn – Painel de Permissões</title>
+    <!-- Tailwind CSS para estilização e responsividade -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte Poppins para consistência com a tela de login -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos globais para o corpo e HTML */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5; /* Fundo claro para a tela */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto; /* Permite rolagem se o conteúdo exceder a altura */
+        }
+
+        /* Cores personalizadas (consistentes com o VigiOn) */
+        .custom-bg-primary { background-color: #6200EE; } /* Primária: Roxo */
+        .custom-bg-secondary { background-color: #5A73D4; } /* Secundária: Azul vibrante */
+        .custom-text-primary { color: #6200EE; }
+        .custom-text-secondary { color: #5A73D4; }
+
+        /* Estilos para o Painel de Permissões (similar ao modal de cadastros) */
+        .permissions-panel-container {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            max-width: 90%; /* Máximo de 90% da largura da viewport */
+            width: 1000px; /* Largura fixa para telas maiores */
+            height: 90vh; /* 90% da altura da viewport */
+            display: flex;
+            flex-direction: column;
+            margin: 2rem auto; /* Centraliza e adiciona margem */
+        }
+        .permissions-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #5A73D4;
+            color: white;
+            padding: 1rem 1.5rem;
+            margin: -1.5rem -1.5rem 1.5rem -1.5rem; /* Ajusta margem para cobrir o padding do container */
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+        }
+        .permissions-panel-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        .permissions-panel-header button { /* Estilo para o botão "+ Adicionar" */
+            background-color: #6200EE;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .permissions-panel-header button:hover {
+            background-color: #5A73D4;
+        }
+
+        /* Estilos para filtros e tabela */
+        .permissions-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        .permissions-filters input {
+            flex-grow: 1;
+            padding: 0.6rem 1rem;
+            border: 1px solid #CBD5E0;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .permissions-filters select {
+            padding: 0.6rem 1rem;
+            border: 1px solid #CBD5E0;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            background-color: white;
+        }
+        .permissions-table-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 1px solid #E2E8F0;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .permissions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .permissions-table th, .permissions-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .permissions-table th {
+            background-color: #F7FAFC;
+            font-weight: 600;
+            color: #4A5568;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .permissions-table tbody tr:hover {
+            background-color: #F0F4F8;
+        }
+        .permissions-table .action-buttons button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.4rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease;
+        }
+        .permissions-table .action-buttons button:hover {
+            background-color: #E2E8F0;
+        }
+        .permissions-table .action-buttons svg {
+            width: 18px;
+            height: 18px;
+            color: #718096;
+        }
+        .permissions-table .permission-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: #6200EE; /* Cor do checkbox */
+            cursor: pointer;
+        }
+        .permissions-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #718096;
+        }
+        .permissions-pagination-buttons button {
+            background-color: #F7FAFC;
+            border: 1px solid #E2E8F0;
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin: 0 0.2rem;
+        }
+        .permissions-pagination-buttons button:hover {
+            background-color: #E2E8F0;
+        }
+        .permissions-pagination-buttons button.active {
+            background-color: #6200EE;
+            color: white;
+            border-color: #6200EE;
+        }
+        .permissions-pagination-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Rodapé do Painel de Permissões com o botão de fechar/voltar */
+        .permissions-panel-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 1rem;
+            border-top: 1px solid #E2E8F0;
+            margin-top: auto;
+            align-items: center;
+        }
+        .permissions-panel-footer .back-button {
+            background-color: #F44336; /* Red color for exit button */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .permissions-panel-footer .back-button:hover {
+            background-color: #D32F2F;
+        }
+        .permissions-panel-footer .back-button svg {
+            width: 20px;
+            height: 20px;
+            color: white;
+        }
+
+        /* Media Queries para responsividade do Painel de Permissões */
+        @media (max-width: 768px) {
+            .permissions-panel-container {
+                padding: 1rem;
+                max-width: 95%;
+                width: auto;
+                height: 95vh;
+                margin: 1rem auto;
+            }
+            .permissions-panel-header {
+                padding: 0.8rem 1rem;
+                margin: -1rem -1rem 1rem -1rem;
+            }
+            .permissions-panel-header h3 {
+                font-size: 1.2rem;
+            }
+            .permissions-panel-header button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            .permissions-filters {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .permissions-filters input, .permissions-filters select {
+                width: 100%;
+            }
+            .permissions-table th, .permissions-table td {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .permissions-pagination {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .permissions-pagination-buttons button {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+            }
+            .permissions-panel-footer .back-button {
+                font-size: 0.9rem;
+                padding: 0.4rem 0.8rem;
+            }
+            .permissions-panel-footer .back-button svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        /* Estilos para o Modal de Adição de Permissão (dentro desta nova tela) */
+        .add-permission-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2001; /* Acima do painel */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .add-permission-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .add-permission-modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            text-align: left;
+            max-width: 500px;
+            width: 90%;
+            transform: translateY(-30px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .add-permission-modal-overlay.show .add-permission-modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .add-permission-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .add-permission-modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        .add-permission-modal-content label {
+            font-weight: 500;
+            color: #4A5568;
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+        .add-permission-modal-content input[type="text"],
+        .add-permission-modal-content select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #CBD5E0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+            margin-bottom: 1rem;
+        }
+        .add-permission-modal-content input:focus,
+        .add-permission-modal-content select:focus {
+            outline: none;
+            border-color: #6200EE;
+            box-shadow: 0 0 0 3px rgba(98, 0, 238, 0.2);
+        }
+        .add-permission-modal-content .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .add-permission-modal-content .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+        .add-permission-modal-content .checkbox-group input[type="checkbox"] {
+            margin-right: 0.75rem;
+            accent-color: #6200EE;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .add-permission-modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .add-permission-modal-buttons button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .add-permission-modal-buttons button.cancel-btn {
+            background-color: #E2E8F0;
+            color: #2D3748;
+        }
+        .add-permission-modal-buttons button.cancel-btn:hover {
+            background-color: #CBD5E0;
+        }
+        .add-permission-modal-buttons button.save-btn {
+            background-color: #6200EE;
+            color: white;
+        }
+        .add-permission-modal-buttons button.save-btn:hover {
+            background-color: #5A73D4;
+        }
+        @media (max-width: 640px) {
+            .add-permission-modal-content {
+                padding: 1rem;
+                width: 95%;
+            }
+            .add-permission-modal-header h3 {
+                font-size: 1.3rem;
+            }
+            .add-permission-modal-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .add-permission-modal-buttons button {
+                width: 100%;
+            }
+        }
+
+        /* Modal para Mensagens de Erro/Validação (copiado do dashboard) */
+        .message-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000; /* Z-index mais alto para garantir que apareça sobre tudo */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .message-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .message-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            transform: translateY(-30px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .message-modal-overlay.show .message-modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .message-modal-content h3 {
+            color: #333;
+        }
+        .message-modal-content p {
+            color: #555;
+        }
+        .message-modal-content button {
+            background-color: #6200EE;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        .message-modal-content button:hover {
+            background-color: #5A73D4;
+        }
+    </style>
+</head>
+<body>
+    <div class="permissions-panel-container">
+        <div class="permissions-panel-header">
+            <h3>Painel de Permissões</h3>
+            <button id="addPermissionButton">+ Adicionar</button>
+        </div>
+        
+        <div class="permissions-filters">
+            <input type="text" id="searchPermissionInput" placeholder="Pesquisar por tipo de acesso..." />
+        </div>
+
+        <div class="permissions-table-container">
+            <table class="permissions-table">
+                <thead>
+                    <tr>
+                        <th>TIPO DE ACESSO</th>
+                        <th>VISUALIZAR MAPA</th>
+                        <th>LOCALIZAR EQUIPE</th>
+                        <th>HISTÓRICO</th>
+                        <th>AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody id="permissionsTableBody">
+                    <!-- Dados de permissões serão carregados aqui via JS -->
+                </tbody>
+            </table>
+        </div>
+        <div class="permissions-pagination">
+            <span>Mostrando 1 a 4 de 4 resultados</span>
+            <div class="permissions-pagination-buttons">
+                <button>&lt;</button>
+                <button class="active">1</button>
+                <button disabled>&gt;</button>
+            </div>
+        </div>
+
+        <div class="permissions-panel-footer">
+            <button class="back-button" onclick="window.location.href = 'dashboard.html'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                Voltar ao Dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar Nova Permissão (dentro desta tela) -->
+    <div id="addPermissionModal" class="add-permission-modal-overlay">
+        <div class="add-permission-modal-content">
+            <div class="add-permission-modal-header">
+                <h3>Adicionar Nova Permissão</h3>
+            </div>
+            <label for="addPermissionAccessType">Tipo de Acesso</label>
+            <input type="text" id="addPermissionAccessType" placeholder="Ex: Supervisor">
+
+            <label for="addPermissionCompany">Empresa</label>
+            <select id="addPermissionCompany">
+                <option value="">Selecione uma empresa</option>
+                <option value="Empresa A">Empresa A</option>
+                <option value="Empresa B">Empresa B</option>
+                <option value="Empresa C">Empresa C</option>
+                <!-- Futuramente, esta lista será preenchida dinamicamente -->
+            </select>
+
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="addPermissionViewMap"> Visualizar Mapa
+                </label>
+                <label>
+                    <input type="checkbox" id="addPermissionLocateTeam"> Localizar Equipe
+                </label>
+                <label>
+                    <input type="checkbox" id="addPermissionViewHistory"> Visualizar Histórico
+                </label>
+                <label>
+                    <input type="checkbox" id="addPermissionPrintHistory"> Imprimir Histórico
+                </label>
+                <label>
+                    <input type="checkbox" id="addPermissionCreateRoute"> Criar Rota
+                </label>
+                <label>
+                    <input type="checkbox" id="addPermissionSettings"> Configurações
+                </label>
+                <label>
+                    <input type="checkbox" id="addPermissionViewUsers"> Visualizar Cadastros (usuários)
+                </label>
+                <label>
+                    <input type="checkbox" id="addPermissionViewCompanies"> Visualizar Cadastros (empresas)
+                </label>
+                <label>
+                    <input type="checkbox" id="addPermissionRegisterUsers"> Cadastrar (usuários)
+                </label>
+                <label>
+                    <input type="checkbox" id="addPermissionRegisterCompanies"> Cadastrar (empresas)
+                </label>
+            </div>
+
+            <div class="add-permission-modal-buttons">
+                <button class="cancel-btn" onclick="closeAddPermissionModal()">Cancelar</button>
+                <button class="save-btn" onclick="saveNewPermission()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Mensagens de Erro/Validação (copiado para esta tela também) -->
+    <div id="messageModal" class="message-modal-overlay">
+        <div class="message-modal-content">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Atenção!</h3>
+            <p id="modalMessageText" class="text-gray-700 mb-6">Mensagem de exemplo.</p>
+            <button id="closeModalButton" class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Variável para o temporizador de inatividade (copiado do dashboard)
+        let inactivityTimer;
+        const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos
+
+        // Dados de exemplo para as permissões (agora nesta tela)
+        let permissionsData = [
+            { 
+                accessType: 'Admin', 
+                company: 'Todas', 
+                viewMap: true, 
+                locateTeam: true, 
+                viewHistory: true, 
+                printHistory: true, 
+                createRoute: true, 
+                settings: true, 
+                viewUsers: true, 
+                viewCompanies: true, 
+                registerUsers: true, 
+                registerCompanies: true 
+            },
+            { 
+                accessType: 'Gestor', 
+                company: 'Empresa A', 
+                viewMap: true, 
+                locateTeam: true, 
+                viewHistory: true, 
+                printHistory: false,
+                createRoute: true,
+                settings: false,
+                viewUsers: true,
+                viewCompanies: true,
+                registerUsers: false,
+                registerCompanies: false
+            },
+            { 
+                accessType: 'Usuário', 
+                company: 'Empresa B', 
+                viewMap: true, 
+                locateTeam: false, 
+                viewHistory: true, 
+                printHistory: false,
+                createRoute: false,
+                settings: false,
+                viewUsers: false,
+                viewCompanies: false,
+                registerUsers: false,
+                registerCompanies: false
+            },
+            { 
+                accessType: 'Visitante', 
+                company: 'Empresa C', 
+                viewMap: true, 
+                locateTeam: false, 
+                viewHistory: false, 
+                printHistory: false,
+                createRoute: false,
+                settings: false,
+                viewUsers: false,
+                viewCompanies: false,
+                registerUsers: false,
+                registerCompanies: false
+            }
+        ];
+
+        /** Funções do Modal de Mensagens (copiado do dashboard) */
+        function showMessageModal(title, message, callback = null) {
+            const modalOverlay = document.getElementById('messageModal');
+            const modalTitle = modalOverlay.querySelector('h3');
+            const modalMessageText = document.getElementById('modalMessageText');
+            const closeModalButton = document.getElementById('closeModalButton');
+            
+            modalTitle.textContent = title;
+            modalMessageText.textContent = message;
+            modalOverlay.classList.add('show');
+
+            closeModalButton.removeEventListener('click', modalCallbackHandler);
+            closeModalButton.addEventListener('click', modalCallbackHandler);
+
+            function modalCallbackHandler() {
+                modalOverlay.classList.remove('show');
+                closeModalButton.removeEventListener('click', modalCallbackHandler);
+                if (callback) {
+                    callback();
+                }
+            }
+        }
+
+        /** Logout do usuário (copiado do dashboard) */
+        function logout() {
+            localStorage.removeItem('vigion_user_data');
+            localStorage.removeItem('vigion_username');
+            localStorage.removeItem('vigion_company'); 
+            window.location.replace('index.html'); 
+        }
+
+        /**
+         * Reinicia o temporizador de inatividade (copiado do dashboard).
+         * Chama logout() se o tempo limite for atingido.
+         */
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                console.log("Usuário inativo por mais de 30 minutos. Deslogando...");
+                showMessageModal("Sessão Expirada", "Você foi desconectado devido à inatividade.", () => {
+                    logout();
+                });
+            }, INACTIVITY_TIMEOUT);
+        }
+
+        // Função para renderizar a tabela de permissões
+        function renderPermissionsTable(data) {
+            const tableBody = document.getElementById('permissionsTableBody');
+            tableBody.innerHTML = ''; // Limpa o corpo da tabela
+
+            data.forEach(permission => {
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${permission.accessType}</td>
+                    <td><input type="checkbox" class="permission-checkbox" ${permission.viewMap ? 'checked' : ''} disabled></td>
+                    <td><input type="checkbox" class="permission-checkbox" ${permission.locateTeam ? 'checked' : ''} disabled></td>
+                    <td><input type="checkbox" class="permission-checkbox" ${permission.viewHistory ? 'checked' : ''} disabled></td>
+                    <td class="action-buttons">
+                        <button title="Visualizar Permissões" onclick="viewPermission('${permission.accessType}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                        <button title="Editar Permissões" onclick="editPermission('${permission.accessType}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                        </button>
+                        <button title="Excluir Permissão" onclick="deletePermission('${permission.accessType}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </button>
+                    </td>
+                `;
+            });
+        }
+
+        // Lógica de filtragem da tabela de permissões (simulada)
+        document.getElementById('searchPermissionInput').addEventListener('input', (event) => {
+            const searchTerm = event.target.value.toLowerCase();
+            const filteredData = permissionsData.filter(p => 
+                p.accessType.toLowerCase().includes(searchTerm)
+            );
+            renderPermissionsTable(filteredData);
+        });
+
+        // Função para abrir o modal de adição de permissão
+        document.getElementById('addPermissionButton').addEventListener('click', () => {
+            openAddPermissionModal();
+        });
+
+        function openAddPermissionModal() {
+            resetInactivityTimer();
+            document.getElementById('addPermissionModal').classList.add('show');
+            // Limpa os campos e define valores padrão
+            document.getElementById('addPermissionAccessType').value = '';
+            document.getElementById('addPermissionCompany').value = ''; // Define vazio para "Selecione uma empresa"
+            document.getElementById('addPermissionViewMap').checked = false;
+            document.getElementById('addPermissionLocateTeam').checked = false;
+            document.getElementById('addPermissionViewHistory').checked = false;
+            document.getElementById('addPermissionPrintHistory').checked = false;
+            document.getElementById('addPermissionCreateRoute').checked = false;
+            document.getElementById('addPermissionSettings').checked = false;
+            document.getElementById('addPermissionViewUsers').checked = false;
+            document.getElementById('addPermissionViewCompanies').checked = false;
+            document.getElementById('addPermissionRegisterUsers').checked = false;
+            document.getElementById('addPermissionRegisterCompanies').checked = false;
+        }
+
+        function closeAddPermissionModal() {
+            document.getElementById('addPermissionModal').classList.remove('show');
+            resetInactivityTimer();
+        }
+
+        function saveNewPermission() {
+            const accessType = document.getElementById('addPermissionAccessType').value.trim();
+            const company = document.getElementById('addPermissionCompany').value;
+            const viewMap = document.getElementById('addPermissionViewMap').checked;
+            const locateTeam = document.getElementById('addPermissionLocateTeam').checked;
+            const viewHistory = document.getElementById('addPermissionViewHistory').checked;
+            const printHistory = document.getElementById('addPermissionPrintHistory').checked;
+            const createRoute = document.getElementById('addPermissionCreateRoute').checked;
+            const settings = document.getElementById('addPermissionSettings').checked;
+            const viewUsers = document.getElementById('addPermissionViewUsers').checked;
+            const viewCompanies = document.getElementById('addPermissionViewCompanies').checked;
+            const registerUsers = document.getElementById('addPermissionRegisterUsers').checked;
+            const registerCompanies = document.getElementById('addPermissionRegisterCompanies').checked;
+
+            if (!accessType || !company) {
+                showMessageModal("Atenção", "Por favor, preencha o 'Tipo de Acesso' e selecione uma 'Empresa'.");
+                return;
+            }
+
+            // Verifica se já existe um tipo de acesso com esse nome (case-insensitive)
+            const exists = permissionsData.some(p => p.accessType.toLowerCase() === accessType.toLowerCase());
+            if (exists) {
+                showMessageModal("Erro", `O tipo de acesso "${accessType}" já existe.`);
+                return;
+            }
+
+            const newPermission = { 
+                accessType, 
+                company,
+                viewMap, 
+                locateTeam, 
+                viewHistory, 
+                printHistory,
+                createRoute,
+                settings,
+                viewUsers,
+                viewCompanies,
+                registerUsers,
+                registerCompanies
+            };
+            permissionsData.push(newPermission);
+            renderPermissionsTable(permissionsData); // Atualiza a tabela
+            showMessageModal("Sucesso", `Permissão para "${accessType}" adicionada!`);
+            closeAddPermissionModal();
+        }
+
+        function viewPermission(accessType) {
+            showMessageModal("Funcionalidade em Desenvolvimento", `A visualização detalhada das permissões para "${accessType}" será implementada em breve.`);
+        }
+
+        function editPermission(accessType) {
+            showMessageModal("Funcionalidade em Desenvolvimento", `A edição de permissões para "${accessType}" será implementada em breve.`);
+        }
+
+        function deletePermission(accessType) {
+            showMessageModal("Confirmação", `Tem certeza que deseja excluir a permissão para "${accessType}"?`, () => {
+                permissionsData = permissionsData.filter(p => p.accessType !== accessType);
+                renderPermissionsTable(permissionsData);
+                showMessageModal("Sucesso", `Permissão para "${accessType}" excluída!`);
+            });
+        }
+
+        // Inicialização ao carregar a página
+        window.addEventListener('load', () => {
+            // Renderiza a tabela de permissões ao carregar a página
+            renderPermissionsTable(permissionsData);
+            // Inicia o temporizador de inatividade
+            resetInactivityTimer();
+
+            // Adiciona event listeners para reiniciar o temporizador em qualquer interação
+            document.addEventListener('mousemove', resetInactivityTimer);
+            document.addEventListener('keypress', resetInactivityTimer);
+            document.addEventListener('click', resetInactivityTimer);
+            document.addEventListener('scroll', resetInactivityTimer);
+            document.addEventListener('touchstart', resetInactivityTimer);
+            document.addEventListener('touchmove', resetInactivityTimer);
+        });
+    </script>
+</body>
+</html>
