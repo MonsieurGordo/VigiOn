@@ -170,6 +170,25 @@
             accent-color: #6200EE; /* Cor do checkbox */
             cursor: pointer;
         }
+        /* Estilo para a célula do checkbox e texto SIM/NÃO */
+        .permissions-table td.checkbox-cell {
+            /* Removido display: flex e justify-content aqui para que o label interno controle */
+            text-align: center; /* Centraliza o conteúdo (o label) dentro da célula */
+        }
+        .permissions-table td.checkbox-cell label { /* Estilo para o label que envolve checkbox e texto */
+            display: inline-flex; /* Usa inline-flex para não quebrar a linha da célula */
+            align-items: center;
+            justify-content: center; /* Centraliza o conteúdo horizontalmente dentro do label */
+            gap: 0.25rem; /* Espaço entre o checkbox e o texto */
+            width: 100%; /* Ocupa a largura total para centralizar */
+        }
+        .permissions-table td.checkbox-cell label span {
+            font-size: 0.75rem; /* Tamanho da fonte para SIM/NÃO */
+            font-weight: 500;
+            color: #4A5568;
+            white-space: nowrap; /* Impede que o texto quebre linha */
+        }
+
         .permissions-pagination {
             display: flex;
             justify-content: space-between;
@@ -185,9 +204,6 @@
             cursor: pointer;
             transition: background-color 0.2s ease;
             margin: 0 0.2rem;
-        }
-        .permissions-pagination-buttons button:hover {
-            background-color: #E2E8F0;
         }
         .permissions-pagination-buttons button.active {
             background-color: #6200EE;
@@ -272,6 +288,7 @@
                 width: 14px;
                 height: 14px;
             }
+            /* Removido flex-direction: column para o label interno em telas menores */
             .permissions-pagination {
                 flex-direction: column;
                 gap: 0.5rem;
@@ -967,16 +984,66 @@
                 row.innerHTML = `
                     <td data-column-id="company">${permission.company}</td>
                     <td data-column-id="accessType">${permission.accessType}</td>
-                    <td data-column-id="viewMap"><input type="checkbox" class="permission-checkbox" ${permission.viewMap ? 'checked' : ''} disabled></td>
-                    <td data-column-id="locateTeam"><input type="checkbox" class="permission-checkbox" ${permission.locateTeam ? 'checked' : ''} disabled></td>
-                    <td data-column-id="viewHistory"><input type="checkbox" class="permission-checkbox" ${permission.viewHistory ? 'checked' : ''} disabled></td>
-                    <td data-column-id="printHistory"><input type="checkbox" class="permission-checkbox" ${permission.printHistory ? 'checked' : ''} disabled></td>
-                    <td data-column-id="createRoute"><input type="checkbox" class="permission-checkbox" ${permission.createRoute ? 'checked' : ''} disabled></td>
-                    <td data-column-id="settings"><input type="checkbox" class="permission-checkbox" ${permission.settings ? 'checked' : ''} disabled></td>
-                    <td data-column-id="viewUsers"><input type="checkbox" class="permission-checkbox" ${permission.viewUsers ? 'checked' : ''} disabled></td>
-                    <td data-column-id="viewCompanies"><input type="checkbox" class="permission-checkbox" ${permission.viewCompanies ? 'checked' : ''} disabled></td>
-                    <td data-column-id="registerUsers"><input type="checkbox" class="permission-checkbox" ${permission.registerUsers ? 'checked' : ''} disabled></td>
-                    <td data-column-id="registerCompanies"><input type="checkbox" class="permission-checkbox" ${permission.registerCompanies ? 'checked' : ''} disabled></td>
+                    <td data-column-id="viewMap" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.viewMap ? 'checked' : ''} disabled>
+                            <span>${permission.viewMap ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
+                    <td data-column-id="locateTeam" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.locateTeam ? 'checked' : ''} disabled>
+                            <span>${permission.locateTeam ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
+                    <td data-column-id="viewHistory" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.viewHistory ? 'checked' : ''} disabled>
+                            <span>${permission.viewHistory ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
+                    <td data-column-id="printHistory" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.printHistory ? 'checked' : ''} disabled>
+                            <span>${permission.printHistory ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
+                    <td data-column-id="createRoute" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.createRoute ? 'checked' : ''} disabled>
+                            <span>${permission.createRoute ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
+                    <td data-column-id="settings" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.settings ? 'checked' : ''} disabled>
+                            <span>${permission.settings ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
+                    <td data-column-id="viewUsers" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.viewUsers ? 'checked' : ''} disabled>
+                            <span>${permission.viewUsers ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
+                    <td data-column-id="viewCompanies" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.viewCompanies ? 'checked' : ''} disabled>
+                            <span>${permission.viewCompanies ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
+                    <td data-column-id="registerUsers" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.registerUsers ? 'checked' : ''} disabled>
+                            <span>${permission.registerUsers ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
+                    <td data-column-id="registerCompanies" class="checkbox-cell">
+                        <label class="flex items-center justify-center gap-1">
+                            <input type="checkbox" class="permission-checkbox" ${permission.registerCompanies ? 'checked' : ''} disabled>
+                            <span>${permission.registerCompanies ? 'SIM' : 'NÃO'}</span>
+                        </label>
+                    </td>
                     <td class="action-buttons" data-column-id="actions">
                         <button title="Visualizar Permissões" onclick="viewPermission('${permission.accessType}')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -1152,14 +1219,17 @@
         }
 
         function toggleColumnVisibility(columnId, isVisible) {
+            // Conta quantas colunas estão ocultas *antes* da mudança atual
             const currentlyHidden = Object.values(columnVisibility).filter(v => !v).length;
             const maxHidden = 3; // Limite de colunas que podem ser ocultadas
 
             if (!isVisible && currentlyHidden >= maxHidden) {
                 // Se o usuário tentar ocultar mais de 3 colunas, reverte o checkbox e avisa
                 showMessageModal("Atenção", `Você pode ocultar no máximo ${maxHidden} colunas. Desmarque uma coluna oculta para ocultar outra.`);
-                document.getElementById(`toggle-${columnId}`).checked = true; // Reverte o estado do checkbox
-                return;
+                // Não é necessário reverter o checkbox aqui, pois ele já não foi alterado no evento 'change'
+                // O estado do checkbox no DOM já reflete o estado ANTERIOR ao clique que causou a tentativa de ocultar.
+                // A função updateCheckboxStates() será chamada em seguida e irá corrigir o estado visual.
+                return; // Impede a alteração do estado da coluna
             }
 
             columnVisibility[columnId] = isVisible; // Atualiza o estado
@@ -1192,8 +1262,9 @@
                 if (!col.essential) {
                     const checkbox = document.getElementById(`toggle-${col.id}`);
                     if (checkbox) {
-                        if (currentlyHidden >= maxHidden && !checkbox.checked) {
-                            // Desabilita o checkbox se o limite for atingido e a coluna não estiver visível
+                        // Se a coluna está visível E o limite de ocultas foi atingido, desabilita para impedir ocultar mais.
+                        // Se a coluna está oculta, ela DEVE permanecer habilitada para poder ser reexibida.
+                        if (columnVisibility[col.id] === true && currentlyHidden >= maxHidden) {
                             checkbox.disabled = true;
                         } else {
                             checkbox.disabled = false;
