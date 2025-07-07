@@ -870,7 +870,7 @@
         color: #333;
         margin: 0;
     }
-    /* O botão de fechar 'X' foi removido, então este estilo não é mais necessário */
+    /* O botão de fechar 'X' foi removido, então este estilo não é más necessário */
     /* .add-modal-header .close-button {
         background: none;
         border: none;
@@ -1005,7 +1005,7 @@
         .add-modal-header h3 {
             font-size: 1.3rem;
         }
-        /* O botão de fechar 'X' foi removido, então este estilo não é mais necessário */
+        /* O botão de fechar 'X' foi removido, então este estilo não é más necessário */
         /* .add-modal-header .close-button {
             font-size: 1.5rem;
         } */
@@ -1285,7 +1285,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 2001; /* Acima do modal de permissões */
+        z-index: 2001;
         opacity: 0;
         visibility: hidden;
         transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -2048,8 +2048,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // URL da sua API do Google Apps Script para AUTENTICAÇÃO, LOGIN E ATUALIZAÇÃO DE PERFIL.
+    // URL da sua API do Google Apps Script para AUTENTICAÇÃO E LOGIN (apenas).
     const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
+    // URL da sua API do Google Apps Script para ATUALIZAR PERFIL.
+    // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU SCRIPT DE ATUALIZAÇÃO DE PERFIL PUBLICADO!**
+    const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brgSr5mAYMNOj9eXDdixQ/exec"; // URL fornecida pelo usuário
     // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
 
@@ -2319,7 +2322,8 @@
 
         // Verifica se os dados essenciais para o dashboard estão presentes
         // Agora, incluímos 'password' na verificação, pois ele será salvo no index.html
-        if (!userData || !userData.id || !userData.nomeCompleto || !userData.autenticado || !userData.username || !userData.password) {
+        // O `id` é o `username` que o Apps Script retorna como `data.id`
+        if (!userData || !userData.id || !userData.nomeCompleto || !userData.autenticado || !userData.password) {
             console.log("Dados essenciais do usuário incompletos no localStorage. Redirecionando para login.");
             localStorage.clear();
             window.location.replace('index.html');
@@ -2601,7 +2605,8 @@
         }
         const userData = JSON.parse(userDataString);
 
-        const id = userData.id; // O ID é o 'id' salvo no login
+        // O ID é o 'id' salvo no localStorage (que veio do Apps Script)
+        const id = userData.id; 
         const oldName = userData.nomeCompleto; // O nome completo atual (Coluna B)
         const newName = document.getElementById('editProfileName').value.trim();
         const newCompany = document.getElementById('editProfileCompany').value.trim();
@@ -2629,7 +2634,6 @@
 
         try {
             const params = new URLSearchParams({
-                action: 'updateProfile', // Adiciona o parâmetro de ação para o Apps Script
                 id: id,
                 oldName: oldName,
                 newName: newName,
@@ -2637,9 +2641,10 @@
                 newPassword: newPassword
             });
 
-            console.log("URL de Atualização de Perfil:", `${APPS_SCRIPT_AUTH_URL}?${params.toString()}`);
+            console.log("Enviando requisição GET para: ", APPS_SCRIPT_UPDATE_PROFILE_URL);
+            console.log("Parâmetros da requisição: ", params.toString());
 
-            const response = await fetch(`${APPS_SCRIPT_AUTH_URL}?${params.toString()}`);
+            const response = await fetch(`${APPS_SCRIPT_UPDATE_PROFILE_URL}?${params.toString()}`); // Requisição GET
             
             if (!response.ok) {
                 const errorText = await response.text();
