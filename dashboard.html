@@ -1269,7 +1269,8 @@
   <script>
     // URL da sua API do Google Apps Script para AUTENTICAÇÃO E LOGIN (apenas).
     // Esta URL agora aponta para a API Centralizada
-    const APPS_SCRIPT_CENTRAL_API_URL = "https://script.google.com/macros/s/AKfycbw-c0s0e8s8k8l8m8n8o8p8q8r8s8t8u8v8w8x8y8z8/exec"; // SUBSTITUA PELA SUA URL REAL DA API CENTRALIZADA
+    // ATENÇÃO: SUBSTITUA PELA SUA URL REAL DA API CENTRALIZADA (doPost)
+    const APPS_SCRIPT_CENTRAL_API_URL = "https://script.google.com/macros/s/AKfycbw-c0s0e8s8k8l8m8n8o8p8q8r8s8t8u8v8w8x8y8z8/exec"; // Exemplo: URL de um doPost
 
     // Variáveis globais para o mapa Leaflet
     let map;
@@ -1446,8 +1447,8 @@
     function logout() {
       // Limpa todos os dados de sessão/lembrar-me
       localStorage.removeItem('vigion_user_data');
-      localStorage.removeItem('vigion_username');
-      localStorage.removeItem('vigion_company'); 
+      localStorage.removeItem('vigion_username'); // Pode ser removido se não for mais usado
+      localStorage.removeItem('vigion_company'); // Pode ser removido se não for mais usado
       // Redireciona para a tela de login
       window.location.replace('index.html'); 
     }
@@ -1478,7 +1479,7 @@
         }
 
         // Verifica se os dados essenciais para o dashboard estão presentes
-        // Agora, incluímos 'password' na verificação, pois ele será salvo no index.html
+        // Usando 'id', 'nome', 'empresa' para consistência
         if (!userData || !userData.id || !userData.nome || !userData.autenticado || !userData.empresa || !userData.tipoAcesso || !userData.password) {
             console.log("Dados essenciais do usuário incompletos no localStorage. Redirecionando para login.");
             localStorage.clear();
@@ -1487,6 +1488,7 @@
         }
 
         // Preenche as labels diretamente com os dados do localStorage.
+        // Usando 'nome' e 'empresa' para consistência
         document.getElementById('loggedInUsername').textContent = userData.nome || 'N/A';
         document.getElementById('loggedInCompany').textContent = userData.empresa || 'N/A';
         document.getElementById('loggedInAccessType').textContent = userData.tipoAcesso || 'Visitante';
@@ -1537,8 +1539,9 @@
         const userData = JSON.parse(userDataString);
 
         // Preenche os campos do modal com os dados atuais do usuário
-        document.getElementById('editProfileName').value = userData.nome || ''; // Usar 'nome' do userData
-        document.getElementById('editProfileCompany').value = userData.empresa || ''; // Usar 'empresa' do userData
+        // Usando 'nome' e 'empresa' para consistência
+        document.getElementById('editProfileName').value = userData.nome || ''; 
+        document.getElementById('editProfileCompany').value = userData.empresa || ''; 
         // A senha não é preenchida por segurança, o usuário deve digitá-la para alterar
         // ou deixá-la em branco para manter a atual.
         document.getElementById('editProfilePassword').value = ''; 
@@ -1563,8 +1566,9 @@
         }
         const userData = JSON.parse(userDataString);
 
-        const id = userData.id; // O ID é o 'id' salvo no login (Coluna A)
-        const oldName = userData.nome; // O nome completo atual (Coluna B)
+        // Usando 'id' e 'nome' para consistência
+        const id = userData.id; 
+        const oldName = userData.nome; 
         const newName = document.getElementById('editProfileName').value.trim();
         const newCompany = document.getElementById('editProfileCompany').value.trim();
         let newPassword = document.getElementById('editProfilePassword').value.trim();
@@ -1599,9 +1603,14 @@
                 newPassword: newPassword
             });
 
-            console.log("URL de Atualização de Perfil:", `${APPS_SCRIPT_CENTRAL_API_URL}?${params.toString()}`);
-
-            const response = await fetch(`${APPS_SCRIPT_CENTRAL_API_URL}?${params.toString()}`);
+            // Requisição POST para a API Centralizada
+            const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded', // Tipo de conteúdo para URLSearchParams
+                },
+                body: params.toString()
+            });
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -1712,7 +1721,7 @@
         // Adiciona listener para o select de status
         document.getElementById('filterCadastroStatus').addEventListener('change', filterAndRenderCadastros);
         // Adiciona listener para o botão de adicionar
-        document.getElementById('addCadastroButton').onclick = openAddEditCadastroModal;
+        document.getElementById('addCadastroButton').onclick = () => openAddEditCadastroModal(null, currentCadastroTab); // Passa a aba atual
     }
 
     function closeCadastrosModal() {
@@ -1760,7 +1769,14 @@
                 username: userData.id, // ID do usuário logado para autenticação
                 password: userData.password // Senha do usuário logado para autenticação
             });
-            const response = await fetch(`${APPS_SCRIPT_CENTRAL_API_URL}?${params.toString()}`);
+            // Requisição POST para a API Centralizada
+            const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: params.toString()
+            });
             const result = await response.json();
 
             if (result.status === "sucesso") {
@@ -1790,7 +1806,14 @@
                 username: userData.id, // ID do usuário logado para autenticação
                 password: userData.password // Senha do usuário logado para autenticação
             });
-            const response = await fetch(`${APPS_SCRIPT_CENTRAL_API_URL}?${params.toString()}`);
+            // Requisição POST para a API Centralizada
+            const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: params.toString()
+            });
             const result = await response.json();
 
             if (result.status === "sucesso") {
@@ -1904,7 +1927,7 @@
         document.getElementById('nextCadastroPageButton').disabled = (currentCadastroPage === totalPages || totalPages === 0);
 
         const startIndex = (currentCadastroPage - 1) * cadastroRowsPerPage;
-        const displayedCount = Math.min(currentPage * cadastroRowsPerPage, totalRows); // Corrigido para currentPage
+        const displayedCount = Math.min(currentCadastroPage * cadastroRowsPerPage, totalRows); // Corrigido para currentCadastroPage
         document.getElementById('displayedCadastroResultsCount').textContent = displayedCount;
         document.getElementById('totalCadastroResultsCount').textContent = totalRows;
     }
@@ -2135,7 +2158,14 @@
         }
 
         try {
-            const response = await fetch(`${APPS_SCRIPT_CENTRAL_API_URL}?${params.toString()}`);
+            // Requisição POST para a API Centralizada
+            const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: params.toString()
+            });
             const result = await response.json();
 
             if (result.status === "sucesso") {
@@ -2186,7 +2216,14 @@
                     });
                     params.append(idParamName, idToDelete);
 
-                    const response = await fetch(`${APPS_SCRIPT_CENTRAL_API_URL}?${params.toString()}`);
+                    // Requisição POST para a API Centralizada
+                    const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: params.toString()
+                    });
                     const result = await response.json();
 
                     if (result.status === "sucesso") {
@@ -2203,11 +2240,8 @@
                     console.error(`Erro ao excluir ${itemType}:`, error);
                     showMessageModal("Erro de Conexão", `Não foi possível conectar ao servidor para excluir o ${itemType}.`);
                 }
-            },
-            true, // showCancel = true
-            () => {
-                console.log("Exclusão cancelada pelo usuário.");
             }
+            // Não há um botão de cancelamento explícito, então o callback de cancelamento não é passado.
         );
     }
 
