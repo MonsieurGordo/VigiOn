@@ -140,13 +140,16 @@
             white-space: normal; /* Permite que o texto do cabeçalho quebre linha */
             max-width: 100px; /* Define uma largura máxima para forçar a quebra */
             text-align: center; /* Centraliza o texto do cabeçalho */
-            vertical-align: top; /* Alinha o texto ao topo da célula */
+            vertical-align: middle; /* Centraliza verticalmente o cabeçalho */
         }
         .permissions-table td {
             vertical-align: middle; /* Centraliza verticalmente o conteúdo das células de dados */
         }
         .permissions-table tbody tr:hover {
             background-color: #F0F4F8;
+        }
+        .permissions-table .action-buttons { /* Adicionado estilo para a célula de botões de ação */
+            text-align: center; /* CENTRALIZA OS BOTÕES DE AÇÃO */
         }
         .permissions-table .action-buttons button {
             background: none;
@@ -169,24 +172,27 @@
             height: 16px;
             accent-color: #6200EE; /* Cor do checkbox */
             cursor: pointer;
+            flex-shrink: 0; /* IMPEDE O CHECKBOX DE ENCOLHER */
         }
         /* Estilo para a célula do checkbox e texto SIM/NÃO */
         .permissions-table td.checkbox-cell {
-            /* Removido display: flex e justify-content aqui para que o label interno controle */
             text-align: center; /* Centraliza o conteúdo (o label) dentro da célula */
         }
         .permissions-table td.checkbox-cell label { /* Estilo para o label que envolve checkbox e texto */
-            display: inline-flex; /* Usa inline-flex para não quebrar a linha da célula */
-            align-items: center;
+            display: flex; /* ALTERADO: Usar flex para melhor controle de alinhamento */
+            align-items: center; /* Alinha itens verticalmente ao centro */
             justify-content: center; /* Centraliza o conteúdo horizontalmente dentro do label */
             gap: 0.25rem; /* Espaço entre o checkbox e o texto */
             width: 100%; /* Ocupa a largura total para centralizar */
+            min-height: 24px; /* Adiciona uma altura mínima para consistência */
+            box-sizing: border-box; /* Garante que padding e border sejam incluídos na altura/largura */
         }
         .permissions-table td.checkbox-cell label span {
             font-size: 0.75rem; /* Tamanho da fonte para SIM/NÃO */
             font-weight: 500;
             color: #4A5568;
             white-space: nowrap; /* Impede que o texto quebre linha */
+            flex-shrink: 0; /* IMPEDE O TEXTO DE ENCOLHER */
         }
 
         .permissions-pagination {
@@ -245,66 +251,6 @@
             width: 20px;
             height: 20px;
             color: white;
-        }
-
-        /* Media Queries para responsividade do Painel de Permissões */
-        @media (max-width: 1024px) { /* Ajuste para tablets e telas menores */
-            .permissions-panel-container {
-                height: auto; /* Altura automática para permitir rolagem */
-                padding: 1rem;
-                margin: 0.5rem auto;
-            }
-            .permissions-panel-header {
-                padding: 0.8rem 1rem;
-                margin: -1rem -1rem 1rem -1rem;
-            }
-            .permissions-panel-header h3 {
-                font-size: 1.2rem;
-            }
-            .permissions-panel-header button {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.9rem;
-            }
-            .permissions-filters {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            .permissions-filters input, .permissions-filters select {
-                width: 100%;
-                max-width: 100%; /* Remove max-width em telas menores */
-            }
-            .permissions-table th, .permissions-table td {
-                padding: 0.3rem 0.4rem; /* Ainda mais reduzido para mobile */
-                font-size: 0.75rem; /* Fonte menor para mobile */
-            }
-            .permissions-table th {
-                max-width: 80px; /* Ajusta largura máxima para mobile */
-            }
-            .permissions-table .action-buttons svg {
-                width: 12px;
-                height: 12px;
-            }
-            .permissions-table .permission-checkbox {
-                width: 14px;
-                height: 14px;
-            }
-            /* Removido flex-direction: column para o label interno em telas menores */
-            .permissions-pagination {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            .permissions-pagination-buttons button {
-                padding: 0.4rem 0.6rem;
-                font-size: 0.8rem;
-            }
-            .permissions-panel-footer .back-button {
-                font-size: 0.9rem;
-                padding: 0.4rem 0.8rem;
-            }
-            .permissions-panel-footer .back-button svg {
-                width: 16px;
-                height: 16px;
-            }
         }
 
         /* --- Estilo: Popover de Filtro de Colunas --- */
@@ -511,7 +457,7 @@
             }
         }
 
-        /* Modal para Mensagens de Erro/Validação (copiado para esta tela também) */
+        /* Modal para Mensagens de Erro/Validação (AGORA COM OPÇÃO DE CANCELAR) */
         .message-modal-overlay {
             position: fixed;
             top: 0;
@@ -553,16 +499,203 @@
         .message-modal-content p {
             color: #555;
         }
-        .message-modal-content button {
-            background-color: #6200EE;
-            color: white;
+        .message-modal-buttons-group { /* Novo grupo para os botões do modal de mensagem */
+            display: flex;
+            justify-content: center;
+            gap: 1rem; /* Espaçamento entre os botões */
+            margin-top: 1.5rem;
+        }
+        .message-modal-buttons-group button {
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
             font-weight: 600;
             transition: background-color 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
-        .message-modal-content button:hover {
+        .message-modal-buttons-group .ok-button {
+            background-color: #6200EE;
+            color: white;
+        }
+        .message-modal-buttons-group .ok-button:hover {
             background-color: #5A73D4;
+        }
+        .message-modal-buttons-group .cancel-button {
+            background-color: #E2E8F0;
+            color: #2D3748;
+        }
+        .message-modal-buttons-group .cancel-button:hover {
+            background-color: #CBD5E0;
+        }
+
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000; /* Acima de todos os outros modais */
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: none; /* Escondido por padrão */
+        }
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        /* Novo Modal de Visualização/Edição de Permissão */
+        .view-edit-permission-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2002; /* Acima do modal de adicionar, mas abaixo do de mensagem */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .view-edit-permission-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .view-edit-permission-modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            text-align: left;
+            max-width: 500px;
+            width: 90%;
+            transform: translateY(-30px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .view-edit-permission-modal-overlay.show .view-edit-permission-modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .view-edit-permission-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .view-edit-permission-modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        .view-edit-permission-modal-content label {
+            font-weight: 500;
+            color: #4A5568;
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+        .view-edit-permission-modal-content input[type="text"],
+        .view-edit-permission-modal-content select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #CBD5E0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+            margin-bottom: 1rem;
+            background-color: white; /* Garante fundo branco mesmo quando desabilitado */
+        }
+        .view-edit-permission-modal-content input[type="text"]:disabled,
+        .view-edit-permission-modal-content select:disabled {
+            background-color: #F7FAFC; /* Cor de fundo para campos desabilitados */
+            color: #718096; /* Cor do texto para campos desabilitados */
+            cursor: not-allowed;
+        }
+        .view-edit-permission-modal-content input:focus,
+        .view-edit-permission-modal-content select:focus {
+            outline: none;
+            border-color: #6200EE;
+            box-shadow: 0 0 0 3px rgba(98, 0, 238, 0.2);
+        }
+        .view-edit-permission-modal-content .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .view-edit-permission-modal-content .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+        .view-edit-permission-modal-content .checkbox-group input[type="checkbox"] {
+            margin-right: 0.75rem;
+            accent-color: #6200EE;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .view-edit-permission-modal-content .checkbox-group input[type="checkbox"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .view-edit-permission-modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .view-edit-permission-modal-buttons button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .view-edit-permission-modal-buttons button.cancel-btn {
+            background-color: #E2E8F0;
+            color: #2D3748;
+        }
+        .view-edit-permission-modal-buttons button.cancel-btn:hover {
+            background-color: #CBD5E0;
+        }
+        .view-edit-permission-modal-buttons button.update-btn { /* Botão de Atualizar */
+            background-color: #6200EE;
+            color: white;
+        }
+        .view-edit-permission-modal-buttons button.update-btn:hover {
+            background-color: #5A73D4;
+        }
+        @media (max-width: 640px) {
+            .view-edit-permission-modal-content {
+                padding: 1rem;
+                width: 95%;
+            }
+            .view-edit-permission-modal-header h3 {
+                font-size: 1.3rem;
+            }
+            .view-edit-permission-modal-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .view-edit-permission-modal-buttons button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -582,7 +715,7 @@
             <!-- Contêiner para o botão de filtro de colunas e popover -->
             <div class="column-filter-area">
                 <button id="toggleColumnFilterButton" class="filter-button" title="Filtrar Colunas">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.78 1.35a2 2 0 0 0 .73 2.73l.04.02a2 2 0 0 1 .97 1.95v.44a2 2 0 0 1-.97 1.95l-.04.02a2 2 0 0 0-.73 2.73l.78 1.35a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.78-1.35a2 2 0 0 0-.73-2.73l-.04-.02a2 2 0 0 1-.97-1.95v-.44a2 2 0 0 1 .97-1.95l.04-.02a2 2 0 0 0 .73-2.73l-.78-1.35a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.78 1.35a2 2 0 0 0 .73 2.73l.04.02a2 2 0 0 1 .97 1.95v.44a2 2 0 0 1-.97 1.95l-.04.02a2 2 0 0 0-.73 2.73l.78 1.35a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.78-1.35a2 2 0 0 0-.73-2.73l-.04-.02a2 2 0 0 1-.97-1.95v-.44a2 2 0 0 1 .97-1.95l-.04-.02a2 2 0 0 0 .73-2.73l-.78-1.35a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
                 <div id="columnFilterPopover" class="column-filter-popover">
                     <h4>Ocultar Colunas</h4>
@@ -634,7 +767,7 @@
         </div>
     </div>
 
-    <!-- Modal para Adicionar Nova Permissão (dentro desta tela) -->
+    <!-- Modal para Adicionar Nova Permissão -->
     <div id="addPermissionModal" class="add-permission-modal-overlay">
         <div class="add-permission-modal-content">
             <div class="add-permission-modal-header">
@@ -646,14 +779,7 @@
             <label for="addPermissionCompany">Empresa</label>
             <select id="addPermissionCompany">
                 <option value="">Selecione uma empresa</option>
-                <option value="Empresa A">Empresa A</option>
-                <option value="Empresa B">Empresa B</option>
-                <option value="Empresa C">Empresa C</option>
-                <option value="Empresa D">Empresa D</option>
-                <option value="Empresa E">Empresa E</option>
-                <option value="Empresa F">Empresa F</option>
-                <option value="Todas">Todas</option>
-                <!-- Futuramente, esta lista será preenchida dinamicamente -->
+                <!-- As opções de empresa serão carregadas dinamicamente aqui via JS -->
             </select>
 
             <div class="checkbox-group">
@@ -696,198 +822,97 @@
         </div>
     </div>
 
-    <!-- Modal para Mensagens de Erro/Validação (copiado para esta tela também) -->
+    <!-- NOVO: Modal para Visualização/Edição de Permissão -->
+    <div id="viewEditPermissionModal" class="view-edit-permission-modal-overlay">
+        <div class="view-edit-permission-modal-content">
+            <div class="view-edit-permission-modal-header">
+                <h3 id="viewEditModalTitle">Detalhes da Permissão</h3>
+            </div>
+            <label for="viewEditPermissionAccessType">Tipo de Acesso</label>
+            <input type="text" id="viewEditPermissionAccessType" placeholder="Ex: Supervisor">
+
+            <label for="viewEditPermissionCompany">Empresa</label>
+            <select id="viewEditPermissionCompany">
+                <option value="">Selecione uma empresa</option>
+                <!-- As opções de empresa serão carregadas dinamicamente aqui via JS -->
+            </select>
+
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="viewEditPermissionViewMap"> Visualizar Mapa
+                </label>
+                <label>
+                    <input type="checkbox" id="viewEditPermissionLocateTeam"> Localizar Equipe
+                </label>
+                <label>
+                    <input type="checkbox" id="viewEditPermissionViewHistory"> Visualizar Histórico
+                </label>
+                <label>
+                    <input type="checkbox" id="viewEditPermissionPrintHistory"> Imprimir Histórico
+                </label>
+                <label>
+                    <input type="checkbox" id="viewEditPermissionCreateRoute"> Criar Rota
+                </label>
+                <label>
+                    <input type="checkbox" id="viewEditPermissionSettings"> Configurações
+                </label>
+                <label>
+                    <input type="checkbox" id="viewEditPermissionViewUsers"> Visualizar Cadastros (usuários)
+                </label>
+                <label>
+                    <input type="checkbox" id="viewEditPermissionViewCompanies"> Visualizar Cadastros (empresas)
+                </label>
+                <label>
+                    <input type="checkbox" id="viewEditPermissionRegisterUsers"> Cadastrar (usuários)
+                </label>
+                <label>
+                    <input type="checkbox" id="viewEditPermissionRegisterCompanies"> Cadastrar (empresas)
+                </label>
+            </div>
+
+            <div class="view-edit-permission-modal-buttons">
+                <button class="cancel-btn" onclick="closeViewEditPermissionModal()">Cancelar</button>
+                <button class="update-btn" id="updatePermissionButton">Atualizar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Mensagens de Erro/Validação -->
     <div id="messageModal" class="message-modal-overlay">
         <div class="message-modal-content">
             <h3 class="text-xl font-semibold text-gray-800 mb-4">Atenção!</h3>
             <p id="modalMessageText" class="text-gray-700 mb-6">Mensagem de exemplo.</p>
-            <button id="closeModalButton" class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                OK
-            </button>
+            <div class="message-modal-buttons-group">
+                <button id="modalCancelButton" class="cancel-button">Cancelar</button>
+                <button id="modalOkButton" class="ok-button">OK</button>
+            </div>
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        Carregando...
+    </div>
+
     <script>
+        // URL do seu Google Apps Script para o gerenciamento de permissões
+        const APPS_SCRIPT_PERMISSIONS_URL = "https://script.google.com/macros/s/AKfycbxnotHPRqBWWgdJzKgrVC2tdSE5W65GUA5heoRRAK6JwNTsLTYnW7kT9WlKQYJx02zh/exec";
+
         // Variável para o temporizador de inatividade (copiado do dashboard)
         let inactivityTimer;
         const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos
 
-        // Dados de exemplo para as permissões (agora nesta tela)
-        let permissionsData = [
-            { 
-                accessType: 'Admin', 
-                company: 'Todas', 
-                viewMap: true, 
-                locateTeam: true, 
-                viewHistory: true, 
-                printHistory: true, 
-                createRoute: true, 
-                settings: true, 
-                viewUsers: true, 
-                viewCompanies: true, 
-                registerUsers: true, 
-                registerCompanies: true 
-            },
-            { 
-                accessType: 'Gestor', 
-                company: 'Empresa A', 
-                viewMap: true, 
-                locateTeam: true, 
-                viewHistory: true, 
-                printHistory: false,
-                createRoute: true,
-                settings: false,
-                viewUsers: true,
-                viewCompanies: true,
-                registerUsers: false,
-                registerCompanies: false
-            },
-            { 
-                accessType: 'Usuário', 
-                company: 'Empresa B', 
-                viewMap: true, 
-                locateTeam: false, 
-                viewHistory: true, 
-                printHistory: false,
-                createRoute: false,
-                settings: false,
-                viewUsers: false,
-                viewCompanies: false,
-                registerUsers: false,
-                registerCompanies: false
-            },
-            { 
-                accessType: 'Visitante', 
-                company: 'Empresa C', 
-                viewMap: true, 
-                locateTeam: false, 
-                viewHistory: false, 
-                printHistory: false,
-                createRoute: false,
-                settings: false,
-                viewUsers: false,
-                viewCompanies: false,
-                registerUsers: false,
-                registerCompanies: false
-            },
-            { 
-                accessType: 'Supervisor', 
-                company: 'Empresa D', 
-                viewMap: true, 
-                locateTeam: true, 
-                viewHistory: true, 
-                printHistory: true,
-                createRoute: true,
-                settings: true,
-                viewUsers: true,
-                viewCompanies: false,
-                registerUsers: false,
-                registerCompanies: false
-            },
-            { 
-                accessType: 'Técnico', 
-                company: 'Empresa E', 
-                viewMap: true, 
-                locateTeam: true, 
-                viewHistory: true, 
-                printHistory: false,
-                createRoute: false,
-                settings: false,
-                viewUsers: false,
-                viewCompanies: false,
-                registerUsers: false,
-                registerCompanies: false
-            },
-            { 
-                accessType: 'Auditor', 
-                company: 'Empresa F', 
-                viewMap: true, 
-                locateTeam: false, 
-                viewHistory: true, 
-                printHistory: true,
-                createRoute: false,
-                settings: false,
-                viewUsers: true,
-                viewCompanies: true,
-                registerUsers: false,
-                registerCompanies: false
-            },
-            { 
-                accessType: 'Desenvolvedor', 
-                company: 'Todas', 
-                viewMap: true, 
-                locateTeam: true, 
-                viewHistory: true, 
-                printHistory: true, 
-                createRoute: true, 
-                settings: true, 
-                viewUsers: true, 
-                viewCompanies: true, 
-                registerUsers: true, 
-                registerCompanies: true 
-            },
-            { 
-                accessType: 'Suporte', 
-                company: 'Empresa A', 
-                viewMap: true, 
-                locateTeam: true, 
-                viewHistory: true, 
-                printHistory: false, 
-                createRoute: false, 
-                settings: false, 
-                viewUsers: true, 
-                viewCompanies: false, 
-                registerUsers: false, 
-                registerCompanies: false 
-            },
-            { 
-                accessType: 'Financeiro', 
-                company: 'Empresa B', 
-                viewMap: false, 
-                locateTeam: false, 
-                viewHistory: false, 
-                printHistory: false, 
-                createRoute: false, 
-                settings: false, 
-                viewUsers: true, 
-                viewCompanies: true, 
-                registerUsers: false, 
-                registerCompanies: false 
-            },
-            { 
-                accessType: 'RH', 
-                company: 'Empresa C', 
-                viewMap: false, 
-                locateTeam: false, 
-                viewHistory: false, 
-                printHistory: false, 
-                createRoute: false, 
-                settings: false, 
-                viewUsers: true, 
-                viewCompanies: false, 
-                registerUsers: false, 
-                registerCompanies: false 
-            },
-            { 
-                accessType: 'Estagiário', 
-                company: 'Empresa D', 
-                viewMap: true, 
-                locateTeam: false, 
-                viewHistory: false, 
-                printHistory: false, 
-                createRoute: false, 
-                settings: false, 
-                viewUsers: false, 
-                viewCompanies: false, 
-                registerUsers: false, 
-                registerCompanies: false 
-            }
-        ];
+        // Dados de exemplo para as permissões (AGORA SERÃO CARREGADOS DA PLANILHA)
+        let permissionsData = []; // Inicialmente vazio, será preenchido via fetch
+        let companiesList = []; // Lista de empresas para o dropdown
 
         // Variáveis para paginação
         const rowsPerPage = 10; // Número de linhas por página
         let currentPage = 1;
         let filteredPermissions = []; // Dados filtrados para a paginação
+
+        // Variáveis para armazenar a permissão atualmente em edição/visualização
+        let currentEditingPermission = null;
 
         // Mapeamento de colunas para IDs e rótulos para o filtro de visibilidade
         const columnMap = [
@@ -920,30 +945,69 @@
             localStorage.setItem('columnVisibility', JSON.stringify(columnVisibility));
         }
 
-        /** Funções do Modal de Mensagens */
-        function showMessageModal(title, message, callback = null) {
+        /**
+         * Funções do Modal de Mensagens
+         * @param {string} title - Título do modal.
+         * @param {string} message - Mensagem do modal.
+         * @param {function} okCallback - Função a ser executada quando o botão OK for clicado.
+         * @param {boolean} showCancel - Se true, exibe o botão Cancelar.
+         * @param {function} cancelCallback - Função a ser executada quando o botão Cancelar for clicado.
+         */
+        function showMessageModal(title, message, okCallback = null, showCancel = false, cancelCallback = null) {
             const modalOverlay = document.getElementById('messageModal');
-            const modalTitle = modalOverlay.querySelector('h3'); // Seleciona o h3 dentro do modal
+            const modalTitle = modalOverlay.querySelector('h3');
             const modalMessageText = document.getElementById('modalMessageText');
-            const closeModalButton = document.getElementById('closeModalButton');
+            const modalOkButton = document.getElementById('modalOkButton');
+            const modalCancelButton = document.getElementById('modalCancelButton');
             
             modalTitle.textContent = title;
             modalMessageText.textContent = message;
+
+            // Limpa listeners anteriores para evitar múltiplos disparos
+            modalOkButton.removeEventListener('click', handleOkClick);
+            modalCancelButton.removeEventListener('click', handleCancelClick);
+
+            // Adiciona novos listeners
+            modalOkButton.addEventListener('click', handleOkClick);
+            
+            if (showCancel) {
+                modalCancelButton.style.display = 'inline-block'; // Mostra o botão Cancelar
+                modalCancelButton.addEventListener('click', handleCancelClick);
+            } else {
+                modalCancelButton.style.display = 'none'; // Esconde o botão Cancelar
+            }
+
             modalOverlay.classList.add('show');
 
-            // Remove listeners anteriores para evitar múltiplos disparos
-            closeModalButton.removeEventListener('click', modalCallbackHandler);
-
-            // Adiciona o novo handler para o botão 'OK' do modal
-            closeModalButton.addEventListener('click', modalCallbackHandler);
-
-            // Define a função de callback a ser executada quando o modal for fechado (pelo clique no OK)
-            function modalCallbackHandler() {
+            function closeModal() {
                 modalOverlay.classList.remove('show');
-                closeModalButton.removeEventListener('click', modalCallbackHandler); // Remove o listener temporário
-                if (callback) {
-                    callback();
+                // Remove os listeners após fechar para evitar vazamento de memória
+                modalOkButton.removeEventListener('click', handleOkClick);
+                modalCancelButton.removeEventListener('click', handleCancelClick);
+            }
+
+            function handleOkClick() {
+                closeModal();
+                if (okCallback) {
+                    okCallback();
                 }
+            }
+
+            function handleCancelClick() {
+                closeModal();
+                if (cancelCallback) {
+                    cancelCallback();
+                }
+            }
+        }
+
+        /** Exibe ou oculta o overlay de carregamento */
+        function toggleLoading(show) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (show) {
+                loadingOverlay.classList.add('show');
+            } else {
+                loadingOverlay.classList.remove('show');
             }
         }
 
@@ -969,6 +1033,87 @@
             }, INACTIVITY_TIMEOUT);
         }
 
+        /**
+         * Busca os dados de permissões da planilha via Google Apps Script.
+         */
+        async function fetchPermissions() {
+            toggleLoading(true); // Mostra o loading
+            try {
+                const response = await fetch(APPS_SCRIPT_PERMISSIONS_URL);
+                const result = await response.json();
+
+                if (result.status === "sucesso") {
+                    permissionsData = result.data;
+                    filteredPermissions = permissionsData; // Inicializa dados filtrados
+                    renderPermissionsTable(filteredPermissions);
+                } else {
+                    showMessageModal("Erro ao Carregar", result.message || "Não foi possível carregar as permissões da planilha.");
+                    permissionsData = []; // Limpa os dados se houver erro
+                    filteredPermissions = [];
+                    renderPermissionsTable([]); // Renderiza tabela vazia
+                }
+            } catch (error) {
+                console.error("Erro na requisição fetchPermissions:", error);
+                showMessageModal("Erro de Conexão", "Não foi possível conectar ao servidor para carregar as permissões.");
+                permissionsData = [];
+                filteredPermissions = [];
+                renderPermissionsTable([]);
+            } finally {
+                toggleLoading(false); // Esconde o loading
+            }
+        }
+
+        /**
+         * Busca a lista de empresas da API Centralizada do Google Apps Script
+         * e preenche o dropdown do modal de adição de permissão.
+         */
+        async function fetchCompanies() {
+            toggleLoading(true); // Mostra o loading
+            try {
+                const params = new URLSearchParams({
+                    action: 'getCompanies' // Ação para buscar empresas
+                });
+                // CHAMA O MESMO SCRIPT DE PERMISSÕES, AGORA COM AÇÃO 'getCompanies'
+                const response = await fetch(`${APPS_SCRIPT_PERMISSIONS_URL}?${params.toString()}`);
+                const result = await response.json();
+
+                if (result.status === "sucesso") {
+                    companiesList = result.data;
+                    populateCompanyDropdown(companiesList, 'addPermissionCompany'); // Para o modal de Adicionar
+                    populateCompanyDropdown(companiesList, 'viewEditPermissionCompany'); // Para o modal de Visualizar/Editar
+                } else {
+                    showMessageModal("Erro ao Carregar Empresas", result.message || "Não foi possível carregar a lista de empresas.");
+                    companiesList = [];
+                }
+            } catch (error) {
+                console.error("Erro na requisição fetchCompanies:", error);
+                showMessageModal("Erro de Conexão", "Não foi possível conectar ao servidor para carregar as empresas.");
+                companiesList = [];
+            } finally {
+                toggleLoading(false); // Esconde o loading
+            }
+        }
+
+        /**
+         * Preenche o dropdown de empresas em um elemento select específico.
+         * @param {Array} companies - Lista de objetos de empresa (ex: [{ nome: "Empresa A", ... }]).
+         * @param {string} selectId - O ID do elemento <select> a ser preenchido.
+         */
+        function populateCompanyDropdown(companies, selectId) {
+            const selectElement = document.getElementById(selectId);
+            if (!selectElement) return; // Sai se o elemento não for encontrado
+
+            selectElement.innerHTML = '<option value="">Selecione uma empresa</option>'; // Limpa e adiciona a opção padrão
+
+            companies.forEach(company => {
+                const option = document.createElement('option');
+                option.value = company.nome; // Usa o nome da empresa como valor
+                option.textContent = company.nome; // Exibe o nome da empresa
+                selectElement.appendChild(option);
+            });
+        }
+
+
         // Função para renderizar a tabela de permissões com paginação
         function renderPermissionsTable(data) {
             const tableBody = document.getElementById('permissionsTableBody');
@@ -985,73 +1130,73 @@
                     <td data-column-id="company">${permission.company}</td>
                     <td data-column-id="accessType">${permission.accessType}</td>
                     <td data-column-id="viewMap" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.viewMap ? 'checked' : ''} disabled>
                             <span>${permission.viewMap ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td data-column-id="locateTeam" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.locateTeam ? 'checked' : ''} disabled>
                             <span>${permission.locateTeam ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td data-column-id="viewHistory" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.viewHistory ? 'checked' : ''} disabled>
                             <span>${permission.viewHistory ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td data-column-id="printHistory" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.printHistory ? 'checked' : ''} disabled>
                             <span>${permission.printHistory ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td data-column-id="createRoute" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.createRoute ? 'checked' : ''} disabled>
                             <span>${permission.createRoute ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td data-column-id="settings" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.settings ? 'checked' : ''} disabled>
                             <span>${permission.settings ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td data-column-id="viewUsers" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.viewUsers ? 'checked' : ''} disabled>
                             <span>${permission.viewUsers ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td data-column-id="viewCompanies" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.viewCompanies ? 'checked' : ''} disabled>
                             <span>${permission.viewCompanies ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td data-column-id="registerUsers" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.registerUsers ? 'checked' : ''} disabled>
                             <span>${permission.registerUsers ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td data-column-id="registerCompanies" class="checkbox-cell">
-                        <label class="flex items-center justify-center gap-1">
+                        <label>
                             <input type="checkbox" class="permission-checkbox" ${permission.registerCompanies ? 'checked' : ''} disabled>
                             <span>${permission.registerCompanies ? 'SIM' : 'NÃO'}</span>
                         </label>
                     </td>
                     <td class="action-buttons" data-column-id="actions">
-                        <button title="Visualizar Permissões" onclick="viewPermission('${permission.accessType}')">
+                        <button title="Visualizar Permissões" onclick="viewPermission('${permission.accessType}', '${permission.company}')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
-                        <button title="Editar Permissões" onclick="editPermission('${permission.accessType}')">
+                        <button title="Editar Permissões" onclick="editPermission('${permission.accessType}', '${permission.company}')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
                         </button>
-                        <button title="Excluir Permissão" onclick="deletePermission('${permission.accessType}')">
+                        <button title="Excluir Permissão" onclick="deletePermission('${permission.accessType}', '${permission.company}')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                         </button>
                     </td>
@@ -1100,7 +1245,10 @@
             resetInactivityTimer();
         }
 
-        function saveNewPermission() {
+        /**
+         * Salva uma nova permissão ou atualiza uma existente na planilha via Apps Script.
+         */
+        async function saveNewPermission() {
             const accessType = document.getElementById('addPermissionAccessType').value.trim();
             const company = document.getElementById('addPermissionCompany').value;
             const viewMap = document.getElementById('addPermissionViewMap').checked;
@@ -1119,50 +1267,237 @@
                 return;
             }
 
-            // Verifica se já existe um tipo de acesso com esse nome (case-insensitive)
-            const exists = permissionsData.some(p => p.accessType.toLowerCase() === accessType.toLowerCase());
-            if (exists) {
-                showMessageModal("Erro", `O tipo de acesso "${accessType}" já existe.`);
+            toggleLoading(true); // Mostra o loading
+
+            try {
+                const params = new URLSearchParams({
+                    action: 'save', // Ação para o Apps Script
+                    company: company,
+                    accessType: accessType,
+                    viewMap: viewMap,
+                    locateTeam: locateTeam,
+                    viewHistory: viewHistory,
+                    printHistory: printHistory,
+                    createRoute: createRoute,
+                    settings: settings,
+                    viewUsers: viewUsers,
+                    viewCompanies: viewCompanies,
+                    registerUsers: registerUsers,
+                    registerCompanies: registerCompanies
+                });
+
+                const response = await fetch(`${APPS_SCRIPT_PERMISSIONS_URL}?${params.toString()}`);
+                const result = await response.json();
+
+                if (result.status === "sucesso") {
+                    showMessageModal("Sucesso", result.message, () => {
+                        closeAddPermissionModal();
+                        fetchPermissions(); // Recarrega os dados da tabela
+                    });
+                } else {
+                    showMessageModal("Erro", result.message || "Ocorreu um erro ao salvar a permissão.");
+                }
+            } catch (error) {
+                console.error("Erro ao salvar permissão:", error);
+                showMessageModal("Erro de Conexão", "Não foi possível conectar ao servidor para salvar a permissão.");
+            } finally {
+                toggleLoading(false); // Esconde o loading
+            }
+        }
+
+        /**
+         * Abre o modal de visualização de permissão.
+         * @param {string} accessType - O tipo de acesso da permissão.
+         * @param {string} company - A empresa associada à permissão.
+         */
+        function viewPermission(accessType, company) {
+            resetInactivityTimer();
+            const permission = permissionsData.find(p => p.accessType === accessType && p.company === company);
+            if (permission) {
+                currentEditingPermission = permission; // Armazena a permissão para referência
+                populateViewEditPermissionModal(permission, false); // false para modo de visualização
+                document.getElementById('viewEditModalTitle').textContent = 'Detalhes da Permissão';
+                document.getElementById('updatePermissionButton').style.display = 'none'; // Esconde o botão de Atualizar
+                document.getElementById('viewEditPermissionModal').classList.add('show');
+            } else {
+                showMessageModal("Erro", "Permissão não encontrada para visualização.");
+            }
+        }
+
+        /**
+         * Abre o modal de edição de permissão.
+         * @param {string} accessType - O tipo de acesso da permissão.
+         * @param {string} company - A empresa associada à permissão.
+         */
+        function editPermission(accessType, company) {
+            resetInactivityTimer();
+            const permission = permissionsData.find(p => p.accessType === accessType && p.company === company);
+            if (permission) {
+                currentEditingPermission = permission; // Armazena a permissão para referência
+                populateViewEditPermissionModal(permission, true); // true para modo de edição
+                document.getElementById('viewEditModalTitle').textContent = 'Editar Permissão';
+                document.getElementById('updatePermissionButton').style.display = 'inline-block'; // Mostra o botão de Atualizar
+                document.getElementById('viewEditPermissionModal').classList.add('show');
+            } else {
+                showMessageModal("Erro", "Permissão não encontrada para edição.");
+            }
+        }
+
+        /**
+         * Preenche o modal de visualização/edição com os dados da permissão.
+         * @param {object} permission - O objeto de permissão.
+         * @param {boolean} isEditMode - True se for modo de edição, false para visualização.
+         */
+        function populateViewEditPermissionModal(permission, isEditMode) {
+            document.getElementById('viewEditPermissionAccessType').value = permission.accessType;
+            document.getElementById('viewEditPermissionCompany').value = permission.company;
+            document.getElementById('viewEditPermissionViewMap').checked = permission.viewMap;
+            document.getElementById('viewEditPermissionLocateTeam').checked = permission.locateTeam;
+            document.getElementById('viewEditPermissionViewHistory').checked = permission.viewHistory;
+            document.getElementById('viewEditPermissionPrintHistory').checked = permission.printHistory;
+            document.getElementById('viewEditPermissionCreateRoute').checked = permission.createRoute;
+            document.getElementById('viewEditPermissionSettings').checked = permission.settings;
+            document.getElementById('viewEditPermissionViewUsers').checked = permission.viewUsers;
+            document.getElementById('viewEditPermissionViewCompanies').checked = permission.viewCompanies;
+            document.getElementById('viewEditPermissionRegisterUsers').checked = permission.registerUsers;
+            document.getElementById('viewEditPermissionRegisterCompanies').checked = permission.registerCompanies;
+
+            // Define o estado de disabled para todos os campos
+            const inputs = document.querySelectorAll('#viewEditPermissionModal input[type="text"], #viewEditPermissionModal select, #viewEditPermissionModal input[type="checkbox"]');
+            inputs.forEach(input => {
+                input.disabled = !isEditMode;
+            });
+
+            // Campos de empresa e tipo de acesso AGORA PODEM SER EDITADOS
+            // Mas eles precisam ser passados como originais para o Apps Script
+            document.getElementById('viewEditPermissionAccessType').disabled = !isEditMode;
+            document.getElementById('viewEditPermissionCompany').disabled = !isEditMode;
+        }
+
+        /** Fecha o modal de visualização/edição de permissão. */
+        function closeViewEditPermissionModal() {
+            document.getElementById('viewEditPermissionModal').classList.remove('show');
+            resetInactivityTimer();
+            currentEditingPermission = null; // Limpa a permissão em edição
+        }
+
+        /**
+         * Atualiza uma permissão existente na planilha via Apps Script.
+         */
+        document.getElementById('updatePermissionButton').addEventListener('click', async () => {
+            if (!currentEditingPermission) {
+                showMessageModal("Erro", "Nenhuma permissão selecionada para atualização.");
                 return;
             }
 
-            const newPermission = { 
-                accessType, 
-                company,
-                viewMap, 
-                locateTeam, 
-                viewHistory, 
-                printHistory,
-                createRoute,
-                settings,
-                viewUsers,
-                viewCompanies,
-                registerUsers,
-                registerCompanies
-            };
-            permissionsData.push(newPermission);
-            filteredPermissions = permissionsData; // Atualiza os dados filtrados também
-            renderPermissionsTable(filteredPermissions); // Atualiza a tabela
-            showMessageModal("Sucesso", `Permissão para "${accessType}" adicionada!`);
-            closeAddPermissionModal();
-        }
+            // Coleta os valores ATUAIS do modal (que podem ter sido editados)
+            const newAccessType = document.getElementById('viewEditPermissionAccessType').value.trim();
+            const newCompany = document.getElementById('viewEditPermissionCompany').value;
+            const viewMap = document.getElementById('viewEditPermissionViewMap').checked;
+            const locateTeam = document.getElementById('viewEditPermissionLocateTeam').checked;
+            const viewHistory = document.getElementById('viewEditPermissionViewHistory').checked;
+            const printHistory = document.getElementById('viewEditPermissionPrintHistory').checked;
+            const createRoute = document.getElementById('viewEditPermissionCreateRoute').checked;
+            const settings = document.getElementById('viewEditPermissionSettings').checked;
+            const viewUsers = document.getElementById('viewEditPermissionViewUsers').checked;
+            const viewCompanies = document.getElementById('viewEditPermissionViewCompanies').checked;
+            const registerUsers = document.getElementById('viewEditPermissionRegisterUsers').checked;
+            const registerCompanies = document.getElementById('viewEditPermissionRegisterCompanies').checked;
 
-        function viewPermission(accessType) {
-            showMessageModal("Funcionalidade em Desenvolvimento", `A visualização detalhada das permissões para "${accessType}" será implementada em breve.`);
-        }
+            // Valores ORIGINAIS da permissão antes da edição
+            const originalAccessType = currentEditingPermission.accessType;
+            const originalCompany = currentEditingPermission.company;
 
-        function editPermission(accessType) {
-            showMessageModal("Funcionalidade em Desenvolvimento", `A edição de permissões para "${accessType}" será implementada em breve.`);
-        }
+            if (!newAccessType || !newCompany) {
+                showMessageModal("Atenção", "Por favor, preencha o 'Tipo de Acesso' e selecione uma 'Empresa'.");
+                return;
+            }
 
-        function deletePermission(accessType) {
-            showMessageModal("Confirmação", `Tem certeza que deseja excluir a permissão para "${accessType}"?`, () => {
-                permissionsData = permissionsData.filter(p => p.accessType !== accessType);
-                filteredPermissions = permissionsData; // Atualiza os dados filtrados também
-                currentPage = 1; // Volta para a primeira página após exclusão
-                renderPermissionsTable(filteredPermissions);
-                showMessageModal("Sucesso", `Permissão para "${accessType}" excluída!`);
-            });
+            toggleLoading(true); // Mostra o loading
+
+            try {
+                const params = new URLSearchParams({
+                    action: 'save', // Reutiliza a ação 'save' que já lida com atualização
+                    // Passa os valores ORIGINAIS para identificar a linha na planilha
+                    originalCompany: originalCompany,
+                    originalAccessType: originalAccessType,
+                    // Passa os NOVOS valores para atualizar a linha
+                    company: newCompany,
+                    accessType: newAccessType,
+                    viewMap: viewMap,
+                    locateTeam: locateTeam,
+                    viewHistory: viewHistory,
+                    printHistory: printHistory,
+                    createRoute: createRoute,
+                    settings: settings,
+                    viewUsers: viewUsers,
+                    viewCompanies: viewCompanies,
+                    registerUsers: registerUsers,
+                    registerCompanies: registerCompanies
+                });
+
+                const response = await fetch(`${APPS_SCRIPT_PERMISSIONS_URL}?${params.toString()}`);
+                const result = await response.json();
+
+                if (result.status === "sucesso") {
+                    showMessageModal("Sucesso", result.message, () => {
+                        closeViewEditPermissionModal();
+                        fetchPermissions(); // Recarrega os dados da tabela
+                    });
+                } else {
+                    showMessageModal("Erro", result.message || "Ocorreu um erro ao atualizar a permissão.");
+                }
+            } catch (error) {
+                console.error("Erro ao atualizar permissão:", error);
+                showMessageModal("Erro de Conexão", "Não foi possível conectar ao servidor para atualizar a permissão.");
+            } finally {
+                toggleLoading(false); // Esconde o loading
+            }
+        });
+
+
+        /**
+         * Exclui uma permissão da planilha via Apps Script após confirmação.
+         * @param {string} accessType - O tipo de acesso da permissão a ser excluída.
+         * @param {string} company - A empresa associada à permissão a ser excluída.
+         */
+        function deletePermission(accessType, company) {
+            showMessageModal(
+                "Confirmação",
+                `Tem certeza que deseja excluir a permissão para "${accessType}" da empresa "${company}"?`,
+                async () => { // okCallback
+                    toggleLoading(true); // Mostra o loading
+                    try {
+                        const params = new URLSearchParams({
+                            action: 'delete', // Ação para o Apps Script
+                            company: company,
+                            accessType: accessType
+                        });
+
+                        const response = await fetch(`${APPS_SCRIPT_PERMISSIONS_URL}?${params.toString()}`);
+                        const result = await response.json();
+
+                        if (result.status === "sucesso") {
+                            showMessageModal("Sucesso", result.message, () => {
+                                currentPage = 1; // Volta para a primeira página após exclusão
+                                fetchPermissions(); // Recarrega os dados da tabela
+                            });
+                        } else {
+                            showMessageModal("Erro", result.message || "Ocorreu um erro ao excluir a permissão.");
+                        }
+                    } catch (error) {
+                        console.error("Erro ao excluir permissão:", error);
+                        showMessageModal("Erro de Conexão", "Não foi possível conectar ao servidor para excluir a permissão.");
+                    } finally {
+                        toggleLoading(false); // Esconde o loading
+                    }
+                },
+                true, // showCancel = true
+                () => { // cancelCallback
+                    console.log("Exclusão cancelada pelo usuário.");
+                    // Nenhuma ação adicional é necessária, o modal já foi fechado.
+                }
+            );
         }
 
         // Funções de paginação
@@ -1298,8 +1633,8 @@
 
         // Inicialização ao carregar a página
         window.addEventListener('load', () => {
-            filteredPermissions = permissionsData; // Inicializa com todos os dados
-            renderPermissionsTable(filteredPermissions); // Renderiza a tabela de permissões ao carregar a página
+            fetchPermissions(); // Carrega os dados de permissões da planilha ao iniciar
+            fetchCompanies(); // Carrega a lista de empresas para o dropdown
             generateColumnCheckboxes(); // Gera os checkboxes de visibilidade de colunas
             applyColumnVisibility(); // Aplica a visibilidade inicial das colunas
 
