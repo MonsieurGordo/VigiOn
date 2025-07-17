@@ -1461,10 +1461,9 @@
      */
     async function checkDashboardAuth() {
         const userDataString = localStorage.getItem('vigion_user_data');
-        console.log("checkDashboardAuth: userDataString do localStorage:", userDataString);
         
         if (!userDataString) {
-            console.log("checkDashboardAuth: Nenhum dado de usuário encontrado no localStorage. Redirecionando para login.");
+            console.log("Nenhum dado de usuário encontrado no localStorage. Redirecionando para login.");
             window.location.replace('index.html'); 
             return false;
         }
@@ -1472,9 +1471,8 @@
         let userData;
         try {
             userData = JSON.parse(userDataString);
-            console.log("checkDashboardAuth: userData parseado:", userData);
         } catch (e) {
-            console.error("checkDashboardAuth: Erro ao parsear dados do usuário do localStorage:", e);
+            console.error("Erro ao parsear dados do usuário do localStorage:", e);
             localStorage.clear(); // Limpa dados corrompidos
             window.location.replace('index.html');
             return false;
@@ -1482,17 +1480,8 @@
 
         // Verifica se os dados essenciais para o dashboard estão presentes
         // Usando 'id', 'nome', 'empresa' para consistência
-        let missingData = [];
-        if (!userData) missingData.push("userData é nulo/indefinido");
-        if (!userData.id) missingData.push("ID do usuário ausente");
-        if (!userData.nome) missingData.push("Nome do usuário ausente");
-        if (!userData.autenticado) missingData.push("Status de autenticação ausente");
-        if (!userData.empresa) missingData.push("Empresa do usuário ausente");
-        if (!userData.tipoAcesso) missingData.push("Tipo de acesso ausente");
-        if (!userData.password) missingData.push("Senha (para re-autenticação) ausente"); // Lembre-se da preocupação de segurança aqui
-
-        if (missingData.length > 0) {
-            console.log("checkDashboardAuth: Dados essenciais do usuário incompletos no localStorage. Detalhes:", missingData.join(", "));
+        if (!userData || !userData.id || !userData.nome || !userData.autenticado || !userData.empresa || !userData.tipoAcesso || !userData.password) {
+            console.log("Dados essenciais do usuário incompletos no localStorage. Redirecionando para login.");
             localStorage.clear();
             window.location.replace('index.html');
             return false;
@@ -1504,7 +1493,7 @@
         document.getElementById('loggedInCompany').textContent = userData.empresa || 'N/A';
         document.getElementById('loggedInAccessType').textContent = userData.tipoAcesso || 'Visitante';
         
-        console.log("checkDashboardAuth: Usuário autenticado via localStorage. Exibindo dados no dashboard.");
+        console.log("Usuário autenticado via localStorage.");
         return true; 
     }
 
