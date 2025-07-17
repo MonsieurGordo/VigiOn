@@ -995,7 +995,8 @@
     .add-modal-buttons button.save-btn:hover {
         background-color: #5A73D4;
     }
-    /* Media Queries para responsividade dos modais de adição */
+
+    /* Media Queries para os novos modais de adição */
     @media (max-width: 640px) {
         .add-modal-content {
             padding: 1rem;
@@ -1004,19 +1005,25 @@
         .add-modal-header h3 {
             font-size: 1.3rem;
         }
+        /* O botão de fechar 'X' foi removido, então este estilo não é más necessário */
+        /* .add-modal-header .close-button {
+            font-size: 1.5rem;
+        } */
         .add-modal-grid {
-            grid-template-columns: 1fr; /* Uma coluna em telas pequenas */
+            grid-template-columns: 1fr; /* Uma coluna em telas menores */
             gap: 1rem;
         }
+        .add-modal-grid .status-toggle {
+            grid-column: span 1; /* Ocupa uma coluna */
+        }
         .add-modal-buttons {
-            flex-direction: column;
+            flex-direction: column; /* Botões empilhados em telas menores */
             gap: 0.5rem;
         }
         .add-modal-buttons button {
             width: 100%;
         }
     }
-
   </style>
 </head>
 
@@ -1054,31 +1061,31 @@
       </li>
       <li id="rota-placeholder"></li>
 
-      <!-- NOVO: Botão de Configurações -->
+      <!-- Botão de Configurações -->
       <li>
         <button onclick="openSettingsModal()" id="btn-settings">
           Configurações
         </button>
       </li>
 
-      <!-- NOVO: Botão de Cadastros -->
+      <!-- Botão de Controles -->
       <li>
-        <button onclick="openCadastrosModal('users')" id="btn-cadastros">
+        <button onclick="openShortcutsModal()" id="btn-controles">
+          Controles
+        </button>
+      </li>
+
+      <!-- Botão de Cadastros -->
+      <li>
+        <button onclick="openCadastrosModal()" id="btn-cadastros">
           Cadastros
         </button>
       </li>
 
-      <!-- NOVO: Botão de Permissões -->
+      <!-- NOVO: Botão de Permissões (agora redireciona para uma nova tela) -->
       <li>
-        <button onclick="window.location.href = 'permissions-panel.html'" id="btn-permissions">
+        <button onclick="redirectToPermissionsPanel()" id="btn-permissions">
           Permissões
-        </button>
-      </li>
-
-      <!-- NOVO: Botão de Atalhos -->
-      <li>
-        <button onclick="openShortcutsModal()" id="btn-shortcuts">
-          Atalhos
         </button>
       </li>
     </ul>
@@ -1127,7 +1134,7 @@
       </div>
   </div>
 
-  <!-- NOVO: Modal de Configurações do Mapa -->
+  <!-- Modal de Configurações do Mapa -->
   <div id="settingsModal" class="settings-modal-overlay">
       <div class="settings-modal-content">
           <h3>Configurações do Mapa</h3>
@@ -1144,140 +1151,429 @@
       </div>
   </div>
 
-  <!-- NOVO: Modal de Atalhos -->
+  <!-- Modal de Atalhos -->
   <div id="shortcutsModal" class="shortcuts-modal-overlay">
       <div class="shortcuts-modal-content">
-          <h3>Atalhos do Sistema</h3>
+          <h3>Atalhos de Teclado</h3>
           <ul class="shortcuts-list">
               <li>
-                  <span class="shortcut-key">F1</span>
-                  <span class="shortcut-description">Abrir/Fechar Sidebar</span>
-              </li>
-              <li>
-                  <span class="shortcut-key">Ctrl + M</span>
-                  <span class="shortcut-description">Centralizar mapa em sua localização</span>
-              </li>
-              <li>
-                  <span class="shortcut-key">Alt + L</span>
-                  <span class="shortcut-description">Abrir "Localizar Equipe"</span>
-              </li>
-              <li>
-                  <span class="shortcut-key">Alt + H</span>
-                  <span class="shortcut-description">Abrir "Histórico"</span>
-              </li>
-              <li>
-                  <span class="shortcut-key">Alt + R</span>
-                  <span class="shortcut-description">Abrir "Criar Rota"</span>
-              </li>
-              <li>
-                  <span class="shortcut-key">Esc</span>
-                  <span class="shortcut-description">Fechar qualquer modal aberto</span>
+                  <span class="shortcut-key">Ctrl + R</span>
+                  <span class="shortcut-description">Atualiza os marcadores do mapa sem alterar o foco ou o zoom atual do usuário.</span>
               </li>
               <li>
                   <span class="shortcut-key">Ctrl + P</span>
-                  <span class="shortcut-description">Abrir Modal de Perfil</span>
+                  <span class="shortcut-description">Imprime o relatório de histórico (Em desenvolvimento).</span>
               </li>
-              <li>
-                  <span class="shortcut-key">Ctrl + S</span>
-                  <span class="shortcut-description">Abrir Modal de Configurações do Mapa</span>
-              </li>
-              <li>
-                  <span class="shortcut-key">Ctrl + C</span>
-                  <span class="shortcut-description">Abrir Modal de Cadastros</span>
-              </li>
-              <li>
-                  <span class="shortcut-key">Ctrl + Alt + L</span>
-                  <span class="shortcut-description">Fazer Logout do Sistema</span>
-              </li>
+              <!-- Adicionar mais atalhos aqui no futuro -->
           </ul>
-          <button onclick="closeShortcutsModal()">Entendi</button>
+          <button onclick="closeShortcutsModal()">Fechar</button>
       </div>
   </div>
 
-  <!-- NOVO: Modal de Cadastros (Usuários e Empresas) -->
+  <!-- Modal de Cadastros -->
   <div id="cadastrosModal" class="cadastros-modal-overlay">
       <div class="cadastros-modal-content">
           <div class="cadastros-header">
-              <h3 id="cadastrosModalTitle">Cadastros</h3>
-              <button id="addCadastroButton">+ Adicionar</button>
-          </div>
-          <div class="cadastros-tabs">
-              <button class="cadastros-tab-button active" id="tabUsers" onclick="switchCadastroTab('users')">Usuários</button>
-              <button class="cadastros-tab-button" id="tabCompanies" onclick="switchCadastroTab('companies')">Empresas</button>
+              <h3>Painel de Cadastros</h3>
+              <!-- O botão "+ Adicionar" agora chama a função openAddModal() -->
+              <button id="addCadastrosButton">+ Adicionar</button>
           </div>
           
-          <div class="cadastros-filters">
-              <input type="text" id="searchCadastroInput" placeholder="Pesquisar..." />
-              <select id="filterCadastroStatus">
-                  <option value="todos">Todos os Status</option>
-                  <option value="ativo">Ativo</option>
-                  <option value="inativo">Inativo</option>
-                  <option value="bloqueado">Bloqueado</option>
-              </select>
+          <div class="cadastros-tabs">
+              <button class="cadastros-tab-button active" id="tabUsers" onclick="showCadastrosTab('users')">Usuários</button>
+              <button class="cadastros-tab-button" id="tabCompanies" onclick="showCadastrosTab('companies')">Empresas</button>
           </div>
 
-          <div class="cadastros-table-container">
-              <table class="cadastros-table">
-                  <thead>
-                      <tr id="cadastrosTableHeader">
-                          <!-- Cabeçalhos serão injetados por JS -->
-                      </tr>
-                  </thead>
-                  <tbody id="cadastrosTableBody">
-                      <!-- Dados serão injetados por JS -->
-                  </tbody>
-              </table>
-          </div>
-          <div class="cadastros-pagination">
-              <span>Mostrando 1 a <span id="displayedCadastroResultsCount"></span> de <span id="totalCadastroResultsCount"></span> resultados</span>
-              <div class="cadastros-pagination-buttons">
-                  <button id="prevCadastroPageButton">&lt;</button>
-                  <button class="active" id="currentCadastroPageButton">1</button>
-                  <button id="nextCadastroPageButton">&gt;</button>
+          <div id="cadastrosUsersContent" class="cadastros-tab-content">
+              <div class="cadastros-filters">
+                  <input type="text" placeholder="Pesquisar por nome..." />
+                  <label for="statusFilterUsers">Status:</label>
+                  <select id="statusFilterUsers">
+                      <option value="ativos">Ativos</option>
+                      <option value="inativos">Inativos</option>
+                      <option value="bloqueados">Bloqueados</option>
+                      <option value="todos">Todos</option>
+                  </select>
+              </div>
+              <div class="cadastros-table-container">
+                  <table class="cadastros-table">
+                      <thead>
+                          <tr>
+                              <th>USUÁRIO</th>
+                              <th>NOME</th>
+                              <th>EMPRESA</th>
+                              <th>ACESSO</th>
+                              <th>AÇÕES</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <!-- Exemplo de dados de Usuários (atualizados) -->
+                          <tr>
+                              <td>joaosilva</td>
+                              <td><span class="user-avatar">JS</span> João Silva</td>
+                              <td>Empresa A</td>
+                              <td>Admin</td>
+                              <td class="action-buttons">
+                                  <button title="Visualizar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  </button>
+                                  <button title="Editar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                                  </button>
+                                  <button title="Bloquear">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                  </button>
+                                  <button title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                  </button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>mariasouza</td>
+                              <td><span class="user-avatar">MS</span> Maria Souza</td>
+                              <td>Empresa B</td>
+                              <td>Gestor</td>
+                              <td class="action-buttons">
+                                  <button title="Visualizar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  </button>
+                                  <button title="Editar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                                  </button>
+                                  <button title="Bloquear">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                  </button>
+                                  <button title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                  </button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>carlosoliver</td>
+                              <td><span class="user-avatar">CO</span> Carlos Oliveira</td>
+                              <td>Empresa C</td>
+                              <td>Usuário</td>
+                              <td class="action-buttons">
+                                  <button title="Visualizar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  </button>
+                                  <button title="Editar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                                  </button>
+                                  <button title="Bloquear">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                  </button>
+                                  <button title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                  </button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>anasantos</td>
+                              <td><span class="user-avatar">AS</span> Ana Santos</td>
+                              <td>Empresa A</td>
+                              <td>Visitante</td>
+                              <td class="action-buttons">
+                                  <button title="Visualizar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  </button>
+                                  <button title="Editar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                                  </button>
+                                  <button title="Bloquear">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                  </button>
+                                  <button title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                  </button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>pedrocosta</td>
+                              <td><span class="user-avatar">PC</span> Pedro Costa</td>
+                              <td>Empresa B</td>
+                              <td>Usuário</td>
+                              <td class="action-buttons">
+                                  <button title="Visualizar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  </button>
+                                  <button title="Editar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                                  </button>
+                                  <button title="Bloquear">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                  </button>
+                                  <button title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                  </button>
+                              </td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+              <div class="cadastros-pagination">
+                  <span>Mostrando 1 a 5 de 5 resultados</span>
+                  <div class="cadastros-pagination-buttons">
+                      <button>&lt;</button>
+                      <button class="active">1</button>
+                      <button disabled>&gt;</button>
+                  </div>
               </div>
           </div>
 
+          <div id="cadastrosCompaniesContent" class="cadastros-tab-content hidden">
+              <div class="cadastros-filters">
+                  <input type="text" placeholder="Pesquisar por nome..." />
+                  <label for="statusFilterCompanies">Status:</label>
+                  <select id="statusFilterCompanies">
+                      <option value="ativos">Ativos</option>
+                      <option value="inativos">Inativos</option>
+                      <option value="bloqueados">Bloqueados</option>
+                      <option value="todos">Todos</option>
+                  </select>
+              </div>
+              <div class="cadastros-table-container">
+                  <table class="cadastros-table">
+                      <thead>
+                          <tr>
+                              <th>CNPJ</th>
+                              <th>NOME</th>
+                              <th>PROPRIETÁRIO</th>
+                              <th>STATUS</th>
+                              <th>AÇÕES</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <!-- Exemplo de dados de Empresas (atualizados) -->
+                          <tr>
+                              <td>01.234.567/0001-89</td>
+                              <td><span class="user-avatar">TS</span> Tech Solutions Ltda</td>
+                              <td>João da Silva</td>
+                              <td><span class="status-badge ativo">Ativo</span></td>
+                              <td class="action-buttons">
+                                  <button title="Visualizar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  </button>
+                                  <button title="Editar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                                  </button>
+                                  <button title="Bloquear">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                  </button>
+                                  <button title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                  </button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>98.765.432/0001-10</td>
+                              <td><span class="user-avatar">IS</span> Inova Sistemas SA</td>
+                              <td>Maria Oliveira</td>
+                              <td><span class="status-badge ativo">Ativo</span></td>
+                              <td class="action-buttons">
+                                  <button title="Visualizar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  </button>
+                                  <button title="Editar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                                  </button>
+                                  <button title="Bloquear">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                  </button>
+                                  <button title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                  </button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>12.345.678/0001-23</td>
+                              <td><span class="user-avatar">DM</span> Digital Marketing ME</td>
+                              <td>Pedro Almeida</td>
+                              <td><span class="status-badge inativo">Inativo</span></td>
+                              <td class="action-buttons">
+                                  <button title="Visualizar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  </button>
+                                  <button title="Editar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                                  </button>
+                                  <button title="Bloquear">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                  </button>
+                                  <button title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                  </button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>54.321.098/0001-45</td>
+                              <td><span class="user-avatar">CS</span> Cloud Services EIRELI</td>
+                              <td>Carla Santos</td>
+                              <td><span class="status-badge bloqueado">Bloqueado</span></td>
+                              <td class="action-buttons">
+                                  <button title="Visualizar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  </button>
+                                  <button title="Editar">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                                  </button>
+                                  <button title="Bloquear">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                  </button>
+                                  <button title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                  </button>
+                              </td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+              <div class="cadastros-pagination">
+                  <span>Mostrando 1 a 4 de 4 resultados</span>
+                  <div class="cadastros-pagination-buttons">
+                      <button>&lt;</button>
+                      <button class="active">1</button>
+                      <button disabled>&gt;</button>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Rodapé do Modal de Cadastros com o botão de fechar -->
           <div class="cadastros-modal-footer">
               <button class="close-modal-button" onclick="closeCadastrosModal()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="17 16 22 12 17 8"/><line x1="22" x2="11" y1="12" y2="12"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                   Fechar
               </button>
           </div>
       </div>
   </div>
 
-  <!-- NOVO: Modal para Adicionar/Editar Usuário/Empresa (aninhado) -->
-  <div id="addEditCadastroModal" class="add-modal-overlay">
+  <!-- NOVO: Modal para Adicionar Novo Usuário -->
+  <div id="addUserModal" class="add-modal-overlay">
       <div class="add-modal-content">
           <div class="add-modal-header">
-              <h3 id="addEditCadastroModalTitle">Adicionar Novo Cadastro</h3>
+              <h3>Adicionar Novo Usuário</h3>
+              <!-- Botão de fechar 'X' removido daqui -->
           </div>
-          <div id="addEditCadastroForm" class="add-modal-grid">
-              <!-- Formulário será injetado por JS (usuário ou empresa) -->
+          <div class="add-modal-grid">
+              <div class="form-group">
+                  <label for="addUserUsername">Usuário</label>
+                  <input type="text" id="addUserUsername" placeholder="Nome de usuário">
+              </div>
+              <div class="form-group">
+                  <label for="addUserFullName">Nome</label>
+                  <input type="text" id="addUserFullName" placeholder="Nome completo do usuário">
+              </div>
+              <div class="form-group">
+                  <label for="addUserCompany">Empresa</label>
+                  <select id="addUserCompany">
+                      <option value="Empresa 1">Empresa 1</option>
+                      <option value="Empresa 2">Empresa 2</option>
+                      <option value="Empresa 3">Empresa 3</option>
+                  </select>
+              </div>
+              <!-- Coluna Autenticação removida da tabela, mas mantida no formulário de adição -->
+              <div class="form-group status-toggle">
+                  <label for="addUserAuthentication">Autenticação</label>
+                  <label class="switch">
+                      <input type="checkbox" id="addUserAuthentication" checked>
+                      <span class="slider"></span>
+                  </label>
+                  <span id="authStatusText">SIM</span>
+              </div>
+              <div class="form-group">
+                  <label for="addUserAccess">Acesso</label>
+                  <select id="addUserAccess">
+                      <option value="Admin">Admin</option>
+                      <option value="Gestor">Gestor</option>
+                      <option value="Usuario">Usuário</option>
+                      <option value="Visitante">Visitante</option>
+                  </select>
+              </div>
+              <div class="form-group">
+                  <label for="addUserPassword">Senha</label>
+                  <input type="text" id="addUserPassword" readonly>
+              </div>
           </div>
           <div class="add-modal-buttons">
-              <button class="cancel-btn" onclick="closeAddEditCadastroModal()">Cancelar</button>
-              <button class="save-btn" id="saveCadastroButton">Salvar</button>
+              <button class="cancel-btn" onclick="closeAddUserModal()">Cancelar</button>
+              <button class="save-btn" onclick="saveNewUser()">Salvar</button>
           </div>
       </div>
   </div>
 
+  <!-- NOVO: Modal para Adicionar Nova Empresa -->
+  <div id="addCompanyModal" class="add-modal-overlay">
+      <div class="add-modal-content">
+          <div class="add-modal-header">
+              <h3>Adicionar Nova Empresa</h3>
+              <!-- Botão de fechar 'X' removido daqui -->
+          </div>
+          <div class="add-modal-grid">
+              <div class="form-group">
+                  <label for="addCompanyCNPJ">CNPJ</label>
+                  <input type="text" id="addCompanyCNPJ" placeholder="XX.XXX.XXX/XXXX-XX">
+              </div>
+              <div class="form-group">
+                  <label for="addCompanyCompanyName">Nome Empresa</label>
+                  <input type="text" id="addCompanyCompanyName" placeholder="Nome completo da empresa">
+              </div>
+              <div class="form-group">
+                  <label for="addCompanyOwner">Proprietário Empresa</label>
+                  <input type="text" id="addCompanyOwner" placeholder="Nome do proprietário">
+              </div>
+              <!-- Telefone e E-mail removidos da tabela, mas mantidos no formulário de adição -->
+              <div class="form-group">
+                  <label for="addCompanyPhone">Telefone</label>
+                  <input type="tel" id="addCompanyPhone" placeholder="(XX) XXXX-XXXX">
+              </div>
+              <div class="form-group">
+                  <label for="addCompanyEmail">E-mail</label>
+                  <input type="email" id="addCompanyEmail" placeholder="contato@empresa.com">
+              </div>
+              <div class="form-group">
+                  <label for="addCompanyAddress">Endereço</label>
+                  <input type="text" id="addCompanyAddress" placeholder="Rua, Número, Bairro, Cidade">
+              </div>
+              <div class="form-group status-toggle">
+                  <label for="addCompanyStatus">Status</label>
+                  <label class="switch">
+                      <input type="checkbox" id="addCompanyStatus" checked>
+                      <span class="slider"></span>
+                  </label>
+                  <span id="companyStatusText">Ativo</span>
+              </div>
+          </div>
+          <div class="add-modal-buttons">
+              <button class="cancel-btn" onclick="closeAddCompanyModal()">Cancelar</button>
+              <button class="save-btn" onclick="saveNewCompany()">Salvar</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- REMOVIDO: Modal de Permissões (agora é uma tela separada) -->
+  <!-- REMOVIDO: Modal para Adicionar Nova Permissão (agora é uma tela separada) -->
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
     // URL da sua API do Google Apps Script para AUTENTICAÇÃO E LOGIN (apenas).
-    // Esta URL agora aponta para a API Centralizada
-    // ATENÇÃO: SUBSTITUA PELA SUA URL REAL DA API CENTRALIZADA (doPost)
-    const APPS_SCRIPT_CENTRAL_API_URL = "https://script.google.com/macros/s/AKfycbw-c0s0e8s8k8l8m8n8o8p8q8r8s8t8u8v8w8x8y8z8/exec"; // Exemplo: URL de um doPost
+    const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
+    // URL da sua API do Google Apps Script para ATUALIZAR PERFIL.
+    // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU SCRIPT DE ATUALIZAÇÃO DE PERFIL PUBLICADO!**
+    const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brgSr5mAYMNOj9eXDdixQ/exec"; // URL fornecida pelo usuário
+    // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
+    const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
 
     // Variáveis globais para o mapa Leaflet
     let map;
     let currentTileLayer; // Para gerenciar a camada de tiles atual
+    let markersLayer; // Camada para marcadores de localização atual
+    let allMarkers = []; // Armazena todos os dados de marcadores atuais (Localizações)
+    let historicoMarkers = []; // Armazena marcadores do histórico
 
     // Definição das camadas de mapa
-    // Satélite: Agora usando a camada Esri World Imagery para um visual mais próximo da imagem anexada
     const tileLayers = {
         default: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -1285,45 +1581,26 @@
         satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
         })
-        // A opção 'terrain' foi removida conforme solicitado.
     };
-
 
     // Coordenadas de Cuiabá - MT (Centro aproximado)
     const CUIABA_LAT = -15.6014;
     const CUIABA_LON = -56.0979;
     const INITIAL_ZOOM = 13; // Nível de zoom razoável para a cidade
 
-    // Variáveis globais para marcadores (apenas declaração para evitar ReferenceError)
-    let markersLayer; 
-    let allMarkers = []; 
-    let historicoMarkers = []; 
-
-    // ID da sua planilha e nomes das abas (apenas declaração para evitar ReferenceError)
-    // ESTES NÃO SÃO MAIS USADOS DIRETAMENTE NO FRONTEND, APENAS NA API CENTRALIZADA
-    // const SHEET_ID = '1C8RlFUa9FEmiAUVrNYC7PTRUTGepkVXXwsND5OoC1Y'; 
-    // const SHEET_NAME_LOCAL = 'Localizações';
-    // const SHEET_NAME_HIST = 'Historico';
-
-    // URLs para as APIs Google Sheets (Query Language) (apenas declaração para evitar ReferenceError)
-    // ESTES NÃO SÃO MAIS USADOS DIRETAMENTE NO FRONTEND, APENAS NA API CENTRALIZADA
-    // const SHEET_URL_LOCAL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME_LOCAL)}`;
-    // const SHEET_URL_HIST = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME_HIST)}`;
-
-
     // Variável para o temporizador de inatividade
     let inactivityTimer;
     // Tempo limite de inatividade em milissegundos (30 minutos)
     const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos * 60 segundos * 1000 milissegundos
 
-    // Variáveis para o modal de Cadastros
-    let currentCadastroTab = 'users'; // 'users' ou 'companies'
-    let usersData = [];
-    let companiesData = [];
-    let filteredCadastroData = [];
-    let currentCadastroPage = 1;
-    const cadastroRowsPerPage = 10;
-    let currentEditingCadastro = null; // Armazena o objeto de usuário/empresa em edição
+    // Variável para o temporizador de atualização do mapa
+    let mapUpdateInterval;
+    const MAP_UPDATE_INTERVAL_MS = 60 * 1000; // 60 segundos
+
+    // Variável para armazenar a aba ativa no modal de cadastros
+    let activeCadastrosTab = 'users'; // 'users' ou 'companies'
+
+    // REMOVIDO: permissionsData array (agora será gerenciado na nova tela de permissões)
 
     /** Funções do Modal de Mensagens */
     function showMessageModal(title, message, callback = null) {
@@ -1397,11 +1674,12 @@
             searchInput.value = ''; // Campo vazio
         }
         document.getElementById('search-input').focus();
-        showMessageModal('Funcionalidade de busca não implementada neste layout.', 'Aguarde as próximas atualizações.');
-        document.getElementById('btn-search').onclick = () => showMessageModal('Funcionalidade de busca não implementada neste layout.', 'Aguarde as próximas atualizações.');
+        document.getElementById('btn-search').onclick = () => showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo e atualizando!');
         document.getElementById('search-input').addEventListener('keyup', (e) => {
-          if (e.key === 'Enter') showMessageModal('Funcionalidade de busca não implementada neste layout.', 'Aguarde as próximas atualizações.');
+          if (e.key === 'Enter') showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo!');
         });
+        // Inicia a atualização do mapa para a view "Localizar Equipe"
+        startMapUpdates(true); // Inicia com recentralização
 
       } else if (view === 'historico') {
         document.getElementById('btn-historico').classList.add('active');
@@ -1416,14 +1694,21 @@
         `;
         // Adicionar listeners básicos para o layout
         document.getElementById('hist-latlng').focus();
-        showMessageModal('Funcionalidade de histórico não implementada neste layout.', 'Aguarde as próximas atualizações.');
-        document.getElementById('btn-historico-buscar').onclick = () => showMessageModal('Funcionalidade de histórico não implementada neste layout.', 'Aguarde as próximas atualizações.');
-        document.getElementById('btn-historico-pdf').onclick = () => showMessageModal('Funcionalidade de PDF não implementada neste layout.', 'Aguarde as próximas atualizações.');
+        showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
+        document.getElementById('btn-historico-buscar').onclick = () => showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
+        document.getElementById('btn-historico-pdf').onclick = () => showMessageModal('Funcionalidade de PDF', 'A geração de PDF será implementada em breve.');
         ['hist-latlng','hist-date-start','hist-date-end'].forEach(id => {
           document.getElementById(id).addEventListener('keyup', e => {
-            if (e.key === 'Enter') showMessageModal('Funcionalidade de histórico não implementada neste layout.', 'Aguarde as próximas atualizações.');
+            if (e.key === 'Enter') showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
           });
         });
+        // Para a atualização do mapa ao sair da view "Localizar Equipe"
+        stopMapUpdates();
+        // Limpa os marcadores do mapa
+        markersLayer.clearLayers();
+        allMarkers = [];
+        historicoMarkers.forEach(m => map.removeLayer(m));
+        historicoMarkers = [];
 
       } else if (view === 'rota') {
         document.getElementById('btn-rota').classList.add('active');
@@ -1435,11 +1720,18 @@
         `;
         // Adicionar listeners básicos para o layout
         document.getElementById('rota-latlng').focus();
-        showMessageModal('Funcionalidade de rota não implementada neste layout.', 'Aguarde as próximas atualizações.');
-        document.getElementById('btn-rota-buscar').onclick = () => showMessageModal('Funcionalidade de rota não implementada neste layout.', 'Aguarde as próximas atualizações.');
+        showMessageModal('Funcionalidade de Rota', 'A funcionalidade de criação de rotas será implementada em breve. O mapa já está ativo!');
+        document.getElementById('btn-rota-buscar').onclick = () => showMessageModal('Funcionalidade de Rota', 'A funcionalidade de criação de rotas será implementada em breve. O mapa já está ativo!');
         document.getElementById('rota-latlng').addEventListener('keyup', e => {
-          if (e.key === 'Enter') showMessageModal('Funcionalidade de rota não implementada neste layout.', 'Aguarde as próximas atualizações.');
+          if (e.key === 'Enter') showMessageModal('Funcionalidade de Rota', 'A funcionalidade de criação de rotas será implementada em breve. O mapa já está ativo!');
         });
+        // Para a atualização do mapa ao sair da view "Localizar Equipe"
+        stopMapUpdates();
+        // Limpa os marcadores do mapa
+        markersLayer.clearLayers();
+        allMarkers = [];
+        historicoMarkers.forEach(m => map.removeLayer(m));
+        historicoMarkers = [];
       }
     }
 
@@ -1447,8 +1739,10 @@
     function logout() {
       // Limpa todos os dados de sessão/lembrar-me
       localStorage.removeItem('vigion_user_data');
-      localStorage.removeItem('vigion_username'); // Pode ser removido se não for más usado
-      localStorage.removeItem('vigion_company'); // Pode ser removido se não for más usado
+      localStorage.removeItem('vigion_username');
+      localStorage.removeItem('vigion_company'); 
+      // Para a atualização do mapa
+      stopMapUpdates();
       // Redireciona para a tela de login
       window.location.replace('index.html'); 
     }
@@ -1479,8 +1773,9 @@
         }
 
         // Verifica se os dados essenciais para o dashboard estão presentes
-        // Usando 'id', 'nome', 'empresa' para consistência
-        if (!userData || !userData.id || !userData.nome || !userData.autenticado || !userData.empresa || !userData.tipoAcesso || !userData.password) {
+        // Agora, incluímos 'password' na verificação, pois ele será salvo no index.html
+        // O `id` é o `username` que o Apps Script retorna como `data.id`
+        if (!userData || !userData.id || !userData.nomeCompleto || !userData.autenticado || !userData.password) {
             console.log("Dados essenciais do usuário incompletos no localStorage. Redirecionando para login.");
             localStorage.clear();
             window.location.replace('index.html');
@@ -1488,9 +1783,8 @@
         }
 
         // Preenche as labels diretamente com os dados do localStorage.
-        // Usando 'nome' e 'empresa' para consistência
-        document.getElementById('loggedInUsername').textContent = userData.nome || 'N/A';
-        document.getElementById('loggedInCompany').textContent = userData.empresa || 'N/A';
+        document.getElementById('loggedInUsername').textContent = userData.nomeCompleto || 'N/A';
+        document.getElementById('loggedInCompany').textContent = userData.company || 'N/A';
         document.getElementById('loggedInAccessType').textContent = userData.tipoAcesso || 'Visitante';
         
         console.log("Usuário autenticado via localStorage.");
@@ -1512,6 +1806,7 @@
       // Conforme a imagem, apenas "Leaflet" é o link, "leaflet" é texto simples sem link.
       map.attributionControl.setPrefix('<a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> | leaflet');
 
+      markersLayer = L.layerGroup().addTo(map); // Inicializa a camada de marcadores
 
       // Garante que o mapa se redimensione corretamente se o contêiner mudar de tamanho
       map.invalidateSize(); 
@@ -1522,6 +1817,203 @@
       });
 
       console.log("Mapa Leaflet inicializado em Cuiabá-MT.");
+    }
+
+    /** Converte a string de data serializada do Google Sheets para um objeto JS Date */
+    function parseSerializedDate(serializedDate) {
+      // Formato esperado: Date(YYYY,MM,DD,hh,mm,ss)
+      const match = serializedDate.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
+      if (!match) return null;
+      // Note: month is 0-indexed in JS Date, so we subtract 1
+      const [_, year, month, day, hour, minute, second] = match.map(Number);
+      return new Date(year, month, day, hour, minute, second);
+    }
+
+    /** Formata um objeto JS Date ou string serializada para “dd/MM/yyyy hh:mm:ss AM/PM” */
+    function formatDateTime(dateInput) {
+      let date;
+      if (typeof dateInput === 'string' && dateInput.startsWith('Date(')) {
+          date = parseSerializedDate(dateInput);
+      } else if (dateInput instanceof Date) {
+          date = dateInput;
+      } else {
+          return dateInput; // Retorna o original se não for string serializada ou Date object
+      }
+
+      if (!date) return dateInput;
+
+      const pad = n => n.toString().padStart(2, '0');
+      const day = pad(date.getDate());
+      const month = pad(date.getMonth() + 1);
+      const year = date.getFullYear();
+      let hrs24 = date.getHours();
+      const h12 = hrs24 % 12 || 12; // Converte 0 para 12 para AM/PM
+      const mins = pad(date.getMinutes());
+      const secs = pad(date.getSeconds());
+      const ampm = hrs24 >= 12 ? 'PM' : 'AM'; // Define AM/PM
+      return `${day}/${month}/${year} ${pad(h12)}:${mins}:${secs} ${ampm}`;
+    }
+
+    /** Cria ícone tipo pin SVG com cor e tamanho ajustados */
+    function createPinIcon(color) {
+      // Tamanho do SVG e anchor point ajustados para um visual melhor
+      const iconSize = [36, 60]; // Reduzido um pouco para ser menos intrusivo
+      const iconAnchor = [18, 58]; // Ponta inferior do pin
+      const popupAnchor = [0, -50]; // Posição do pop-up acima do pin
+
+      const svg = `
+        <svg width="${iconSize[0]}" height="${iconSize[1]}" viewBox="0 0 24 40" xmlns="http://www.w3.org/2000/svg">
+          <path fill="${color}" stroke="black" stroke-width="0.8"
+                d="M12,2C8.13,2,5,5.13,5,9c0,5.25,7,13,7,13s7-7.75,7-13C19,5.13,15.87,2,12,2z"/>
+          <circle fill="white" cx="12" cy="9" r="2.5"/>
+        </svg>
+      `;
+      return L.divIcon({
+        className: 'svg-pin-icon',
+        html: svg,
+        iconSize: iconSize,
+        iconAnchor: iconAnchor,
+        popupAnchor: popupAnchor
+      });
+    }
+
+    /**
+     * Busca os dados de localização via Google Apps Script e atualiza os marcadores no mapa.
+     * @param {boolean} recenterMap - Se true, o mapa será recentralizado e ajustado aos marcadores.
+     * Se false, apenas os marcadores serão atualizados sem mudar o foco do mapa.
+     */
+    async function fetchLocalizacoes(recenterMap = true) {
+      if (!map || !markersLayer) {
+          console.warn("Mapa ou camada de marcadores não inicializados. Pulando fetchLocalizacoes.");
+          return;
+      }
+
+      const userDataString = localStorage.getItem('vigion_user_data');
+      if (!userDataString) {
+          console.error("Dados do usuário não encontrados no localStorage para buscar localizações.");
+          showMessageModal("Erro", "Sua sessão expirou. Por favor, faça login novamente.");
+          logout();
+          return;
+      }
+      const userData = JSON.parse(userDataString);
+      const username = userData.id; // Usar 'id' do userData para o Apps Script
+      const password = userData.password; // A senha é necessária para autenticação no Apps Script
+
+      if (!username || !password) {
+          console.error("Username ou password ausentes nos dados do usuário para buscar localizações.");
+          showMessageModal("Erro", "Dados de login incompletos. Por favor, faça login novamente.");
+          logout();
+          return;
+      }
+
+      const params = new URLSearchParams({
+          username: username,
+          password: password
+      });
+
+      try {
+        const response = await fetch(`${APPS_SCRIPT_FETCH_LOCATIONS_URL}?${params.toString()}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
+        }
+        const result = await response.json();
+
+        if (result.status === "sucesso") {
+            markersLayer.clearLayers(); // Limpa todos os marcadores existentes
+            allMarkers = []; // Reseta o array de marcadores
+
+            let bounds = L.latLngBounds([]); // Para ajustar o zoom do mapa
+
+            result.data.forEach(location => {
+                if (location.latitude == null || location.longitude == null || isNaN(location.latitude) || isNaN(location.longitude)) {
+                    console.warn(`Pulando localização inválida para ${location.nome}: Latitude/Longitude inválidas.`);
+                    return;
+                }
+
+                let color = '#757575'; // Cor padrão (cinza)
+                // Usando EXCLUSIVAMENTE location.estado para determinar a cor do marcador
+                const lowerEstado = String(location.estado || '').toLowerCase(); // Garante que 'estado' é usado
+
+                if      (lowerEstado === 'ativo')     color = '#5A73D4'; // Azul (cor secundária)
+                else if (lowerEstado === 'atencao' || lowerEstado === 'atenção') color = '#FFC107'; // Laranja
+                else if (lowerEstado === 'critico'  || lowerEstado === 'crítico') color = '#F44336'; // Vermelho
+                else if (lowerEstado === 'inativo')  color = '#757575'; // Cinza
+                // Se o estado não corresponder a nenhum dos acima, ele permanecerá cinza (padrão)
+
+                const pinIcon = createPinIcon(color);
+                const marker = L.marker([location.latitude, location.longitude], { icon: pinIcon }).addTo(markersLayer);
+
+                // Conteúdo do tooltip (rótulo permanente)
+                marker.bindTooltip(`<div class="marker-label-popup">${location.nome}</div>`, {
+                  permanent: true,
+                  direction: 'top',
+                  offset: [0, -55], // Ajusta offset para o novo tamanho do pin
+                  opacity: 0.9
+                }).openTooltip();
+
+                // Conteúdo do popup (clicável)
+                marker.bindPopup(`
+                  <strong>Nome:</strong> ${location.nome}<br>
+                  <strong>Data/Hora:</strong> ${formatDateTime(location.dataHora)}<br>
+                  <strong>Latitude:</strong> ${location.latitude}<br>
+                  <strong>Longitude:</strong> ${location.longitude}<br>
+                  <strong>Endereço:</strong> ${location.endereco}<br>
+                  <strong>Estado do Técnico:</strong> ${location.estado}<br>
+                  <strong>Protocolo:</strong> ${location.protocolo}<br>
+                  <strong>Status do Dispositivo:</strong> ${location.statusDispositivo}<br>
+                  <strong>Observações:</strong> ${location.observacoes}
+                `);
+
+                allMarkers.push({ marker, nome: location.nome, lat: location.latitude, lng: location.longitude, estado: location.estado, protocolo: location.protocolo }); // Adicionado protocolo ao allMarkers
+                bounds.extend([location.latitude, location.longitude]); // Estende o limite para o zoom
+            });
+
+            // Ajusta o mapa para mostrar todos os marcadores, se houver
+            if (markersLayer.getLayers().length > 0) {
+                if (recenterMap) { // Apenas recentraliza se recenterMap for true
+                    map.fitBounds(bounds, { padding: [20, 20] });
+                }
+            } else {
+                // Se não houver marcadores, volta para a visão padrão de Cuiabá APENAS se recenterMap for true
+                if (recenterMap) {
+                    map.setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM);
+                }
+            }
+            console.log(`Localizações atualizadas. ${markersLayer.getLayers().length} marcadores exibidos.`);
+        } else {
+            console.error("Erro no Apps Script ao buscar localizações:", result.message);
+            showMessageModal("Erro na Busca", result.message || "Não foi possível carregar as localizações.");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar localizações:", error);
+        showMessageModal("Erro de Conexão", `Não foi possível carregar as localizações: ${error.message}.`);
+      }
+    }
+
+    /**
+     * Inicia o temporizador para atualização do mapa.
+     * @param {boolean} initialRecenter - Se true, força a recentralização na primeira chamada.
+     */
+    function startMapUpdates(initialRecenter = false) {
+        // Limpa qualquer intervalo existente para evitar duplicação
+        if (mapUpdateInterval) {
+            clearInterval(mapUpdateInterval);
+        }
+        // Inicia a primeira busca. Se for a carga inicial, recentraliza.
+        fetchLocalizacoes(initialRecenter);
+        // Configura o intervalo para buscas futuras, SEMPRE sem recentralizar
+        mapUpdateInterval = setInterval(() => fetchLocalizacoes(false), MAP_UPDATE_INTERVAL_MS);
+        console.log("Atualização automática do mapa iniciada.");
+    }
+
+    /** Para o temporizador de atualização do mapa. */
+    function stopMapUpdates() {
+        if (mapUpdateInterval) {
+            clearInterval(mapUpdateInterval);
+            mapUpdateInterval = null;
+            console.log("Atualização automática do mapa parada.");
+        }
     }
 
     // --- Funções do Modal de Edição de Perfil ---
@@ -1539,9 +2031,8 @@
         const userData = JSON.parse(userDataString);
 
         // Preenche os campos do modal com os dados atuais do usuário
-        // Usando 'nome' e 'empresa' para consistência
-        document.getElementById('editProfileName').value = userData.nome || ''; 
-        document.getElementById('editProfileCompany').value = userData.empresa || ''; 
+        document.getElementById('editProfileName').value = userData.nomeCompleto || '';
+        document.getElementById('editProfileCompany').value = userData.company || '';
         // A senha não é preenchida por segurança, o usuário deve digitá-la para alterar
         // ou deixá-la em branco para manter a atual.
         document.getElementById('editProfilePassword').value = ''; 
@@ -1566,9 +2057,9 @@
         }
         const userData = JSON.parse(userDataString);
 
-        // Usando 'id' e 'nome' para consistência
+        // O ID é o 'id' salvo no localStorage (que veio do Apps Script)
         const id = userData.id; 
-        const oldName = userData.nome; 
+        const oldName = userData.nomeCompleto; // O nome completo atual (Coluna B)
         const newName = document.getElementById('editProfileName').value.trim();
         const newCompany = document.getElementById('editProfileCompany').value.trim();
         let newPassword = document.getElementById('editProfilePassword').value.trim();
@@ -1595,7 +2086,6 @@
 
         try {
             const params = new URLSearchParams({
-                action: 'updateProfile', // Ação para a API Centralizada
                 id: id,
                 oldName: oldName,
                 newName: newName,
@@ -1603,14 +2093,10 @@
                 newPassword: newPassword
             });
 
-            // Requisição POST para a API Centralizada
-            const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded', // Tipo de conteúdo para URLSearchParams
-                },
-                body: params.toString()
-            });
+            console.log("Enviando requisição GET para: ", APPS_SCRIPT_UPDATE_PROFILE_URL);
+            console.log("Parâmetros da requisição: ", params.toString());
+
+            const response = await fetch(`${APPS_SCRIPT_UPDATE_PROFILE_URL}?${params.toString()}`); // Requisição GET
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -1699,550 +2185,187 @@
 
     // --- Funções do Modal de Atalhos ---
     function openShortcutsModal() {
-        resetInactivityTimer();
+        resetInactivityTimer(); // Redefine o temporizador de inatividade
         document.getElementById('shortcutsModal').classList.add('show');
     }
 
     function closeShortcutsModal() {
         document.getElementById('shortcutsModal').classList.remove('show');
-        resetInactivityTimer();
+        resetInactivityTimer(); // Reinicia o temporizador ao fechar o modal
     }
 
-    // --- Funções do Modal de Cadastros (Usuários e Empresas) ---
-    async function openCadastrosModal(initialTab = 'users') {
-        resetInactivityTimer();
+    // --- Funções do Modal de Cadastros ---
+    function openCadastrosModal() {
+        resetInactivityTimer(); // Redefine o temporizador de inatividade
         document.getElementById('cadastrosModal').classList.add('show');
-        switchCadastroTab(initialTab); // Carrega a aba inicial
-        // Adiciona listeners para os botões de paginação
-        document.getElementById('prevCadastroPageButton').onclick = () => navigateCadastroPage(-1);
-        document.getElementById('nextCadastroPageButton').onclick = () => navigateCadastroPage(1);
-        // Adiciona listener para o input de busca
-        document.getElementById('searchCadastroInput').addEventListener('input', filterAndRenderCadastros);
-        // Adiciona listener para o select de status
-        document.getElementById('filterCadastroStatus').addEventListener('change', filterAndRenderCadastros);
-        // Adiciona listener para o botão de adicionar
-        document.getElementById('addCadastroButton').onclick = () => openAddEditCadastroModal(null, currentCadastroTab); // Passa a aba atual
+        toggleSidebar(); // Minimiza a sidebar ao abrir o modal
+        showCadastrosTab(activeCadastrosTab); // Abre na aba ativa por padrão (usuários ou empresas)
     }
 
     function closeCadastrosModal() {
         document.getElementById('cadastrosModal').classList.remove('show');
-        resetInactivityTimer();
-        // Remove listeners para evitar vazamento de memória
-        document.getElementById('prevCadastroPageButton').onclick = null;
-        document.getElementById('nextCadastroPageButton').onclick = null;
-        document.getElementById('searchCadastroInput').removeEventListener('input', filterAndRenderCadastros);
-        document.getElementById('filterCadastroStatus').removeEventListener('change', filterAndRenderCadastros);
-        document.getElementById('addCadastroButton').onclick = null;
+        resetInactivityTimer(); // Reinicia o temporizador ao fechar o modal
     }
 
-    async function switchCadastroTab(tab) {
-        currentCadastroTab = tab;
-        document.getElementById('tabUsers').classList.remove('active');
-        document.getElementById('tabCompanies').classList.remove('active');
-        document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
-        document.getElementById('searchCadastroInput').value = ''; // Limpa a busca ao trocar de aba
-        document.getElementById('filterCadastroStatus').value = 'todos'; // Reseta o filtro de status
+    function showCadastrosTab(tabName) {
+        activeCadastrosTab = tabName; // Atualiza a aba ativa globalmente
 
-        currentCadastroPage = 1; // Reseta a paginação
-
-        if (tab === 'users') {
-            document.getElementById('cadastrosModalTitle').textContent = 'Cadastros de Usuários';
-            await fetchUsers();
-        } else if (tab === 'companies') {
-            document.getElementById('cadastrosModalTitle').textContent = 'Cadastros de Empresas';
-            await fetchCompanies();
-        }
-        filterAndRenderCadastros(); // Filtra e renderiza os dados da nova aba
-    }
-
-    async function fetchUsers() {
-        const userDataString = localStorage.getItem('vigion_user_data');
-        if (!userDataString) {
-            showMessageModal("Erro", "Sessão expirada. Faça login novamente.", () => logout());
-            return;
-        }
-        const userData = JSON.parse(userDataString);
-
-        try {
-            const params = new URLSearchParams({
-                action: 'getUsers',
-                username: userData.id, // ID do usuário logado para autenticação
-                password: userData.password // Senha do usuário logado para autenticação
-            });
-            // Requisição POST para a API Centralizada
-            const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: params.toString()
-            });
-            const result = await response.json();
-
-            if (result.status === "sucesso") {
-                usersData = result.data;
-            } else {
-                showMessageModal("Erro ao carregar usuários", result.message || "Não foi possível carregar os usuários.");
-                usersData = [];
-            }
-        } catch (error) {
-            console.error("Erro ao buscar usuários:", error);
-            showMessageModal("Erro de Conexão", "Não foi possível conectar ao servidor para carregar usuários.");
-            usersData = [];
-        }
-    }
-
-    async function fetchCompanies() {
-        const userDataString = localStorage.getItem('vigion_user_data');
-        if (!userDataString) {
-            showMessageModal("Erro", "Sessão expirada. Faça login novamente.", () => logout());
-            return;
-        }
-        const userData = JSON.parse(userDataString);
-
-        try {
-            const params = new URLSearchParams({
-                action: 'getCompanies',
-                username: userData.id, // ID do usuário logado para autenticação
-                password: userData.password // Senha do usuário logado para autenticação
-            });
-            // Requisição POST para a API Centralizada
-            const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: params.toString()
-            });
-            const result = await response.json();
-
-            if (result.status === "sucesso") {
-                companiesData = result.data;
-            } else {
-                showMessageModal("Erro ao carregar empresas", result.message || "Não foi possível carregar as empresas.");
-                companiesData = [];
-            }
-        } catch (error) {
-            console.error("Erro ao buscar empresas:", error);
-            showMessageModal("Erro de Conexão", "Não foi possível conectar ao servidor para carregar empresas.");
-            companiesData = [];
-        }
-    }
-
-    function filterAndRenderCadastros() {
-        const searchTerm = document.getElementById('searchCadastroInput').value.toLowerCase();
-        const filterStatus = document.getElementById('filterCadastroStatus').value.toLowerCase();
-        
-        const dataToFilter = (currentCadastroTab === 'users') ? usersData : companiesData;
-
-        filteredCadastroData = dataToFilter.filter(item => {
-            const matchesSearch = (currentCadastroTab === 'users') ? 
-                (item.nome.toLowerCase().includes(searchTerm) || item.id.toLowerCase().includes(searchTerm)) :
-                (item.nome.toLowerCase().includes(searchTerm) || item.cnpj.toLowerCase().includes(searchTerm));
-            
-            const itemStatus = (currentCadastroTab === 'users') ? item.statusUsuario.toLowerCase() : item.status.toLowerCase();
-            const matchesStatus = (filterStatus === 'todos' || itemStatus === filterStatus);
-
-            return matchesSearch && matchesStatus;
+        // Remove a classe 'active' de todos os botões de aba
+        document.querySelectorAll('.cadastros-tab-button').forEach(button => {
+            button.classList.remove('active');
         });
 
-        renderCadastroTable();
-    }
+        // Adiciona a classe 'hidden' a todos os conteúdos de aba
+        document.getElementById('cadastrosUsersContent').classList.add('hidden');
+        document.getElementById('cadastrosCompaniesContent').classList.add('hidden');
 
-    function renderCadastroTable() {
-        const tableHeader = document.getElementById('cadastrosTableHeader');
-        const tableBody = document.getElementById('cadastrosTableBody');
-        tableBody.innerHTML = ''; // Limpa o corpo da tabela
-
-        // Define os cabeçalhos da tabela dinamicamente
-        if (currentCadastroTab === 'users') {
-            tableHeader.innerHTML = `
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Empresa</th>
-                <th>Acesso</th>
-                <th>Status</th>
-                <th>Ações</th>
-            `;
-        } else { // companies
-            tableHeader.innerHTML = `
-                <th>CNPJ</th>
-                <th>Nome</th>
-                <th>Proprietário</th>
-                <th>Telefone</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Ações</th>
-            `;
+        // Exibe o conteúdo da aba selecionada e ativa o botão correspondente
+        if (tabName === 'users') {
+            document.getElementById('tabUsers').classList.add('active');
+            document.getElementById('cadastrosUsersContent').classList.remove('hidden');
+        } else if (tabName === 'companies') {
+            document.getElementById('tabCompanies').classList.add('active');
+            document.getElementById('cadastrosCompaniesContent').classList.remove('hidden');
         }
-
-        const startIndex = (currentCadastroPage - 1) * cadastroRowsPerPage;
-        const endIndex = startIndex + cadastroRowsPerPage;
-        const paginatedData = filteredCadastroData.slice(startIndex, endIndex);
-
-        paginatedData.forEach(item => {
-            const row = tableBody.insertRow();
-            if (currentCadastroTab === 'users') {
-                row.innerHTML = `
-                    <td>${item.id}</td>
-                    <td><span class="user-avatar">${item.nome.charAt(0).toUpperCase()}</span> ${item.nome}</td>
-                    <td>${item.empresa}</td>
-                    <td>${item.tipoAcesso}</td>
-                    <td><span class="status-badge ${item.statusUsuario.toLowerCase()}">${item.statusUsuario}</span></td>
-                    <td class="action-buttons">
-                        <button title="Editar" onclick="editCadastro('${item.id}', 'users')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
-                        </button>
-                        <button title="Excluir" onclick="deleteCadastro('${item.id}', 'users')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                        </button>
-                    </td>
-                `;
-            } else { // companies
-                row.innerHTML = `
-                    <td>${item.cnpj}</td>
-                    <td>${item.nome}</td>
-                    <td>${item.proprietario}</td>
-                    <td>${item.telefone}</td>
-                    <td>${item.email}</td>
-                    <td><span class="status-badge ${item.status.toLowerCase()}">${item.status}</span></td>
-                    <td class="action-buttons">
-                        <button title="Editar" onclick="editCadastro('${item.cnpj}', 'companies')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
-                        </button>
-                        <button title="Excluir" onclick="deleteCadastro('${item.cnpj}', 'companies')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                        </button>
-                    </td>
-                `;
-            }
-        });
-        updateCadastroPagination(filteredCadastroData.length);
     }
 
-    function updateCadastroPagination(totalRows) {
-        const totalPages = Math.ceil(totalRows / cadastroRowsPerPage);
-        document.getElementById('currentCadastroPageButton').textContent = currentCadastroPage;
-        document.getElementById('prevCadastroPageButton').disabled = (currentCadastroPage === 1);
-        document.getElementById('nextCadastroPageButton').disabled = (currentCadastroPage === totalPages || totalPages === 0);
+    // --- Funções para Modais de Adição (Usuário/Empresa) ---
 
-        const startIndex = (currentCadastroPage - 1) * cadastroRowsPerPage;
-        const displayedCount = Math.min(currentCadastroPage * cadastroRowsPerPage, totalRows); // Corrigido para currentCadastroPage
-        document.getElementById('displayedCadastroResultsCount').textContent = displayedCount;
-        document.getElementById('totalCadastroResultsCount').textContent = totalRows;
-    }
-
-    function navigateCadastroPage(direction) {
-        currentCadastroPage += direction;
-        filterAndRenderCadastros(); // Re-renderiza com a nova página
-    }
-
-    function openAddEditCadastroModal(idToEdit = null, type = currentCadastroTab) {
-        resetInactivityTimer();
-        const modalTitle = document.getElementById('addEditCadastroModalTitle');
-        const formContainer = document.getElementById('addEditCadastroForm');
-        formContainer.innerHTML = ''; // Limpa o formulário
-
-        currentEditingCadastro = null; // Reseta o item em edição
-
-        if (type === 'users') {
-            modalTitle.textContent = idToEdit ? 'Editar Usuário' : 'Adicionar Novo Usuário';
-            formContainer.innerHTML = `
-                <div class="form-group">
-                    <label for="addEditUserId">ID do Usuário:</label>
-                    <input type="text" id="addEditUserId" placeholder="Ex: service_id_123">
-                </div>
-                <div class="form-group">
-                    <label for="addEditUserName">Nome Completo:</label>
-                    <input type="text" id="addEditUserName" placeholder="Ex: João Silva">
-                </div>
-                <div class="form-group">
-                    <label for="addEditUserCompany">Empresa:</label>
-                    <input type="text" id="addEditUserCompany" placeholder="Ex: VigiOn LTDA">
-                </div>
-                <div class="form-group">
-                    <label for="addEditUserPassword">Senha:</label>
-                    <input type="password" id="addEditUserPassword" placeholder="Definir senha">
-                </div>
-                <div class="form-group">
-                    <label for="addEditUserAccessType">Tipo de Acesso:</label>
-                    <select id="addEditUserAccessType">
-                        <option value="Usuário">Usuário</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Supervisor">Supervisor</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="addEditUserStatus">Status:</label>
-                    <select id="addEditUserStatus">
-                        <option value="Ativo">Ativo</option>
-                        <option value="Inativo">Inativo</option>
-                        <option value="Bloqueado">Bloqueado</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="addEditUserAuthentication">Autenticação:</label>
-                    <label class="switch">
-                        <input type="checkbox" id="addEditUserAuthentication">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            `;
-            if (idToEdit) {
-                const user = usersData.find(u => u.id === idToEdit);
-                if (user) {
-                    currentEditingCadastro = user;
-                    document.getElementById('addEditUserId').value = user.id;
-                    document.getElementById('addEditUserId').disabled = true; // ID não editável
-                    document.getElementById('addEditUserName').value = user.nome;
-                    document.getElementById('addEditUserCompany').value = user.empresa;
-                    document.getElementById('addEditUserPassword').value = ''; // Senha sempre vazia para edição
-                    document.getElementById('addEditUserAccessType').value = user.tipoAcesso;
-                    document.getElementById('addEditUserStatus').value = user.statusUsuario;
-                    document.getElementById('addEditUserAuthentication').checked = (user.autenticacao.toLowerCase() === 'sim');
-                }
-            } else {
-                 document.getElementById('addEditUserId').disabled = false; // Habilita para novos cadastros
-            }
-        } else if (type === 'companies') {
-            modalTitle.textContent = idToEdit ? 'Editar Empresa' : 'Adicionar Nova Empresa';
-            formContainer.innerHTML = `
-                <div class="form-group">
-                    <label for="addEditCompanyCnpj">CNPJ:</label>
-                    <input type="text" id="addEditCompanyCnpj" placeholder="Ex: 00.000.000/0000-00">
-                </div>
-                <div class="form-group">
-                    <label for="addEditCompanyName">Nome da Empresa:</label>
-                    <input type="text" id="addEditCompanyName" placeholder="Ex: VigiOn LTDA">
-                </div>
-                <div class="form-group">
-                    <label for="addEditCompanyOwner">Proprietário:</label>
-                    <input type="text" id="addEditCompanyOwner" placeholder="Ex: Maria Silva">
-                </div>
-                <div class="form-group">
-                    <label for="addEditCompanyPhone">Telefone:</label>
-                    <input type="tel" id="addEditCompanyPhone" placeholder="Ex: (XX) XXXX-XXXX">
-                </div>
-                <div class="form-group">
-                    <label for="addEditCompanyEmail">E-mail:</label>
-                    <input type="email" id="addEditCompanyEmail" placeholder="Ex: contato@empresa.com">
-                </div>
-                <div class="form-group">
-                    <label for="addEditCompanyAddress">Endereço:</label>
-                    <input type="text" id="addEditCompanyAddress" placeholder="Ex: Rua A, 123, Cidade - UF">
-                </div>
-                <div class="form-group">
-                    <label for="addEditCompanyStatus">Status:</label>
-                    <select id="addEditCompanyStatus">
-                        <option value="Ativo">Ativo</option>
-                        <option value="Inativo">Inativo</option>
-                        <option value="Bloqueado">Bloqueado</option>
-                    </select>
-                </div>
-            `;
-            if (idToEdit) {
-                const company = companiesData.find(c => c.cnpj === idToEdit);
-                if (company) {
-                    currentEditingCadastro = company;
-                    document.getElementById('addEditCompanyCnpj').value = company.cnpj;
-                    document.getElementById('addEditCompanyCnpj').disabled = true; // CNPJ não editável
-                    document.getElementById('addEditCompanyName').value = company.nome;
-                    document.getElementById('addEditCompanyOwner').value = company.proprietario;
-                    document.getElementById('addEditCompanyPhone').value = company.telefone;
-                    document.getElementById('addEditCompanyEmail').value = company.email;
-                    document.getElementById('addEditCompanyAddress').value = company.endereco;
-                    document.getElementById('addEditCompanyStatus').value = company.status;
-                }
-            } else {
-                document.getElementById('addEditCompanyCnpj').disabled = false; // Habilita para novos cadastros
-            }
+    // Adiciona o listener ao botão "+ Adicionar" do modal de cadastros
+    document.getElementById('addCadastrosButton').addEventListener('click', () => {
+        if (activeCadastrosTab === 'users') {
+            openAddUserModal();
+        } else if (activeCadastrosTab === 'companies') {
+            openAddCompanyModal();
         }
-        document.getElementById('addEditCadastroModal').classList.add('show');
-        document.getElementById('saveCadastroButton').onclick = saveCadastro; // Atribui o handler ao botão Salvar
-    }
+    });
 
-    function closeAddEditCadastroModal() {
-        document.getElementById('addEditCadastroModal').classList.remove('show');
+    function openAddUserModal() {
         resetInactivityTimer();
-        currentEditingCadastro = null; // Limpa o item em edição
+        document.getElementById('addUserModal').classList.add('show');
+        // Limpa os campos e define valores padrão
+        const addUserUsernameInput = document.getElementById('addUserUsername');
+        const addUserFullNameInput = document.getElementById('addUserFullName');
+        const addUserCompanySelect = document.getElementById('addUserCompany');
+        const addUserAuthenticationToggle = document.getElementById('addUserAuthentication');
+        const authStatusText = document.getElementById('authStatusText');
+        const addUserAccessSelect = document.getElementById('addUserAccess');
+        const addUserPasswordInput = document.getElementById('addUserPassword');
+
+        addUserUsernameInput.value = '';
+        addUserFullNameInput.value = '';
+        addUserCompanySelect.value = 'Empresa 1'; // Define a primeira opção como padrão
+        addUserAuthenticationToggle.checked = true; // Define como SIM por padrão
+        authStatusText.textContent = 'SIM';
+        addUserAccessSelect.value = 'Usuario'; // Define 'Usuário' como padrão
+        addUserPasswordInput.value = ''; // Senha começa vazia, será preenchida pelo listener
+
+        // Adiciona listener para preencher a senha automaticamente
+        // Remove o listener antes de adicionar para evitar duplicações
+        addUserUsernameInput.removeEventListener('input', updatePasswordBasedOnUsername);
+        addUserUsernameInput.addEventListener('input', updatePasswordBasedOnUsername);
+
+        // Adiciona listener para o toggle de autenticação
+        addUserAuthenticationToggle.removeEventListener('change', updateAuthStatusText);
+        addUserAuthenticationToggle.addEventListener('change', updateAuthStatusText);
     }
 
-    async function saveCadastro() {
-        const saveButton = document.getElementById('saveCadastroButton');
-        saveButton.textContent = "Salvando...";
-        saveButton.disabled = true;
+    function closeAddUserModal() {
+        document.getElementById('addUserModal').classList.remove('show');
+        resetInactivityTimer();
+    }
 
-        const userDataString = localStorage.getItem('vigion_user_data');
-        if (!userDataString) {
-            showMessageModal("Erro", "Sessão expirada. Faça login novamente.", () => logout());
-            saveButton.textContent = "Salvar";
-            saveButton.disabled = false;
+    function updatePasswordBasedOnUsername() {
+        const addUserUsernameInput = document.getElementById('addUserUsername');
+        const addUserPasswordInput = document.getElementById('addUserPassword');
+        const username = addUserUsernameInput.value.trim();
+        if (username) {
+            addUserPasswordInput.value = `${username}@mudar123`;
+        } else {
+            addUserPasswordInput.value = '';
+        }
+    }
+
+    function updateAuthStatusText() {
+        const addUserAuthenticationToggle = document.getElementById('addUserAuthentication');
+        const authStatusText = document.getElementById('authStatusText');
+        authStatusText.textContent = addUserAuthenticationToggle.checked ? 'SIM' : 'NÃO';
+    }
+
+    function saveNewUser() {
+        // Lógica para salvar novo usuário
+        const username = document.getElementById('addUserUsername').value.trim();
+        const fullName = document.getElementById('addUserFullName').value.trim();
+        const company = document.getElementById('addUserCompany').value;
+        const authentication = document.getElementById('addUserAuthentication').checked ? 'SIM' : 'NÃO';
+        const access = document.getElementById('addUserAccess').value;
+        const password = document.getElementById('addUserPassword').value;
+
+        // Validação básica
+        if (!username || !fullName || !company || !access || !password) {
+            showMessageModal("Atenção", "Por favor, preencha todos os campos obrigatórios.");
             return;
         }
-        const userData = JSON.parse(userDataString);
-        
-        let params = new URLSearchParams();
-        params.append('username', userData.id); // ID do usuário logado para autenticação na API
-        params.append('password', userData.password); // Senha do usuário logado para autenticação na API
 
-        if (currentCadastroTab === 'users') {
-            const id = document.getElementById('addEditUserId').value.trim();
-            const nome = document.getElementById('addEditUserName').value.trim();
-            const empresa = document.getElementById('addEditUserCompany').value.trim();
-            const password = document.getElementById('addEditUserPassword').value.trim();
-            const accessType = document.getElementById('addEditUserAccessType').value;
-            const statusUser = document.getElementById('addEditUserStatus').value;
-            const authenticationStatus = document.getElementById('addEditUserAuthentication').checked ? 'SIM' : 'NÃO';
-
-            if (!id || !nome || !empresa || (!currentEditingCadastro && !password)) { // Senha obrigatória apenas para novos
-                showMessageModal("Atenção", "Por favor, preencha todos os campos obrigatórios (ID, Nome, Empresa e Senha para novos usuários).");
-                saveButton.textContent = "Salvar";
-                saveButton.disabled = false;
-                return;
-            }
-
-            if (currentEditingCadastro) { // Edição de usuário
-                params.append('action', 'editUser');
-                params.append('idToEdit', id);
-                params.append('newName', nome);
-                params.append('newCompany', empresa);
-                params.append('newAuthenticationStatus', authenticationStatus);
-                params.append('newAccessType', accessType);
-                params.append('newStatusUser', statusUser);
-                if (password) params.append('newPassword', password); // Só envia se a senha foi digitada
-            } else { // Novo usuário
-                params.append('action', 'createUser');
-                params.append('username', id); // Usando 'username' para o ID do novo usuário
-                params.append('fullName', nome);
-                params.append('company', empresa);
-                params.append('password', password);
-                params.append('authenticationStatus', authenticationStatus);
-                params.append('accessType', accessType);
-                params.append('statusUser', statusUser);
-            }
-        } else { // Empresas
-            const cnpj = document.getElementById('addEditCompanyCnpj').value.trim();
-            const nome = document.getElementById('addEditCompanyName').value.trim();
-            const proprietario = document.getElementById('addEditCompanyOwner').value.trim();
-            const telefone = document.getElementById('addEditCompanyPhone').value.trim();
-            const email = document.getElementById('addEditCompanyEmail').value.trim();
-            const endereco = document.getElementById('addEditCompanyAddress').value.trim();
-            const status = document.getElementById('addEditCompanyStatus').value;
-
-            if (!cnpj || !nome || !proprietario || !telefone || !email || !endereco) {
-                showMessageModal("Atenção", "Por favor, preencha todos os campos obrigatórios para a empresa.");
-                saveButton.textContent = "Salvar";
-                saveButton.disabled = false;
-                return;
-            }
-
-            if (currentEditingCadastro) { // Edição de empresa
-                params.append('action', 'editCompany');
-                params.append('cnpjToEdit', cnpj);
-                params.append('newNameCompany', nome);
-                params.append('newOwner', proprietario);
-                params.append('newPhone', telefone);
-                params.append('newEmail', email);
-                params.append('newAddress', endereco);
-                params.append('newStatusCompany', status);
-            } else { // Nova empresa
-                params.append('action', 'createCompany');
-                params.append('cnpj', cnpj);
-                params.append('companyName', nome);
-                params.append('owner', proprietario);
-                params.append('phone', telefone);
-                params.append('email', email);
-                params.append('address', endereco);
-                params.append('statusCompany', status);
-            }
-        }
-
-        try {
-            // Requisição POST para a API Centralizada
-            const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: params.toString()
-            });
-            const result = await response.json();
-
-            if (result.status === "sucesso") {
-                showMessageModal("Sucesso", result.message, () => {
-                    closeAddEditCadastroModal();
-                    // Recarrega os dados da aba atual
-                    if (currentCadastroTab === 'users') fetchUsers();
-                    else fetchCompanies();
-                    filterAndRenderCadastros(); // Re-renderiza a tabela
-                });
-            } else {
-                showMessageModal("Erro", result.message || "Ocorreu um erro ao salvar o cadastro.");
-            }
-        } catch (error) {
-            console.error("Erro ao salvar cadastro:", error);
-            showMessageModal("Erro de Conexão", "Não foi possível conectar ao servidor para salvar o cadastro.");
-        } finally {
-            saveButton.textContent = "Salvar";
-            saveButton.disabled = false;
-        }
+        console.log("Dados do Novo Usuário:", { username, fullName, company, authentication, access, password });
+        showMessageModal("Cadastro de Usuário", `Usuário "${username}" salvo com sucesso (simulado)!`);
+        closeAddUserModal();
     }
 
-    function editCadastro(id, type) {
-        openAddEditCadastroModal(id, type);
+    function openAddCompanyModal() {
+        resetInactivityTimer();
+        document.getElementById('addCompanyModal').classList.add('show');
+        // Limpa os campos ao abrir o modal e define valores padrão
+        document.getElementById('addCompanyCNPJ').value = '';
+        document.getElementById('addCompanyCompanyName').value = '';
+        document.getElementById('addCompanyOwner').value = '';
+        document.getElementById('addCompanyPhone').value = '';
+        document.getElementById('addCompanyEmail').value = '';
+        document.getElementById('addCompanyAddress').value = '';
+        document.getElementById('addCompanyStatus').checked = true; // Define como ativo por padrão
+        document.getElementById('companyStatusText').textContent = 'Ativo'; // Atualiza o texto do status
+
+        // Adiciona listener para o toggle de status da empresa
+        const addCompanyStatusToggle = document.getElementById('addCompanyStatus');
+        addCompanyStatusToggle.removeEventListener('change', updateCompanyStatusText); // Remove antes para evitar duplicação
+        addCompanyStatusToggle.addEventListener('change', updateCompanyStatusText);
     }
 
-    function deleteCadastro(idToDelete, type) {
-        const itemType = (type === 'users') ? 'usuário' : 'empresa';
-        const actionType = (type === 'users') ? 'deleteUser' : 'deleteCompany';
-        const idParamName = (type === 'users') ? 'idToDelete' : 'cnpjToDelete';
+    function closeAddCompanyModal() {
+        document.getElementById('addCompanyModal').classList.remove('show');
+        resetInactivityTimer();
+    }
 
-        showMessageModal(
-            "Confirmação",
-            `Tem certeza que deseja excluir este ${itemType} (ID/CNPJ: ${idToDelete})?`,
-            async () => { // okCallback
-                const userDataString = localStorage.getItem('vigion_user_data');
-                if (!userDataString) {
-                    showMessageModal("Erro", "Sessão expirada. Faça login novamente.", () => logout());
-                    return;
-                }
-                const userData = JSON.parse(userDataString);
+    function updateCompanyStatusText() {
+        const addCompanyStatusToggle = document.getElementById('addCompanyStatus');
+        const companyStatusText = document.getElementById('companyStatusText');
+        companyStatusText.textContent = addCompanyStatusToggle.checked ? 'Ativo' : 'Inativo';
+    }
 
-                try {
-                    const params = new URLSearchParams({
-                        action: actionType,
-                        username: userData.id,
-                        password: userData.password
-                    });
-                    params.append(idParamName, idToDelete);
+    function saveNewCompany() {
+        // Lógica para salvar nova empresa
+        const cnpj = document.getElementById('addCompanyCNPJ').value.trim();
+        const companyName = document.getElementById('addCompanyCompanyName').value.trim();
+        const owner = document.getElementById('addCompanyOwner').value.trim();
+        const phone = document.getElementById('addCompanyPhone').value.trim();
+        const email = document.getElementById('addCompanyEmail').value.trim();
+        const address = document.getElementById('addCompanyAddress').value.trim();
+        const status = document.getElementById('addCompanyStatus').checked ? 'Ativo' : 'Inativo';
 
-                    // Requisição POST para a API Centralizada
-                    const response = await fetch(APPS_SCRIPT_CENTRAL_API_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: params.toString()
-                    });
-                    const result = await response.json();
+        // Validação básica
+        if (!cnpj || !companyName || !owner || !phone || !email || !address) {
+            showMessageModal("Atenção", "Por favor, preencha todos os campos obrigatórios para a empresa.");
+            return;
+        }
 
-                    if (result.status === "sucesso") {
-                        showMessageModal("Sucesso", result.message, () => {
-                            currentCadastroPage = 1; // Volta para a primeira página após exclusão
-                            if (type === 'users') fetchUsers();
-                            else fetchCompanies();
-                            filterAndRenderCadastros(); // Re-renderiza a tabela
-                        });
-                    } else {
-                        showMessageModal("Erro", result.message || `Ocorreu um erro ao excluir o ${itemType}.`);
-                    }
-                } catch (error) {
-                    console.error(`Erro ao excluir ${itemType}:`, error);
-                    showMessageModal("Erro de Conexão", `Não foi possível conectar ao servidor para excluir o ${itemType}.`);
-                }
-            }
-            // Não há um botão de cancelamento explícito, então o callback de cancelamento não é passado.
-        );
+        console.log("Dados da Nova Empresa:", { cnpj, companyName, owner, phone, email, address, status });
+        showMessageModal("Cadastro de Empresa", `Empresa "${companyName}" salva com sucesso (simulado)!`);
+        closeAddCompanyModal();
+    }
+
+    // NOVO: Função para redirecionar para a tela de Permissões
+    function redirectToPermissionsPanel() {
+        window.location.href = 'permissions_panel.html';
     }
 
     // --- Inicialização ao Carregar a Página ---
@@ -2269,8 +2392,32 @@
         document.addEventListener('scroll', resetInactivityTimer);
         document.addEventListener('touchstart', resetInactivityTimer); // Para dispositivos touch
         document.addEventListener('touchmove', resetInactivityTimer); // Para dispositivos touch
+
+        // Inicia a busca de localizações e o intervalo de atualização para a view padrão (Localizar Equipe)
+        // A primeira chamada (no carregamento) deve recentralizar o mapa.
+        startMapUpdates(true); 
       }
       // Se não autenticado, checkDashboardAuth já terá redirecionado
+    });
+
+    // Listener para detectar Ctrl+R e atualizar os marcadores sem recentralizar
+    document.addEventListener('keydown', (event) => {
+        // Verifica se é 'r' ou 'R' e se Ctrl (Windows/Linux) ou Cmd (Mac) está pressionado
+        if ((event.key === 'r' || event.key === 'R') && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault(); // Previne o comportamento padrão do navegador (recarregar a página)
+            console.log("Atualização manual acionada (Ctrl+R). Atualizando marcadores sem recentralizar.");
+            fetchLocalizacoes(false); // Atualiza os marcadores sem recentralizar o mapa
+        }
+        // Listener para detectar Ctrl+P e exibir mensagem de "Em desenvolvimento"
+        if ((event.key === 'p' || event.key === 'P') && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault(); // Previne o comportamento padrão do navegador (imprimir)
+            console.log("Atalho para Imprimir Relatório acionado (Ctrl+P). Funcionalidade em desenvolvimento.");
+            showMessageModal("Funcionalidade em Desenvolvimento", "A impressão de relatórios de histórico está em desenvolvimento e será disponibilizada em breve.", null, false);
+        }
+        // Nota: Interceptar a tecla F5 diretamente para impedir o recarregamento total da página
+        // não é possível na maioria dos navegadores por razões de segurança e controle do navegador.
+        // Ao pressionar F5, a página será totalmente recarregada e o script será reiniciado,
+        // resultando no comportamento de recentralização inicial.
     });
   </script>
 </body>
