@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome para ícones de ações -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -425,8 +425,8 @@
     </div>
 
     <script>
-        // URL do seu Google Apps Script implantado
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4aJ1BSjsL2PGx9UT-joZzABD_l9zrZFruIbCSzY_pBxLTkOTvdPQ5FNAmNEBnU6KC/exec"; // Certifique-se de que esta URL está correta
+        // URL do seu Google Apps Script implementado (Esta URL permanecerá a mesma)
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4aJ1BSjsL2PGx9UT-joZzABd_l9zrZFruIbCSzY_pBxLTkOTvdPQ5FNAmNEBnU6KC/exec";
 
         // Variáveis globais para paginação e dados
         const itemsPerPage = 10;
@@ -478,13 +478,18 @@
             errorElement.classList.add('hidden');
 
             try {
+                // A URL agora usará a constante APPS_SCRIPT_URL corrigida
                 const response = await fetch(`${APPS_SCRIPT_URL}?tab=${tabName}`);
                 if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
+                    // Tenta ler a resposta como texto para obter mais detalhes do erro, se disponível
+                    const errorText = await response.text();
+                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}. Detalhes: ${errorText.substring(0, 200)}...`); // Limita o tamanho para evitar logs muito grandes
                 }
                 const result = await response.json();
 
                 if (result.status === 'sucesso') {
+                    // Adicionado console.log para depuração
+                    console.log(`Dados recebidos para ${tabName}:`, result.data);
                     return result.data;
                 } else {
                     throw new Error(result.message || 'Erro desconhecido retornado pelo script.');
@@ -528,11 +533,11 @@
 
             if (statusFilter !== 'Todos') {
                 filtered = filtered.filter(item => {
-                    // Para usuários, o status é 'AUTENTICACAO' (SIM/NÃO)
+                    // Para usuários, o status é 'AUTENTICAÇÃO' (SIM/NÃO)
                     // Para empresas, o status é 'STATUS' (Ativo/Inativo)
                     if (tabType === 'usuarios') {
-                        // Compara o valor do filtro (SIM/NÃO) com o valor da coluna AUTENTICACAO
-                        return (item.AUTENTICACAO && item.AUTENTICACAO.toUpperCase() === statusFilter.toUpperCase());
+                        // Compara o valor do filtro (SIM/NÃO) com o valor da coluna AUTENTICAÇÃO (com 'Ç')
+                        return (item['AUTENTICAÇÃO'] && item['AUTENTICAÇÃO'].toUpperCase() === statusFilter.toUpperCase());
                     } else if (tabType === 'empresas') {
                         return (item.STATUS && item.STATUS.toLowerCase() === statusFilter.toLowerCase());
                     }
@@ -561,7 +566,8 @@
                 row.insertCell().textContent = usuario['NOME/EQUIPE'] || '';
                 row.insertCell().textContent = usuario.EMPRESA || '';
                 row.insertCell().textContent = usuario.ACESSO || '';
-                row.insertCell().textContent = usuario.AUTENTICACAO || '';
+                // Acessa a propriedade AUTENTICAÇÃO (com 'Ç') e garante que seja uma string vazia se for null/undefined
+                row.insertCell().textContent = usuario['AUTENTICAÇÃO'] || '';
 
                 const actionsCell = row.insertCell();
                 actionsCell.className = 'action-buttons';
@@ -745,22 +751,19 @@
         }
 
         /**
-         * Popula o select de acesso com base na empresa fornecida.
-         * @param {string} companyName O nome da empresa para filtrar os tipos de acesso.
+         * Popula o select de acesso com TODOS os tipos de acesso da aba 'Permissões'.
+         * A filtragem por empresa foi removida conforme solicitação.
          */
-        function populateAcessoSelect(companyName) {
+        function populateAcessoSelect() {
             modalAcessoSelect.innerHTML = '<option value="">Selecione um tipo de acesso</option>'; // Limpa e adiciona opção padrão
-            if (!companyName) {
-                return; // Não popula se não houver empresa selecionada
-            }
 
-            const accessibleTypes = allPermissoesData
-                .filter(perm => perm.EMPRESA === companyName)
+            // Mapeia todos os tipos de acesso da aba 'Permissões'
+            const allAccessTypes = allPermissoesData
                 .map(perm => perm['TIPO DE ACESSO'])
                 .filter(type => type); // Filtra valores vazios/nulos
 
             // Remove duplicatas e ordena alfabeticamente
-            const uniqueAccessTypes = [...new Set(accessibleTypes)].sort();
+            const uniqueAccessTypes = [...new Set(allAccessTypes)].sort();
 
             uniqueAccessTypes.forEach(type => {
                 const option = document.createElement('option');
@@ -780,7 +783,7 @@
             modalSenhaInput.value = ""; // Garante que a senha comece em branco
             hideModalError(); // Oculta qualquer mensagem de erro anterior
 
-            // Lógica condicional para o campo EMPRESA
+            // Lógica condicional para o campo EMPRESA (permanece inalterada)
             if (currentUserAccess === "Master System") {
                 modalEmpresaSelect.classList.remove('hidden');
                 modalEmpresaSelect.setAttribute('required', 'true');
@@ -788,8 +791,8 @@
                 modalEmpresaInput.removeAttribute('required');
                 modalEmpresaInput.disabled = true; // Garante que o input esteja desativado se for hidden
                 populateEmpresasSelect(); // Popula o select de empresas
-                // Adiciona listener para mudança na empresa para atualizar o acesso
-                modalEmpresaSelect.onchange = () => populateAcessoSelect(modalEmpresaSelect.value);
+                // Remove o listener de mudança de empresa para o acesso, pois não é mais necessário
+                modalEmpresaSelect.onchange = null;
             } else {
                 modalEmpresaInput.classList.remove('hidden');
                 modalEmpresaInput.setAttribute('required', 'true');
@@ -797,9 +800,10 @@
                 modalEmpresaInput.disabled = true; // Desativa o campo
                 modalEmpresaSelect.classList.add('hidden');
                 modalEmpresaSelect.removeAttribute('required');
-                // Popula o acesso com base na empresa do usuário logado
-                populateAcessoSelect(currentUserCompany);
             }
+
+            // Popula o select de acesso com TODOS os tipos de acesso (sem filtro)
+            populateAcessoSelect();
         }
 
         /**
@@ -897,7 +901,8 @@
 
             allUsuariosData = await fetchData('Usuarios', loadingUsuarios, errorUsuarios);
             allEmpresasData = await fetchData('Empresas', loadingEmpresas, errorEmpresas);
-            allPermissoesData = await fetchData('Permissoes', loadingPermissoes, errorPermissoes); // Busca dados de Permissões
+            // CORREÇÃO AQUI: Alterado de 'Permissoes' para 'Permissões'
+            allPermissoesData = await fetchData('Permissões', loadingPermissoes, errorPermissoes); // Busca dados de Permissões
 
             // Garante que a aba de usuários é a primeira a ser mostrada e renderiza a primeira página com filtros
             showTab('usuarios');
