@@ -261,7 +261,7 @@
 </head>
 <body class="antialiased">
     <!-- Conteúdo Principal do Painel (inicialmente oculto) -->
-    <div id="mainContent" class="container hidden">
+    <div id="mainContent" class="container">
         <header class="header-bar">
             <h1>Painel de Cadastros</h1>
             <div class="flex items-center gap-4">
@@ -432,9 +432,6 @@
         // URL do seu Google Apps Script implementado (Esta URL permanecerá a mesma)
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4aJ1BSjsL2PGx9UT-joZzABd_l9zrZFruIbCSzY_pBxLTkOTvdPQ5FNAmNEBnU6KC/exec";
 
-        // URL do VigiOn Dashboard para redirecionamento
-        const VIGION_DASHBOARD_URL = "./dashboard.html"; // Alterado para caminho relativo explícito
-
         // Variáveis globais para paginação e dados
         const itemsPerPage = 10;
         let currentPageUsuarios = 1;
@@ -465,14 +462,23 @@
          */
         function updateCurrentUserInfoDisplay() {
             const userInfoElement = document.getElementById('currentUserInfo');
-            if (userInfoElement && currentUserAccess && currentUserCompany) {
-                if (currentUserAccess === "Master System") {
-                    userInfoElement.textContent = `Acesso: ${currentUserAccess}`;
+            if (userInfoElement) {
+                const storedAccess = localStorage.getItem('vigilonUserAccess');
+                const storedCompany = localStorage.getItem('vigilonUserCompany');
+
+                // Atualiza as variáveis globais com o que está no localStorage
+                currentUserAccess = storedAccess;
+                currentUserCompany = storedCompany;
+
+                if (currentUserAccess && currentUserCompany) {
+                    if (currentUserAccess === "Master System") {
+                        userInfoElement.textContent = `Acesso: ${currentUserAccess}`;
+                    } else {
+                        userInfoElement.textContent = `Acesso: ${currentUserAccess} | Empresa: ${currentUserCompany}`;
+                    }
                 } else {
-                    userInfoElement.textContent = `Acesso: ${currentUserAccess} | Empresa: ${currentUserCompany}`;
+                    userInfoElement.textContent = 'Acesso: Não autenticado'; // Mensagem genérica se não houver dados
                 }
-            } else if (userInfoElement) {
-                userInfoElement.textContent = ''; // Limpa se não houver dados de usuário válidos
             }
         }
 
@@ -827,7 +833,7 @@
             } else {
                 modalEmpresaInput.classList.remove('hidden');
                 modalEmpresaInput.setAttribute('required', 'true');
-                modalEmpresaInput.value = currentUserCompany; // Preenche com a empresa do usuário
+                modalEmpresaInput.value = currentUserCompany || ''; // Preenche com a empresa do usuário ou vazio
                 modalEmpresaInput.disabled = true; // Desativa o campo
                 modalEmpresaSelect.classList.add('hidden');
                 modalEmpresaSelect.removeAttribute('required');
@@ -859,38 +865,26 @@
         }
 
         /**
-         * Verifica o localStorage para determinar se o usuário tem acesso.
-         * Se não tiver, redireciona para o VigiOn Dashboard. Caso contrário, inicializa o painel.
+         * Carrega os dados do usuário do localStorage e inicializa o painel.
+         * Não há redirecionamento se os dados estiverem ausentes.
          */
-        async function checkAndHandleAccess() {
-            const storedAccess = localStorage.getItem('vigilonUserAccess');
-            const storedCompany = localStorage.getItem('vigilonUserCompany');
+        async function initializeDashboard() {
+            updateCurrentUserInfoDisplay(); // Tenta carregar e exibir as informações do usuário
 
-            if (!storedAccess || !storedCompany) {
-                // Se o localStorage estiver limpo, redireciona para o VigiOn Dashboard
-                window.location.href = VIGION_DASHBOARD_URL;
-            } else {
-                // Se o localStorage tiver dados, define as variáveis globais e mostra o conteúdo principal
-                currentUserAccess = storedAccess;
-                currentUserCompany = storedCompany;
+            // O conteúdo principal é visível por padrão, não precisa de mainContent.classList.remove('hidden'); aqui.
 
-                mainContent.classList.remove('hidden'); // Mostra o conteúdo principal
+            const loadingUsuarios = document.getElementById('loadingUsuarios');
+            const errorUsuarios = document.getElementById('errorUsuarios');
+            const loadingEmpresas = document.getElementById('loadingEmpresas');
+            const errorEmpresas = document.getElementById('errorEmpresas');
+            const loadingPermissoes = document.getElementById('loadingUsuarios'); // Reutilizando elementos de loading/erro
+            const errorPermissoes = document.getElementById('errorUsuarios'); // Reutilizando elementos de loading/erro
 
-                updateCurrentUserInfoDisplay(); // Atualiza a exibição do usuário atual
+            allUsuariosData = await fetchData('Usuarios', loadingUsuarios, errorUsuarios);
+            allEmpresasData = await fetchData('Empresas', loadingEmpresas, errorEmpresas);
+            allPermissoesData = await fetchData('Permissões', loadingPermissoes, errorPermissoes);
 
-                const loadingUsuarios = document.getElementById('loadingUsuarios');
-                const errorUsuarios = document.getElementById('errorUsuarios');
-                const loadingEmpresas = document.getElementById('loadingEmpresas');
-                const errorEmpresas = document.getElementById('errorEmpresas');
-                const loadingPermissoes = document.getElementById('loadingUsuarios');
-                const errorPermissoes = document.getElementById('errorUsuarios');
-
-                allUsuariosData = await fetchData('Usuarios', loadingUsuarios, errorUsuarios);
-                allEmpresasData = await fetchData('Empresas', loadingEmpresas, errorEmpresas);
-                allPermissoesData = await fetchData('Permissões', loadingPermissoes, errorPermissoes);
-
-                showTab('usuarios'); // Garante que a aba de usuários é a primeira a ser mostrada
-            }
+            showTab('usuarios'); // Garante que a aba de usuários é a primeira a ser mostrada
         }
 
         // Adiciona event listeners para os campos de pesquisa e filtros de status
@@ -953,10 +947,10 @@
                 // Por exemplo: await sendUserDataToAppsScript(userData);
                 closeUserModal(); // Fecha o modal após o "envio" (ou após o sucesso da API)
             });
-        });
 
-        // Executa quando a página é totalmente carregada
-        window.onload = checkAndHandleAccess;
+            // Executa quando a página é totalmente carregada
+            initializeDashboard();
+        });
     </script>
 </body>
 </html>
