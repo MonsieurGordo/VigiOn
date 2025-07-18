@@ -21,17 +21,21 @@
             padding: 2rem;
         }
         table {
-            width: 100%;
+            width: 100%; /* Garante que a tabela ocupe a largura total do seu contêiner */
             border-collapse: collapse;
             margin-top: 1rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 0.5rem;
             overflow: hidden; /* Ensures rounded corners are applied to table content */
+            table-layout: auto; /* Permite que as colunas se ajustem ao conteúdo */
         }
         th, td {
             padding: 0.75rem 1rem;
             text-align: left;
             border-bottom: 1px solid #e5e7eb; /* Light gray border */
+            /* Adicionado para ajudar no redimensionamento de colunas */
+            white-space: normal; /* Permite que o texto quebre linha */
+            word-break: break-word; /* Força a quebra de palavras longas */
         }
         th {
             background-color: #F7FAFC; /* Light background for table header */
@@ -260,7 +264,7 @@
     </style>
 </head>
 <body class="antialiased">
-    <!-- Conteúdo Principal do Painel (inicialmente oculto) -->
+    <!-- Conteúdo Principal do Painel -->
     <div id="mainContent" class="container">
         <header class="header-bar">
             <h1>Painel de Cadastros</h1>
@@ -297,7 +301,8 @@
                 <div id="errorUsuarios" class="message-box error hidden">
                     Erro ao carregar dados de usuários.
                 </div>
-                <div id="usuariosTableContainer" class="overflow-x-auto">
+                <!-- Removida a classe overflow-x-auto do contêiner da tabela de usuários -->
+                <div id="usuariosTableContainer">
                     <table id="usuariosTable" class="min-w-full">
                         <thead>
                             <tr>
@@ -343,7 +348,8 @@
                 <div id="errorEmpresas" class="message-box error hidden">
                     Erro ao carregar dados de empresas.
                 </div>
-                <div id="empresasTableContainer" class="overflow-x-auto">
+                <!-- Removida a classe overflow-x-auto do contêiner da tabela de empresas -->
+                <div id="empresasTableContainer">
                     <table id="empresasTable" class="min-w-full">
                         <thead>
                             <tr>
@@ -368,7 +374,7 @@
                     <button onclick="goToPage('empresas', currentPageEmpresas + 1)">&gt;</button>
                 </div>
             </div>
-            <button class="back-button">
+            <button id="backButton" class="back-button">
                 <i class="fas fa-arrow-left"></i> Voltar
             </button>
         </div>
@@ -756,6 +762,9 @@
         // Referências para o conteúdo principal
         const mainContent = document.getElementById('mainContent');
 
+        // Referência ao botão "Voltar"
+        const backButton = document.getElementById('backButton');
+
         /**
          * Exibe uma mensagem de erro no modal.
          * @param {string} message A mensagem de erro a ser exibida.
@@ -871,8 +880,6 @@
         async function initializeDashboard() {
             updateCurrentUserInfoDisplay(); // Tenta carregar e exibir as informações do usuário
 
-            // O conteúdo principal é visível por padrão, não precisa de mainContent.classList.remove('hidden'); aqui.
-
             const loadingUsuarios = document.getElementById('loadingUsuarios');
             const errorUsuarios = document.getElementById('errorUsuarios');
             const loadingEmpresas = document.getElementById('loadingEmpresas');
@@ -946,6 +953,11 @@
                 // Aqui você integraria a lógica para enviar os dados para o Google Apps Script
                 // Por exemplo: await sendUserDataToAppsScript(userData);
                 closeUserModal(); // Fecha o modal após o "envio" (ou após o sucesso da API)
+            });
+
+            // Event listener para o botão "Voltar"
+            backButton.addEventListener('click', () => {
+                window.location.href = "dashboard.html";
             });
 
             // Executa quando a página é totalmente carregada
