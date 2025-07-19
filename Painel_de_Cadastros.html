@@ -294,7 +294,6 @@
                         </select>
                     </div>
                 </div>
-
                 <div id="loadingUsuarios" class="message-box loading">
                     Carregando dados de usuários...
                 </div>
@@ -399,13 +398,11 @@
                 </div>
                 <div class="mb-4">
                     <label for="modalEmpresa" class="block text-sm font-medium text-gray-700 mb-1">EMPRESA</label>
-                    <!-- Select para Master System (inicialmente hidden) -->
-                    <select id="modalEmpresaSelect" name="empresa" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 hidden" required>
+                    <!-- Agora apenas um select para empresa, sempre ativo e populado -->
+                    <select id="modalEmpresaSelect" name="empresa" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" required>
                         <option value="">Selecione uma empresa</option>
                         <!-- Opções de empresas serão inseridas aqui pelo JavaScript -->
                     </select>
-                    <!-- Input desativado para outros acessos (inicialmente hidden) -->
-                    <input type="text" id="modalEmpresaInput" name="empresa" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed hidden" readonly>
                 </div>
                 <div class="mb-4">
                     <label for="modalAutenticacao" class="block text-sm font-medium text-gray-700 mb-1">Autenticado</label>
@@ -482,8 +479,6 @@
                     } else {
                         userInfoElement.textContent = `Acesso: ${currentUserAccess} | Empresa: ${currentUserCompany}`;
                     }
-                } else {
-                    userInfoElement.textContent = 'Acesso: Não autenticado'; // Mensagem genérica se não houver dados
                 }
             }
         }
@@ -599,7 +594,6 @@
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Nenhum usuário encontrado.</td></tr>';
                 return;
             }
-
             data.forEach(usuario => {
                 const row = tbody.insertRow();
                 row.insertCell().textContent = usuario.ID || '';
@@ -755,7 +749,6 @@
         const modalUsuarioInput = document.getElementById('modalUsuario');
         const modalSenhaInput = document.getElementById('modalSenha');
         const modalEmpresaSelect = document.getElementById('modalEmpresaSelect'); // Referência ao select de empresas
-        const modalEmpresaInput = document.getElementById('modalEmpresaInput'); // Referência ao input de empresas
         const modalAcessoSelect = document.getElementById('modalAcesso'); // Referência ao select de acesso
         const modalErrorMessage = document.getElementById('modalErrorMessage'); // Referência à mensagem de erro no modal
 
@@ -794,6 +787,11 @@
                 option.textContent = name;
                 modalEmpresaSelect.appendChild(option);
             });
+
+            // Se o usuário atual tiver uma empresa associada, pré-seleciona-a
+            if (currentUserCompany && uniqueCompanyNames.includes(currentUserCompany)) {
+                modalEmpresaSelect.value = currentUserCompany;
+            }
         }
 
         /**
@@ -829,24 +827,11 @@
             modalSenhaInput.value = ""; // Garante que a senha comece em branco
             hideModalError(); // Oculta qualquer mensagem de erro anterior
 
-            // Lógica condicional para o campo EMPRESA (permanece inalterada)
-            if (currentUserAccess === "Master System") {
-                modalEmpresaSelect.classList.remove('hidden');
-                modalEmpresaSelect.setAttribute('required', 'true');
-                modalEmpresaInput.classList.add('hidden');
-                modalEmpresaInput.removeAttribute('required');
-                modalEmpresaInput.disabled = true; // Garante que o input esteja desativado se for hidden
-                populateEmpresasSelect(); // Popula o select de empresas
-                // Remove o listener de mudança de empresa para o acesso, pois não é mais necessário
-                modalEmpresaSelect.onchange = null;
-            } else {
-                modalEmpresaInput.classList.remove('hidden');
-                modalEmpresaInput.setAttribute('required', 'true');
-                modalEmpresaInput.value = currentUserCompany || ''; // Preenche com a empresa do usuário ou vazio
-                modalEmpresaInput.disabled = true; // Desativa o campo
-                modalEmpresaSelect.classList.add('hidden');
-                modalEmpresaSelect.removeAttribute('required');
-            }
+            // O campo EMPRESA (select) agora está sempre visível e ativo
+            modalEmpresaSelect.classList.remove('hidden');
+            modalEmpresaSelect.setAttribute('required', 'true');
+            modalEmpresaSelect.disabled = false; // Garante que o select esteja ativo
+            populateEmpresasSelect(); // Popula o select de empresas
 
             // Popula o select de acesso com TODOS os tipos de acesso (sem filtro)
             populateAcessoSelect();
@@ -861,13 +846,10 @@
             userForm.reset(); // Reseta todos os campos do formulário
             hideModalError(); // Oculta qualquer mensagem de erro
 
-            // Garante que ambos os campos de empresa estejam ocultos e desativados ao fechar
-            modalEmpresaSelect.classList.add('hidden');
+            // Garante que o select de empresa esteja resetado e desativado ao fechar
+            modalEmpresaSelect.innerHTML = '<option value="">Selecione uma empresa</option>';
             modalEmpresaSelect.removeAttribute('required');
-            modalEmpresaSelect.onchange = null; // Remove o listener para evitar vazamentos de memória
-            modalEmpresaInput.classList.add('hidden');
-            modalEmpresaInput.removeAttribute('required');
-            modalEmpresaInput.disabled = true;
+            modalEmpresaSelect.disabled = true; // Desativa o select ao fechar
 
             // Limpa e reseta o select de acesso
             modalAcessoSelect.innerHTML = '<option value="">Selecione um tipo de acesso</option>';
@@ -929,13 +911,8 @@
                 const formData = new FormData(userForm);
                 const userData = {};
 
-                // Pega o valor correto do campo EMPRESA com base no tipo de acesso
-                if (currentUserAccess === "Master System") {
-                    userData.empresa = modalEmpresaSelect.value;
-                } else {
-                    userData.empresa = modalEmpresaInput.value;
-                }
-
+                // O valor da empresa agora SEMPRE vem do select
+                userData.empresa = modalEmpresaSelect.value;
                 userData.usuario = formData.get('usuario');
                 userData.nome = formData.get('nome');
                 userData.autenticacao = formData.get('autenticacao');
