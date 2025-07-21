@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Usuário</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 17px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #responseMessage {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            display: none; /* Escondido por padrão */
+        }
+        #responseMessage.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        #responseMessage.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Cadastro de Usuário</h2>
+        <form id="userForm">
+            <div class="form-group">
+                <label for="usuario">ID (Usuário):</label>
+                <input type="text" id="usuario" name="usuario" required>
+            </div>
+            <div class="form-group">
+                <label for="nome">Nome:</label>
+                <input type="text" id="nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="empresa">Empresa:</label>
+                <input type="text" id="empresa" name="empresa" required>
+            </div>
+            <div class="form-group">
+                <label for="autenticacao">Autenticação:</label>
+                <select id="autenticacao" name="autenticacao" required>
+                    <option value="SIM">SIM</option>
+                    <option value="NÃO">NÃO</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="acesso">Acesso:</label>
+                <input type="text" id="acesso" name="acesso" required>
+            </div>
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <input type="text" id="status" name="status" placeholder="Campo não usado pelo script, mas incluído para preencher" disabled>
+            </div>
+            <div class="form-group">
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" name="senha" required>
+            </div>
+            <button type="submit">Cadastrar Usuário</button>
+        </form>
+        <div id="responseMessage"></div>
+    </div>
+
+    <script>
+        document.getElementById('userForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+
+            const googleScriptURL = 'https://script.google.com/macros/s/AKfycbzItB3ondj7zbfwGU2ReonLc6m4fGkiYCaUpAlHNDq1vwHNCPc3TDpPdAcZtvu5jrA6Ww/exec';
+            const responseMessageDiv = document.getElementById('responseMessage');
+
+            // Limpa mensagens anteriores
+            responseMessageDiv.style.display = 'none';
+            responseMessageDiv.className = '';
+            responseMessageDiv.textContent = '';
+
+            // Coleta os dados do formulário
+            const userData = {
+                usuario: document.getElementById('usuario').value,
+                nome: document.getElementById('nome').value,
+                empresa: document.getElementById('empresa').value,
+                autenticacao: document.getElementById('autenticacao').value,
+                acesso: document.getElementById('acesso').value,
+                // O campo 'status' não é usado pelo script, então não o incluo no payload.
+                // Se o script fosse atualizado para usá-lo, você o adicionaria aqui:
+                // status: document.getElementById('status').value,
+                senha: document.getElementById('senha').value
+            };
+
+            try {
+                const response = await fetch(googleScriptURL, {
+                    method: 'POST',
+                    mode: 'cors', // Necessário para requisições de origens diferentes
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.status === 'sucesso') {
+                    responseMessageDiv.textContent = result.message;
+                    responseMessageDiv.classList.add('success');
+                    // Opcional: Limpar o formulário após o sucesso
+                    document.getElementById('userForm').reset();
+                } else {
+                    responseMessageDiv.textContent = result.message;
+                    responseMessageDiv.classList.add('error');
+                }
+            } catch (error) {
+                console.error('Erro ao enviar dados:', error);
+                responseMessageDiv.textContent = 'Erro ao conectar com o serviço. Tente novamente.';
+                responseMessageDiv.classList.add('error');
+            } finally {
+                responseMessageDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
