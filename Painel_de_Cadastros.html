@@ -68,10 +68,10 @@
             color: #b91c1c; /* Red 800 */
             border: 1px solid #fca5a5; /* Red 300 */
         }
-        .message-box.success {
-            background-color: #d1fae5; /* Green 200 */
+        .message-box.success { /* Novo estilo para mensagens de sucesso */
+            background-color: #d1fae5; /* Green 100 */
             color: #065f46; /* Green 800 */
-            border: 1px solid #a7f3d0; /* Green 300 */
+            border: 1px solid #a7f3d0; /* Green 200 */
         }
         /* Estilos para as abas */
         .tab-buttons {
@@ -252,37 +252,26 @@
             max-width: 500px; /* Largura máxima para o modal */
             transform: translateY(-20px); /* Começa um pouco acima */
             transition: transform 0.3s ease-in-out;
-            max-height: 90vh; /* Limita a altura do modal */
-            overflow-y: auto; /* Adiciona barra de rolagem vertical se o conteúdo exceder */
         }
         .modal-overlay.active .modal-content {
             transform: translateY(0); /* Desliza para a posição final */
         }
-        /* Estilo para a mensagem de erro dentro do modal */
-        #modalErrorMessage, #modalSuccessMessage {
+        /* Estilo para a mensagem de erro/sucesso dentro do modal */
+        #modalMessage { /* Alterado para uma ID genérica para mensagens */
             padding: 0.75rem;
             border-radius: 0.375rem;
             margin-bottom: 1rem;
             font-size: 0.875rem;
         }
-        #modalErrorMessage {
+        #modalMessage.error {
             background-color: #fecaca; /* Red 200 */
             color: #b91c1c; /* Red 800 */
             border: 1px solid #fca5a5; /* Red 300 */
         }
-        #modalSuccessMessage {
-            background-color: #d1fae5; /* Green 200 */
+        #modalMessage.success {
+            background-color: #d1fae5; /* Green 100 */
             color: #065f46; /* Green 800 */
-            border: 1px solid #a7f3d0; /* Green 300 */
-        }
-        /* Estilo para o grid de campos do modal de empresa */
-        .company-form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 2 colunas responsivas */
-            gap: 1rem; /* Espaçamento entre os campos */
-        }
-        .company-form-grid > div {
-            margin-bottom: 0 !important; /* Remove margem inferior padrão dos divs internos */
+            border: 1px solid #a7f3d0; /* Green 200 */
         }
     </style>
 </head>
@@ -293,9 +282,6 @@
             <h1>Painel de Cadastros</h1>
             <div class="flex items-center gap-4">
                 <span id="currentUserInfo" class="text-sm font-medium"></span>
-                <button id="addCompanyButton" class="add-button hidden">
-                    <i class="fas fa-building"></i> Adicionar Empresa
-                </button>
                 <button id="addUsuarioButton" class="add-button">
                     <i class="fas fa-plus"></i> Adicionar
                 </button>
@@ -400,26 +386,20 @@
                 </div>
             </div>
             <button id="backButton" class="back-button">
-                <i class="fas fa-arrow-left"></i> Voltar
+                <i class="fas fa-arrow-left"></i> Volrar
             </button>
         </div>
     </div>
 
-    <!-- Modal para Cadastrar/Editar Usuário -->
+    <!-- Modal para Cadastrar Usuário -->
     <div id="userModal" class="modal-overlay">
         <div class="modal-content">
-            <h2 id="userModalTitle" class="text-2xl font-bold mb-6 text-gray-800">Cadastrar Usuário</h2>
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Cadastrar Usuário</h2>
 
-            <!-- Mensagens de erro e sucesso dentro do modal -->
-            <div id="modalErrorMessage" class="message-box error hidden"></div>
-            <div id="modalSuccessMessage" class="message-box success hidden"></div>
-            <div id="modalLoadingMessage" class="message-box loading hidden">Processando...</div>
-
+            <!-- Mensagem de erro/sucesso dentro do modal -->
+            <div id="modalMessage" class="message-box hidden"></div>
 
             <form id="userForm">
-                <!-- Campo oculto para armazenar o ID do usuário em caso de edição -->
-                <input type="hidden" id="modalUserId" name="id">
-
                 <div class="mb-4">
                     <label for="modalUsuario" class="block text-sm font-medium text-gray-700 mb-1">USUÁRIO</label>
                     <input type="text" id="modalUsuario" name="usuario" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" required>
@@ -457,113 +437,19 @@
 
                 <div class="flex justify-end gap-3">
                     <button type="button" id="cancelUserModal" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">Cancelar</button>
-                    <button type="submit" id="submitUserFormButton" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">Salvar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
-
-    <!-- Novo Modal para Cadastrar/Editar Empresa -->
-    <div id="companyModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="companyModalTitle" class="text-2xl font-bold mb-6 text-gray-800">Cadastrar Empresa</h2>
-
-            <!-- Mensagens de erro e sucesso dentro do modal -->
-            <div id="companyModalErrorMessage" class="message-box error hidden"></div>
-            <div id="companyModalSuccessMessage" class="message-box success hidden"></div>
-            <div id="companyModalLoadingMessage" class="message-box loading hidden">Processando...</div>
-
-            <form id="companyForm">
-                <!-- Campo oculto para armazenar o CNPJ da empresa em caso de edição -->
-                <input type="hidden" id="modalCompanyCnpj" name="cnpjOriginal">
-
-                <div class="company-form-grid">
-                    <div class="mb-4">
-                        <label for="modalCnpj" class="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
-                        <input type="text" id="modalCnpj" name="cnpj" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyName" class="block text-sm font-medium text-gray-700 mb-1">NOME</label>
-                        <input type="text" id="modalCompanyName" name="nome" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyInscricaoEstadual" class="block text-sm font-medium text-gray-700 mb-1">INSCRIÇÃO ESTADUAL</label>
-                        <input type="text" id="modalCompanyInscricaoEstadual" name="inscricaoEstadual" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyDataAbertura" class="block text-sm font-medium text-gray-700 mb-1">DATA DE ABERTURA</label>
-                        <input type="date" id="modalCompanyDataAbertura" name="dataAbertura" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyEmail" class="block text-sm font-medium text-gray-700 mb-1">E-MAIL</label>
-                        <input type="email" id="modalCompanyEmail" name="email" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyCep" class="block text-sm font-medium text-gray-700 mb-1">CEP</label>
-                        <input type="text" id="modalCompanyCep" name="cep" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyEndereco" class="block text-sm font-medium text-gray-700 mb-1">ENDEREÇO</label>
-                        <input type="text" id="modalCompanyEndereco" name="endereco" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyNumero" class="block text-sm font-medium text-gray-700 mb-1">NÚMERO</label>
-                        <input type="text" id="modalCompanyNumero" name="numero" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyBairro" class="block text-sm font-medium text-gray-700 mb-1">BAIRRO</label>
-                        <input type="text" id="modalCompanyBairro" name="bairro" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyCidade" class="block text-sm font-medium text-gray-700 mb-1">CIDADE</label>
-                        <input type="text" id="modalCompanyCidade" name="cidade" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyEstado" class="block text-sm font-medium text-gray-700 mb-1">ESTADO</label>
-                        <input type="text" id="modalCompanyEstado" name="estado" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyTelefone" class="block text-sm font-medium text-gray-700 mb-1">TELEFONE</label>
-                        <input type="text" id="modalCompanyTelefone" name="telefone" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyOwner" class="block text-sm font-medium text-gray-700 mb-1">PROPRIETARIO</label>
-                        <input type="text" id="modalCompanyOwner" name="proprietario" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="modalCompanyStatus" class="block text-sm font-medium text-gray-700 mb-1">STATUS</label>
-                        <select id="modalCompanyStatus" name="status" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="Ativa">ATIVA</option>
-                            <option value="Inativa">INATIVA</option>
-                            <option value="Bloqueada">BLOQUEADA</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-3 mt-6"> <!-- Adicionado mt-6 para espaçamento -->
-                    <button type="button" id="cancelCompanyModal" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">Cancelar</button>
-                    <button type="submit" id="submitCompanyFormButton" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmação Genérico -->
-    <div id="confirmationModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 class="text-xl font-bold mb-4 text-gray-800">Confirmação</h2>
-            <p id="confirmationMessage" class="mb-6 text-gray-700"></p>
-            <div class="flex justify-end gap-3">
-                <button type="button" id="cancelConfirmation" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">Cancelar</button>
-                <button type="button" id="confirmAction" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
 
     <script>
-        // URL do seu Google Apps Script implementado
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxe-lUFqeFvDVlP-pc7hk14Tq5HuHmzzBmoK3FWVA2tmUCZo0gVoes_hsALrUJnBjUVuw/exec";
+        // URL do seu Google Apps Script para CARREGAR DADOS (gerenciador de cadastros.gs)
+        const APPS_SCRIPT_DATA_URL = "https://script.google.com/macros/s/AKfycbyOk_uoXu7vtA-Hwju1CmM-N6e0wQ_2qEfKEDzVOsigjU-FdbLhvWF9vs623R1guoyykw/exec";
+        // URL do seu Google Apps Script para ADICIONAR USUÁRIOS (adicionar_usuarios.gs)
+        // ESTA É A URL QUE VOCÊ FORNECEU!
+        const APPS_SCRIPT_ADD_USER_URL = "https://script.google.com/macros/s/AKfycbxUY6jnADNZ_3uZk8bvBBrkTJqDbY7e1BVqb0IIQpWCRkST5igK1CKfb51_4Cu6X4QXcQ/exec";
+
 
         // Variáveis globais para paginação e dados
         const itemsPerPage = 10;
@@ -579,11 +465,6 @@
         let currentUserCompany = null;
         // --- Fim das variáveis de simulação ---
 
-        // Referências aos botões de adicionar
-        const addUsuarioButton = document.getElementById('addUsuarioButton');
-        const addCompanyButton = document.getElementById('addCompanyButton');
-
-
         /**
          * Salva os dados do usuário atual no localStorage.
          * @param {string} access Nível de acesso do usuário.
@@ -598,7 +479,7 @@
         /**
          * Atualiza a exibição das informações do usuário atual na interface.
          */
-        function userInfoElement() {
+        function updateCurrentUserInfoDisplay() {
             const userInfoElement = document.getElementById('currentUserInfo');
             if (userInfoElement) {
                 const storedAccess = localStorage.getItem('vigilonUserAccess');
@@ -619,7 +500,7 @@
         }
 
         /**
-         * Alterna a exibição das abas (Usuários/Empresas) e a visibilidade dos botões de adicionar.
+         * Alterna a exibição das abas (Usuários/Empresas).
          * @param {string} tabId O ID da aba a ser mostrada ('usuarios' ou 'empresas').
          */
         function showTab(tabId) {
@@ -632,15 +513,6 @@
 
             document.getElementById(tabId + 'Tab').classList.add('active');
             document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
-
-            // Lógica para esconder/mostrar os botões de adicionar
-            if (tabId === 'usuarios') {
-                addUsuarioButton.classList.remove('hidden');
-                addCompanyButton.classList.add('hidden');
-            } else if (tabId === 'empresas') {
-                addUsuarioButton.classList.add('hidden');
-                addCompanyButton.classList.remove('hidden');
-            }
 
             // Ao mudar de aba, reseta a página para 1 e aplica os filtros atuais
             if (tabId === 'usuarios') {
@@ -662,31 +534,23 @@
             errorElement.classList.add('hidden');
 
             try {
-                console.log(`DEBUG: Tentando fetchData para ${tabName}. URL: ${APPS_SCRIPT_URL}?tab=${tabName}`);
-                const response = await fetch(`${APPS_SCRIPT_URL}?tab=${tabName}`, {
-                    mode: 'cors' // Explicitly set CORS mode for GET requests as well
-                });
-
-                console.log(`DEBUG: Resposta de fetchData para ${tabName}:`, response);
-                console.log(`DEBUG: Access-Control-Allow-Origin header para ${tabName}:`, response.headers.get('Access-Control-Allow-Origin'));
-
-
+                // Usa a URL de dados para requisições GET
+                console.log(`fetchData: Tentando buscar dados da aba '${tabName}' em: ${APPS_SCRIPT_DATA_URL}?tab=${tabName}`);
+                const response = await fetch(`${APPS_SCRIPT_DATA_URL}?tab=${tabName}`);
                 if (!response.ok) {
-                    let errorText = await response.text();
-                    console.error(`DEBUG: Resposta não OK para ${tabName}. Status: ${response.status}, Texto: ${errorText}`);
+                    const errorText = await response.text();
                     throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}. Detalhes: ${errorText.substring(0, 200)}...`);
                 }
                 const result = await response.json();
 
                 if (result.status === 'sucesso') {
-                    console.log(`Dados recebidos para ${tabName}:`, result.data);
+                    console.log(`fetchData: Dados recebidos para ${tabName}:`, result.data);
                     return result.data;
                 } else {
-                    console.error(`DEBUG: Erro no resultado do script para ${tabName}:`, result.message);
                     throw new Error(result.message || 'Erro desconhecido retornado pelo script.');
                 }
             } catch (error) {
-                console.error(`Erro ao buscar dados da aba ${tabName}:`, error);
+                console.error(`fetchData: Erro ao buscar dados da aba ${tabName}:`, error);
                 errorElement.textContent = `Erro ao carregar dados de ${tabName.toLowerCase()}: ${error.message}`;
                 errorElement.classList.remove('hidden');
                 return [];
@@ -759,12 +623,11 @@
 
                 const actionsCell = row.insertCell();
                 actionsCell.className = 'action-buttons';
-                // Adicionando event listeners aos botões de ação
                 actionsCell.innerHTML = `
-                    <button title="Visualizar" data-id="${usuario.ID}" onclick="viewUser('${usuario.ID}')"><i class="fas fa-eye"></i></button>
-                    <button title="Editar" data-id="${usuario.ID}" onclick="editUser('${usuario.ID}')"><i class="fas fa-pencil-alt"></i></button>
-                    <button title="Bloquear/Desbloquear" data-id="${usuario.ID}"><i class="fas fa-lock"></i></button>
-                    <button title="Deletar" data-id="${usuario.ID}" onclick="deleteUser('${usuario.ID}')"><i class="fas fa-trash-alt"></i></button>
+                    <button title="Visualizar"><i class="fas fa-eye"></i></button>
+                    <button title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                    <button title="Bloquear/Desbloquear"><i class="fas fa-lock"></i></button>
+                    <button title="Deletar"><i class="fas fa-trash-alt"></i></button>
                 `;
             });
         }
@@ -791,11 +654,10 @@
 
                 const actionsCell = row.insertCell();
                 actionsCell.className = 'action-buttons';
-                // Adicionando event listeners aos botões de ação
                 actionsCell.innerHTML = `
-                    <button title="Visualizar" data-cnpj="${empresa.CNPJ}" onclick="viewCompany('${empresa.CNPJ}')"><i class="fas fa-eye"></i></button>
-                    <button title="Editar" data-cnpj="${empresa.CNPJ}" onclick="editCompany('${empresa.CNPJ}')"><i class="fas fa-pencil-alt"></i></button>
-                    <button title="Deletar" data-cnpj="${empresa.CNPJ}" onclick="deleteCompany('${empresa.CNPJ}')"><i class="fas fa-trash-alt"></i></button>
+                    <button title="Visualizar"><i class="fas fa-eye"></i></button>
+                    <button title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                    <button title="Deletar"><i class="fas fa-trash-alt"></i></button>
                 `;
             });
         }
@@ -897,83 +759,47 @@
             applyFiltersAndGoToPage(tabName, pageNumber);
         }
 
-        // Referências aos elementos do modal de usuário
+        // Referências aos elementos do modal
         const userModal = document.getElementById('userModal');
+        const addUsuarioButton = document.getElementById('addUsuarioButton');
         const cancelUserModalButton = document.getElementById('cancelUserModal');
         const userForm = document.getElementById('userForm');
-        const modalUserIdInput = document.getElementById('modalUserId'); // Novo campo oculto para ID
         const modalUsuarioInput = document.getElementById('modalUsuario');
-        const modalNomeInput = document.getElementById('modalNome');
-        const modalEmpresaSelect = document.getElementById('modalEmpresaSelect');
-        const modalAutenticacaoSelect = document.getElementById('modalAutenticacao');
-        const modalAcessoSelect = document.getElementById('modalAcesso');
         const modalSenhaInput = document.getElementById('modalSenha');
-        const userModalTitle = document.getElementById('userModalTitle');
-        const submitUserFormButton = document.getElementById('submitUserFormButton');
-        const modalErrorMessage = document.getElementById('modalErrorMessage');
-        const modalSuccessMessage = document.getElementById('modalSuccessMessage');
-        const modalLoadingMessage = document.getElementById('modalLoadingMessage');
+        const modalEmpresaSelect = document.getElementById('modalEmpresaSelect'); // Referência ao select de empresas
+        const modalAcessoSelect = document.getElementById('modalAcesso'); // Referência ao select de acesso
+        const modalMessage = document.getElementById('modalMessage'); // Referência à mensagem de erro/sucesso no modal
 
-        // Referências aos elementos do modal de empresa
-        const companyModal = document.getElementById('companyModal');
-        const cancelCompanyModalButton = document.getElementById('cancelCompanyModal');
-        const companyForm = document.getElementById('companyForm');
-        const modalCompanyCnpjInput = document.getElementById('modalCompanyCnpj'); // Campo oculto para CNPJ original
-        const modalCnpjInput = document.getElementById('modalCnpj');
-        const modalCompanyNameInput = document.getElementById('modalCompanyName');
-        const modalCompanyInscricaoEstadualInput = document.getElementById('modalCompanyInscricaoEstadual');
-        const modalCompanyDataAberturaInput = document.getElementById('modalCompanyDataAbertura');
-        const modalCompanyEmailInput = document.getElementById('modalCompanyEmail');
-        const modalCompanyCepInput = document.getElementById('modalCompanyCep');
-        const modalCompanyEnderecoInput = document.getElementById('modalCompanyEndereco');
-        const modalCompanyNumeroInput = document.getElementById('modalCompanyNumero');
-        const modalCompanyBairroInput = document.getElementById('modalCompanyBairro');
-        const modalCompanyCidadeInput = document.getElementById('modalCompanyCidade');
-        const modalCompanyEstadoInput = document.getElementById('modalCompanyEstado');
-        const modalCompanyTelefoneInput = document.getElementById('modalCompanyTelefone');
-        const modalCompanyOwnerInput = document.getElementById('modalCompanyOwner');
-        const modalCompanyStatusSelect = document.getElementById('modalCompanyStatus');
-        const companyModalTitle = document.getElementById('companyModalTitle');
-        const submitCompanyFormButton = document.getElementById('submitCompanyFormButton');
-        const companyModalErrorMessage = document.getElementById('companyModalErrorMessage');
-        const companyModalSuccessMessage = document.getElementById('companyModalSuccessMessage');
-        const companyModalLoadingMessage = document.getElementById('companyModalLoadingMessage');
-
-        // Referências para o modal de confirmação genérico
-        const confirmationModal = document.getElementById('confirmationModal');
-        const confirmationMessage = document.getElementById('confirmationMessage');
-        const cancelConfirmationButton = document.getElementById('cancelConfirmation');
-        const confirmActionButton = document.getElementById('confirmAction');
-        let currentConfirmAction = null; // Armazena a função a ser executada na confirmação
+        // Referências para o conteúdo principal
+        const mainContent = document.getElementById('mainContent');
 
         // Referência ao botão "Voltar"
         const backButton = document.getElementById('backButton');
 
         /**
-         * Exibe uma mensagem de erro em um elemento específico.
-         * @param {HTMLElement} element O elemento HTML onde a mensagem será exibida.
-         * @param {string} message A mensagem de erro.
+         * Exibe uma mensagem no modal (erro ou sucesso).
+         * @param {string} message A mensagem a ser exibida.
+         * @param {string} type O tipo da mensagem ('error' ou 'success').
          */
-        function showMessage(element, message, type) {
-            element.textContent = message;
-            element.classList.remove('hidden', 'error', 'success', 'loading');
-            element.classList.add(type);
+        function showModalMessage(message, type) {
+            modalMessage.textContent = message;
+            modalMessage.className = `message-box ${type}`; // Adiciona as classes de estilo
+            modalMessage.classList.remove('hidden');
         }
 
         /**
-         * Oculta uma mensagem em um elemento específico.
-         * @param {HTMLElement} element O elemento HTML da mensagem.
+         * Oculta a mensagem no modal.
          */
-        function hideMessage(element) {
-            element.classList.add('hidden');
-            element.textContent = '';
+        function hideModalMessage() {
+            modalMessage.classList.add('hidden');
+            modalMessage.textContent = '';
+            modalMessage.className = 'message-box hidden'; // Remove as classes de estilo
         }
 
         /**
          * Popula o select de empresas com os nomes das empresas cadastradas.
-         * @param {string} [selectedValue] O valor a ser pré-selecionado (opcional).
          */
-        function populateEmpresasSelect(selectedValue = '') {
+        function populateEmpresasSelect() {
             modalEmpresaSelect.innerHTML = '<option value="">Selecione uma empresa</option>'; // Limpa e adiciona opção padrão
             const uniqueCompanyNames = [...new Set(allEmpresasData.map(empresa => empresa.NOME).filter(name => name))];
             uniqueCompanyNames.sort().forEach(name => { // Opcional: ordena alfabeticamente
@@ -983,25 +809,25 @@
                 modalEmpresaSelect.appendChild(option);
             });
 
-            if (selectedValue) {
-                modalEmpresaSelect.value = selectedValue;
-            } else if (currentUserCompany && uniqueCompanyNames.includes(currentUserCompany)) {
-                // Se nenhum valor foi passado e o usuário atual tem empresa, pré-seleciona
+            // Se o usuário atual tiver uma empresa associada, pré-seleciona-a
+            if (currentUserCompany && uniqueCompanyNames.includes(currentUserCompany)) {
                 modalEmpresaSelect.value = currentUserCompany;
             }
         }
 
         /**
          * Popula o select de acesso com TODOS os tipos de acesso da aba 'Permissões'.
-         * @param {string} [selectedValue] O valor a ser pré-selecionado (opcional).
+         * A filtragem por empresa foi removida conforme solicitação.
          */
-        function populateAcessoSelect(selectedValue = '') {
+        function populateAcessoSelect() {
             modalAcessoSelect.innerHTML = '<option value="">Selecione um tipo de acesso</option>'; // Limpa e adiciona opção padrão
 
+            // Mapeia todos os tipos de acesso da aba 'Permissões'
             const allAccessTypes = allPermissoesData
                 .map(perm => perm['TIPO DE ACESSO'])
-                .filter(type => type);
+                .filter(type => type); // Filtra valores vazios/nulos
 
+            // Remove duplicatas e ordena alfabeticamente
             const uniqueAccessTypes = [...new Set(allAccessTypes)].sort();
 
             uniqueAccessTypes.forEach(type => {
@@ -1010,358 +836,126 @@
                 option.textContent = type;
                 modalAcessoSelect.appendChild(option);
             });
-
-            if (selectedValue) {
-                modalAcessoSelect.value = selectedValue;
-            }
         }
 
         /**
-         * Abre o modal de cadastro/edição de usuário.
-         * @param {Object} [userData] Dados do usuário para preencher o formulário (para edição).
+         * Abre o modal de cadastro de usuário e desativa a rolagem da tela.
          */
-        function openUserModal(userData = null) {
+        function openUserModal() {
             userModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            userForm.reset();
-            modalSenhaInput.value = "";
-            hideMessage(modalErrorMessage);
-            hideMessage(modalSuccessMessage);
-            hideMessage(modalLoadingMessage);
+            document.body.style.overflow = 'hidden'; // Desativa a rolagem
+            userForm.reset(); // Reseta todos os campos do formulário para limpar estados anteriores
+            modalSenhaInput.value = ""; // Garante que a senha comece em branco
+            hideModalMessage(); // Oculta qualquer mensagem anterior
 
-            if (userData) {
-                userModalTitle.textContent = 'Editar Usuário';
-                submitUserFormButton.textContent = 'Atualizar';
-                modalUserIdInput.value = userData.ID || '';
-                modalUsuarioInput.value = userData.ID || ''; // ID é o usuário
-                modalNomeInput.value = userData['NOME/EQUIPE'] || '';
-                modalAutenticacaoSelect.value = userData['AUTENTICAÇÃO'] || 'NÃO';
-                modalSenhaInput.value = userData.SENHA || ''; // Mantém a senha existente
-                modalSenhaInput.readOnly = true; // Senha não editável diretamente
-                modalSenhaInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-                populateEmpresasSelect(userData.EMPRESA);
-                populateAcessoSelect(userData.ACESSO);
-            } else {
-                userModalTitle.textContent = 'Cadastrar Usuário';
-                submitUserFormButton.textContent = 'Salvar';
-                modalUserIdInput.value = ''; // Garante que o ID esteja vazio para novo cadastro
-                modalSenhaInput.readOnly = false; // Senha editável para novo cadastro
-                modalSenhaInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
-                populateEmpresasSelect(); // Popula sem pré-seleção
-                populateAcessoSelect(); // Popula sem pré-seleção
-            }
+            // O campo EMPRESA (select) agora está sempre visível e ativo
+            modalEmpresaSelect.classList.remove('hidden');
+            modalEmpresaSelect.setAttribute('required', 'true');
+            modalEmpresaSelect.disabled = false; // Garante que o select esteja ativo
+            populateEmpresasSelect(); // Popula o select de empresas
+
+            // Popula o select de acesso com TODOS os tipos de acesso (sem filtro)
+            populateAcessoSelect();
         }
 
         /**
-         * Fecha o modal de usuário.
+         * Fecha o modal de cadastro de usuário, reseta o formulário e ativa a rolagem da tela.
          */
         function closeUserModal() {
             userModal.classList.remove('active');
-            document.body.style.overflow = '';
-            userForm.reset();
-            hideMessage(modalErrorMessage);
-            hideMessage(modalSuccessMessage);
-            hideMessage(modalLoadingMessage);
+            document.body.style.overflow = ''; // Ativa a rolagem
+            userForm.reset(); // Reseta todos os campos do formulário
+            hideModalMessage(); // Oculta qualquer mensagem
+
+            // Garante que o select de empresa esteja resetado e desativado ao fechar
             modalEmpresaSelect.innerHTML = '<option value="">Selecione uma empresa</option>';
+            modalEmpresaSelect.removeAttribute('required');
+            modalEmpresaSelect.disabled = true; // Desativa o select ao fechar
+
+            // Limpa e reseta o select de acesso
             modalAcessoSelect.innerHTML = '<option value="">Selecione um tipo de acesso</option>';
-            // Reabilita o botão de salvar caso tenha sido escondido pela visualização
-            submitUserFormButton.classList.remove('hidden');
-            userForm.querySelectorAll('input, select').forEach(field => {
-                field.disabled = false; // Reabilita todos os campos
-            });
-            modalUsuarioInput.readOnly = false; // Reabilita edição do ID para novos cadastros
-            modalUsuarioInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
         }
 
         /**
-         * Abre o modal de cadastro/edição de empresa.
-         * @param {Object} [companyData] Dados da empresa para preencher o formulário (para edição).
+         * Envia os dados do novo usuário para o Google Apps Script.
+         * @param {Object} userData Os dados do usuário a serem enviados.
+         * @returns {Promise<Object>} Uma promessa que resolve com o resultado da operação.
          */
-        function openCompanyModal(companyData = null) {
-            companyModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            companyForm.reset();
-            hideMessage(companyModalErrorMessage);
-            hideMessage(companyModalSuccessMessage);
-            hideMessage(companyModalLoadingMessage);
-
-            if (companyData) {
-                companyModalTitle.textContent = 'Editar Empresa';
-                submitCompanyFormButton.textContent = 'Atualizar';
-                modalCompanyCnpjInput.value = companyData.CNPJ || ''; // CNPJ original para busca
-                modalCnpjInput.value = companyData.CNPJ || '';
-                modalCompanyNameInput.value = companyData.NOME || '';
-                modalCompanyInscricaoEstadualInput.value = companyData['INSCRIÇÃO ESTADUAL'] || '';
-                modalCompanyDataAberturaInput.value = companyData['DATA DE ABERTURA'] ? new Date(companyData['DATA DE ABERTURA']).toISOString().split('T')[0] : ''; // Formata para input type="date"
-                modalCompanyEmailInput.value = companyData['E-MAIL'] || '';
-                modalCompanyCepInput.value = companyData.CEP || '';
-                modalCompanyEnderecoInput.value = companyData.ENDERECO || '';
-                modalCompanyNumeroInput.value = companyData.NUMERO || '';
-                modalCompanyBairroInput.value = companyData.BAIRRO || '';
-                modalCompanyCidadeInput.value = companyData.CIDADE || '';
-                modalCompanyEstadoInput.value = companyData.ESTADO || '';
-                modalCompanyTelefoneInput.value = companyData.TELEFONE || '';
-                modalCompanyOwnerInput.value = companyData.PROPRIETARIO || '';
-                modalCompanyStatusSelect.value = companyData.STATUS || 'Ativa';
-                modalCnpjInput.readOnly = true; // CNPJ não editável em edição
-                modalCnpjInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-            } else {
-                companyModalTitle.textContent = 'Cadastrar Empresa';
-                submitCompanyFormButton.textContent = 'Salvar';
-                modalCompanyCnpjInput.value = ''; // Garante que esteja vazio
-                modalCnpjInput.readOnly = false; // CNPJ editável para novo cadastro
-                modalCnpjInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
-            }
-        }
-
-        /**
-         * Fecha o modal de empresa.
-         */
-        function closeCompanyModal() {
-            companyModal.classList.remove('active');
-            document.body.style.overflow = '';
-            companyForm.reset();
-            hideMessage(companyModalErrorMessage);
-            hideMessage(companyModalSuccessMessage);
-            hideMessage(companyModalLoadingMessage);
-            // Reabilita o botão de salvar caso tenha sido escondido pela visualização
-            submitCompanyFormButton.classList.remove('hidden');
-            companyForm.querySelectorAll('input, select').forEach(field => {
-                field.disabled = false; // Reabilita todos os campos
-            });
-            modalCnpjInput.readOnly = false; // Reabilita edição do CNPJ para novos cadastros
-            modalCnpjInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
-        }
-
-        /**
-         * Exibe o modal de confirmação.
-         * @param {string} message Mensagem a ser exibida.
-         * @param {Function} onConfirm Callback a ser executado se o usuário confirmar.
-         */
-        function showConfirmationModal(message, onConfirm) {
-            confirmationMessage.textContent = message;
-            currentConfirmAction = onConfirm;
-            confirmationModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        /**
-         * Fecha o modal de confirmação.
-         */
-        function closeConfirmationModal() {
-            confirmationModal.classList.remove('active');
-            document.body.style.overflow = '';
-            currentConfirmAction = null;
-        }
-
-        /**
-         * Envia dados para o Google Apps Script via POST.
-         * @param {Object} data Os dados a serem enviados.
-         * @param {HTMLElement} loadingEl Elemento para exibir loading.
-         * @param {HTMLElement} errorEl Elemento para exibir erro.
-         * @param {HTMLElement} successEl Elemento para exibir sucesso.
-         * @returns {Promise<Object>} A resposta do script.
-         */
-        async function sendDataToAppsScript(data, loadingEl, errorEl, successEl) {
-            hideMessage(errorEl);
-            hideMessage(successEl);
-            showMessage(loadingEl, 'Processando...', 'loading');
+        async function sendUserDataToAppsScript(userData) {
+            showModalMessage('Enviando dados...', 'loading'); // Exibe mensagem de carregamento
 
             try {
-                console.log('DEBUG: Tentando enviar dados para Apps Script.');
-                console.log('DEBUG: URL:', APPS_SCRIPT_URL);
-                console.log('DEBUG: Dados enviados:', JSON.stringify(data));
+                // Loga a URL e os dados para depuração
+                console.log('sendUserDataToAppsScript: Tentando enviar dados para:', APPS_SCRIPT_ADD_USER_URL);
+                console.log('sendUserDataToAppsScript: Dados a serem enviados:', JSON.stringify(userData, null, 2));
 
-                const response = await fetch(APPS_SCRIPT_URL, {
+                const response = await fetch(APPS_SCRIPT_ADD_USER_URL, {
                     method: 'POST',
+                    mode: 'cors', // Necessário para requisições CORS
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(data),
-                    mode: 'cors' // Explicitly set CORS mode
+                    body: JSON.stringify(userData)
                 });
 
                 if (!response.ok) {
-                    let errorDetails = `Erro HTTP: ${response.status} - ${response.statusText}`;
-                    try {
-                        const errorJson = await response.json();
-                        errorDetails += `. Detalhes: ${JSON.stringify(errorJson)}`;
-                    } catch (e) {
-                        const errorText = await response.text();
-                        errorDetails += `. Detalhes: ${errorText.substring(0, 200)}...`;
-                    }
-                    throw new Error(errorDetails);
+                    const errorText = await response.text();
+                    console.error('sendUserDataToAppsScript: Resposta HTTP não OK:', response.status, response.statusText, errorText);
+                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}. Detalhes: ${errorText.substring(0, 200)}...`);
                 }
 
                 const result = await response.json();
+                console.log('sendUserDataToAppsScript: Resultado da resposta do Apps Script:', result);
+
 
                 if (result.status === 'sucesso') {
-                    showMessage(successEl, result.message, 'success');
-                    return result; // Retorna o resultado para que o chamador possa agir
+                    showModalMessage(result.message, 'success');
+                    // Recarrega os dados de usuários após o cadastro bem-sucedido
+                    allUsuariosData = await fetchData('Usuarios', document.getElementById('loadingUsuarios'), document.getElementById('errorUsuarios'));
+                    applyFiltersAndGoToPage('usuarios', 1); // Atualiza a tabela
+                    setTimeout(closeUserModal, 2000); // Fecha o modal após 2 segundos
                 } else {
-                    throw new Error(result.message || 'Erro desconhecido retornado pelo script.');
+                    showModalMessage(result.message || 'Erro desconhecido ao cadastrar usuário.', 'error');
                 }
+                return result;
             } catch (error) {
-                console.error('Erro na requisição ao Apps Script:', error);
-                showMessage(errorEl, `Erro: ${error.message}`, 'error');
-                return { status: 'erro', message: error.message }; // Retorna um objeto de erro
-            } finally {
-                hideMessage(loadingEl);
+                console.error('sendUserDataToAppsScript: Erro ao enviar dados do usuário (catch):', error);
+                // Mensagem mais específica para "Failed to fetch"
+                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                    showModalMessage(`Erro de conexão: Não foi possível alcançar o servidor. Verifique se a URL do Google Apps Script para adicionar usuários está correta e se o script foi implantado como aplicativo da web com acesso "Qualquer pessoa". Detalhes: ${error.message}.`, 'error');
+                } else {
+                    showModalMessage(`Erro ao cadastrar usuário: ${error.message}`, 'error');
+                }
+                return { status: 'erro', message: error.message };
             }
         }
 
-        /**
-         * Função para lidar com a visualização de detalhes de um usuário.
-         * @param {string} userId O ID do usuário a ser visualizado.
-         */
-        function viewUser(userId) {
-            const user = allUsuariosData.find(u => u.ID === userId);
-            if (user) {
-                openUserModal(user); // Abre o modal em modo de edição/visualização
-                userModalTitle.textContent = 'Detalhes do Usuário';
-                submitUserFormButton.classList.add('hidden'); // Esconde o botão Salvar/Atualizar
-                // Desativa todos os campos para visualização
-                userForm.querySelectorAll('input, select').forEach(field => {
-                    field.disabled = true;
-                });
-                // Apenas o botão de cancelar deve estar visível
-                cancelUserModalButton.classList.remove('hidden');
-
-            } else {
-                console.error('Usuário não encontrado para visualização:', userId);
-                // Poderia exibir uma mensagem de erro na tela
-            }
-        }
-
-        /**
-         * Função para lidar com a edição de um usuário.
-         * @param {string} userId O ID do usuário a ser editado.
-         */
-        function editUser(userId) {
-            const user = allUsuariosData.find(u => u.ID === userId);
-            if (user) {
-                openUserModal(user);
-                submitUserFormButton.classList.remove('hidden'); // Garante que o botão Salvar/Atualizar esteja visível
-                userForm.querySelectorAll('input, select').forEach(field => {
-                    field.disabled = false; // Reabilita campos para edição
-                });
-                modalUsuarioInput.readOnly = true; // ID do usuário não deve ser alterado
-                modalUsuarioInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-            } else {
-                console.error('Usuário não encontrado para edição:', userId);
-            }
-        }
-
-        /**
-         * Função para lidar com a exclusão de um usuário.
-         * @param {string} userId O ID do usuário a ser excluído.
-         */
-        function deleteUser(userId) {
-            const user = allUsuariosData.find(u => u.ID === userId);
-            if (user) {
-                showConfirmationModal(`Tem certeza que deseja deletar o usuário "${user['NOME/EQUIPE']}" (ID: ${user.ID})?`, async () => {
-                    closeConfirmationModal(); // Fecha o modal de confirmação
-                    const dataToSend = {
-                        action: 'deleteUser',
-                        id: userId
-                    };
-                    const result = await sendDataToAppsScript(dataToSend, modalLoadingMessage, modalErrorMessage, modalSuccessMessage);
-                    if (result.status === 'sucesso') {
-                        // Recarrega os dados após a exclusão bem-sucedida
-                        await initializeDashboard();
-                        // Opcional: exibir mensagem de sucesso por um tempo e depois esconder
-                        setTimeout(() => hideMessage(modalSuccessMessage), 3000);
-                    }
-                });
-            } else {
-                console.error('Usuário não encontrado para exclusão:', userId);
-            }
-        }
-
-        /**
-         * Função para lidar com a visualização de detalhes de uma empresa.
-         * @param {string} cnpj O CNPJ da empresa a ser visualizada.
-         */
-        function viewCompany(cnpj) {
-            const company = allEmpresasData.find(c => c.CNPJ === cnpj);
-            if (company) {
-                openCompanyModal(company);
-                companyModalTitle.textContent = 'Detalhes da Empresa';
-                submitCompanyFormButton.classList.add('hidden');
-                companyForm.querySelectorAll('input, select').forEach(field => {
-                    field.disabled = true;
-                });
-                cancelCompanyModalButton.classList.remove('hidden');
-            } else {
-                console.error('Empresa não encontrada para visualização:', cnpj);
-            }
-        }
-
-        /**
-         * Função para lidar com a edição de uma empresa.
-         * @param {string} cnpj O CNPJ da empresa a ser editada.
-         */
-        function editCompany(cnpj) {
-            const company = allEmpresasData.find(c => c.CNPJ === cnpj);
-            if (company) {
-                openCompanyModal(company);
-                submitCompanyFormButton.classList.remove('hidden');
-                companyForm.querySelectorAll('input, select').forEach(field => {
-                    field.disabled = false;
-                });
-                modalCnpjInput.readOnly = true; // CNPJ não deve ser alterado
-                modalCnpjInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-            } else {
-                console.error('Empresa não encontrada para edição:', cnpj);
-            }
-        }
-
-        /**
-         * Função para lidar com a exclusão de uma empresa.
-         * @param {string} cnpj O CNPJ da empresa a ser excluída.
-         */
-        function deleteCompany(cnpj) {
-            const company = allEmpresasData.find(c => c.CNPJ === cnpj);
-            if (company) {
-                showConfirmationModal(`Tem certeza que deseja deletar a empresa "${company.NOME}" (CNPJ: ${company.CNPJ})?`, async () => {
-                    closeConfirmationModal(); // Fecha o modal de confirmação
-                    const dataToSend = {
-                        action: 'deleteCompany',
-                        cnpj: cnpj
-                    };
-                    const result = await sendDataToAppsScript(dataToSend, companyModalLoadingMessage, companyModalErrorMessage, companyModalSuccessMessage);
-                    if (result.status === 'sucesso') {
-                        await initializeDashboard();
-                        setTimeout(() => hideMessage(companyModalSuccessMessage), 3000);
-                    }
-                });
-            } else {
-                console.error('Empresa não encontrada para exclusão:', cnpj);
-            }
-        }
 
         /**
          * Carrega os dados do usuário do localStorage e inicializa o painel.
          * Não há redirecionamento se os dados estiverem ausentes.
          */
         async function initializeDashboard() {
-            userInfoElement(); // Tenta carregar e exibir as informações do usuário
+            updateCurrentUserInfoDisplay(); // Tenta carregar e exibir as informações do usuário
+
+            // Loga as URLs do Apps Script no console para facilitar a depuração
+            console.log('initializeDashboard: URL do Google Apps Script para Dados (GET):', APPS_SCRIPT_DATA_URL);
+            console.log('initializeDashboard: URL do Google Apps Script para Adicionar Usuário (POST):', APPS_SCRIPT_ADD_USER_URL);
+
 
             const loadingUsuarios = document.getElementById('loadingUsuarios');
             const errorUsuarios = document.getElementById('errorUsuarios');
             const loadingEmpresas = document.getElementById('loadingEmpresas');
             const errorEmpresas = document.getElementById('errorEmpresas');
-            // Reutilizando elementos de loading/erro para Permissões, pois não tem um display dedicado
-            const loadingPermissoes = document.getElementById('loadingUsuarios');
-            const errorPermissoes = document.getElementById('errorUsuarios');
+            const loadingPermissoes = document.getElementById('loadingUsuarios'); // Reutilizando elementos de loading/erro
+            const errorPermissoes = document.getElementById('errorUsuarios'); // Reutilizando elementos de loading/erro
 
-            // Carrega todos os dados
+            // fetchData agora usa APPS_SCRIPT_DATA_URL
             allUsuariosData = await fetchData('Usuarios', loadingUsuarios, errorUsuarios);
             allEmpresasData = await fetchData('Empresas', loadingEmpresas, errorEmpresas);
             allPermissoesData = await fetchData('Permissões', loadingPermissoes, errorPermissoes);
 
-            // Garante que a aba de usuários é a primeira a ser mostrada e renderizada
-            showTab('usuarios');
+            showTab('usuarios'); // Garante que a aba de usuários é a primeira a ser mostrada
         }
 
         // Adiciona event listeners para os campos de pesquisa e filtros de status
@@ -1372,10 +966,11 @@
             document.getElementById('searchCompanyInput').addEventListener('input', () => applyFiltersAndGoToPage('empresas', 1));
             document.getElementById('statusCompanyFilter').addEventListener('change', () => applyFiltersAndGoToPage('empresas', 1));
 
-            // Event listeners para o modal de usuário
-            addUsuarioButton.addEventListener('click', () => openUserModal(null)); // Abre para novo cadastro
+            // Event listeners para o modal
+            addUsuarioButton.addEventListener('click', openUserModal);
             cancelUserModalButton.addEventListener('click', closeUserModal);
             userModal.addEventListener('click', (e) => {
+                // Fecha o modal se clicar fora do conteúdo do modal
                 if (e.target === userModal) {
                     closeUserModal();
                 }
@@ -1383,111 +978,38 @@
 
             // Event listener para o campo USUÁRIO para preencher a SENHA dinamicamente
             modalUsuarioInput.addEventListener('input', () => {
-                // Preenche a senha apenas se for um novo cadastro (modalUserIdInput.value está vazio)
-                if (!modalUserIdInput.value && modalUsuarioInput.value.trim() !== "") {
+                if (modalUsuarioInput.value.trim() !== "") {
                     modalSenhaInput.value = modalUsuarioInput.value + "@MudarSenha1999";
-                } else if (!modalUserIdInput.value) { // Se o campo usuário for limpo em novo cadastro
+                } else {
                     modalSenhaInput.value = "";
                 }
             });
 
-            // Lidar com o envio do formulário de usuário
-            userForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                hideMessage(modalErrorMessage);
-                hideMessage(modalSuccessMessage);
+            // Lidar com o envio do formulário
+            userForm.addEventListener('submit', async (e) => { // Tornar a função assíncrona
+                e.preventDefault(); // Impede o envio padrão do formulário
+                hideModalMessage(); // Oculta qualquer mensagem antes de validar
 
                 const formData = new FormData(userForm);
                 const userData = {};
-                userData.id = formData.get('id'); // Pode ser vazio para novo cadastro
+
+                userData.empresa = modalEmpresaSelect.value;
                 userData.usuario = formData.get('usuario');
                 userData.nome = formData.get('nome');
-                userData.empresa = formData.get('empresa');
                 userData.autenticacao = formData.get('autenticacao');
                 userData.acesso = formData.get('acesso');
                 userData.senha = formData.get('senha');
 
-                // Regra de Validação: Cadastrar Master System
+                // --- Regra de Validação: Cadastrar Master System ---
                 if (userData.acesso === "Master System" && currentUserAccess !== "Master System") {
-                    showMessage(modalErrorMessage, 'Erro: Somente usuários "Master System" podem cadastrar outros usuários "Master System".', 'error');
-                    return;
+                    showModalMessage('Erro: Somente usuários "Master System" podem cadastrar outros usuários "Master System".', 'error');
+                    return; // Impede o envio do formulário
                 }
+                // --- Fim da Regra de Validação ---
 
-                // Determina a ação (criar ou atualizar)
-                const action = userData.id ? 'updateUser' : 'createUser';
-                const dataToSend = { action: action, ...userData };
-
-                const result = await sendDataToAppsScript(dataToSend, modalLoadingMessage, modalErrorMessage, modalSuccessMessage);
-
-                if (result.status === 'sucesso') {
-                    // Recarrega os dados e fecha o modal após um pequeno atraso para o usuário ver a mensagem de sucesso
-                    setTimeout(async () => {
-                        closeUserModal();
-                        await initializeDashboard();
-                    }, 1500);
-                }
+                // Chama a função para enviar os dados para o Google Apps Script
+                await sendUserDataToAppsScript(userData);
             });
-
-            // Event listeners para o modal de empresa
-            addCompanyButton.addEventListener('click', () => openCompanyModal(null));
-            cancelCompanyModalButton.addEventListener('click', closeCompanyModal);
-            companyModal.addEventListener('click', (e) => {
-                if (e.target === companyModal) {
-                    closeCompanyModal();
-                }
-            });
-
-            // Lidar com o envio do formulário de empresa
-            companyForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                hideMessage(companyModalErrorMessage);
-                hideMessage(companyModalSuccessMessage);
-
-                const formData = new FormData(companyForm);
-                const companyData = {};
-                companyData.cnpjOriginal = formData.get('cnpjOriginal'); // CNPJ original para edição
-                companyData.cnpj = formData.get('cnpj');
-                companyData.nome = formData.get('nome');
-                companyData.inscricaoEstadual = formData.get('inscricaoEstadual');
-                companyData.dataAbertura = formData.get('dataAbertura');
-                companyData.email = formData.get('email');
-                companyData.cep = formData.get('cep');
-                companyData.endereco = formData.get('endereco');
-                companyData.numero = formData.get('numero');
-                companyData.bairro = formData.get('bairro');
-                companyData.cidade = formData.get('cidade');
-                companyData.estado = formData.get('estado');
-                companyData.telefone = formData.get('telefone');
-                companyData.proprietario = formData.get('proprietario');
-                companyData.status = formData.get('status');
-
-                // Determina a ação (criar ou atualizar)
-                const action = companyData.cnpjOriginal ? 'updateCompany' : 'createCompany';
-                const dataToSend = { action: action, ...companyData };
-
-                const result = await sendDataToAppsScript(dataToSend, companyModalLoadingMessage, companyModalErrorMessage, companyModalSuccessMessage);
-
-                if (result.status === 'sucesso') {
-                    setTimeout(async () => {
-                        closeCompanyModal();
-                        await initializeDashboard();
-                    }, 1500);
-                }
-            });
-
-            // Event listeners para o modal de confirmação
-            confirmActionButton.addEventListener('click', () => {
-                if (currentConfirmAction) {
-                    currentConfirmAction();
-                }
-            });
-            cancelConfirmationButton.addEventListener('click', closeConfirmationModal);
-            confirmationModal.addEventListener('click', (e) => {
-                if (e.target === confirmationModal) {
-                    closeConfirmationModal();
-                }
-            });
-
 
             // Event listener para o botão "Voltar"
             backButton.addEventListener('click', () => {
