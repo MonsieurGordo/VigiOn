@@ -573,14 +573,14 @@
       </li>
 
       <!-- Botão de Cadastros (agora redireciona para uma nova tela) -->
-      <li>
+      <li id="li-cadastros"> <!-- Adicionado ID para controle de visibilidade -->
         <button onclick="window.location.href = 'Painel_de_Cadastros.html';" id="btn-cadastros">
           Cadastros
         </button>
       </li>
 
       <!-- NOVO: Botão de Permissões (agora redireciona para uma nova tela) -->
-      <li>
+      <li id="li-permissions"> <!-- Adicionado ID para controle de visibilidade -->
         <button onclick="redirectToPermissionsPanel()" id="btn-permissions">
           Permissões
         </button>
@@ -866,6 +866,7 @@
      * Agora, ela usará os dados do localStorage salvos no login
      * e os exibirá nas labels da sidebar.
      * Se os dados não existirem ou estiverem incompletos, redireciona para o login.
+     * Também controla a visibilidade dos botões "Cadastros" e "Permissões".
      */
     async function checkDashboardAuth() {
         const userDataString = localStorage.getItem('vigion_user_data');
@@ -889,7 +890,7 @@
         // Verifica se os dados essenciais para o dashboard estão presentes
         // Agora, incluímos 'password' na verificação, pois ele será salvo no index.html
         // O `id` é o `username` que o Apps Script retorna como `data.id`
-        if (!userData || !userData.id || !userData.nomeCompleto || !userData.autenticado || !userData.password) {
+        if (!userData || !userData.id || !userData.nomeCompleto || !userData.autenticado || !userData.password || !userData.tipoAcesso) { // Adicionado tipoAcesso
             console.log("Dados essenciais do usuário incompletos no localStorage. Redirecionando para login.");
             localStorage.clear();
             window.location.replace('index.html');
@@ -901,6 +902,18 @@
         document.getElementById('loggedInCompany').textContent = userData.company || 'N/A';
         document.getElementById('loggedInAccessType').textContent = userData.tipoAcesso || 'Visitante';
         
+        // Lógica para controlar a visibilidade dos botões "Cadastros" e "Permissões"
+        const liCadastros = document.getElementById('li-cadastros');
+        const liPermissions = document.getElementById('li-permissions');
+
+        if (userData.tipoAcesso === "Master System") {
+            liCadastros.style.display = 'block'; // Mostra o item da lista
+            liPermissions.style.display = 'block'; // Mostra o item da lista
+        } else {
+            liCadastros.style.display = 'none'; // Oculta o item da lista
+            liPermissions.style.display = 'none'; // Oculta o item da lista
+        }
+
         console.log("Usuário autenticado via localStorage.");
         return true; 
     }
