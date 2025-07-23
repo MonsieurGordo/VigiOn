@@ -684,7 +684,7 @@
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
     // NOVO: URL da sua API do Google Apps Script para BUSCAR HISTÓRICO DE LOCALIZAÇÕES.
     // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU NOVO SCRIPT DE HISTÓRICO PUBLICADO!**
-    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxHipBLC_iUGR6ZHJvZdZHkG8nKLWJwBQ5Dzt1EKm4CKY9rQ0mkNZAP8_1mR948W4Q/exec"; // Substitua com a URL do Apps Script de histórico
+    const APPS_SCRIPT_FETCH_HISTORICO_URL = ""; // Substitua com a URL do Apps Script de histórico
 
     // Variáveis globais para o mapa Leaflet
     let map;
@@ -1060,13 +1060,14 @@
             let bounds = L.latLngBounds([]); // Para ajustar o zoom do mapa
 
             result.data.forEach(location => {
-                if (location.Latitude == null || location.Longitude == null || isNaN(location.Latitude) || isNaN(location.Longitude)) {
+                // CORRIGIDO: Acessando as propriedades com as chaves exatas do Apps Script (maiúsculas)
+                if (location.LATITUDE == null || location.LONGITUDE == null || isNaN(location.LATITUDE) || isNaN(location.LONGITUDE)) {
                     console.warn(`Pulando localização inválida para ${location['NOME/EQUIPE']}: Latitude/Longitude inválidas.`);
                     return;
                 }
 
                 let color = '#757575'; // Cor padrão (cinza)
-                // Usando EXCLUSIVAMENTE location.ESTADO para determinar a cor do marcador
+                // CORRIGIDO: Acessando a propriedade ESTADO com a chave exata do Apps Script (maiúsculas)
                 const lowerEstado = String(location.ESTADO || '').toLowerCase(); // Garante que 'estado' é usado
 
                 if    (lowerEstado === 'ativo')      color = '#5A73D4'; // Azul (cor secundária)
@@ -1076,9 +1077,11 @@
                 // Se o estado não corresponder a nenhum dos acima, ele permanecerá cinza (padrão)
 
                 const pinIcon = createPinIcon(color);
-                const marker = L.marker([location.Latitude, location.Longitude], { icon: pinIcon }).addTo(markersLayer);
+                // CORRIGIDO: Usando LATITUDE e LONGITUDE
+                const marker = L.marker([location.LATITUDE, location.LONGITUDE], { icon: pinIcon }).addTo(markersLayer);
 
                 // Conteúdo do tooltip (rótulo permanente)
+                // CORRIGIDO: Usando 'NOME/EQUIPE'
                 marker.bindTooltip(`<div class="marker-label-popup">${location['NOME/EQUIPE']}</div>`, {
                   permanent: true,
                   direction: 'top',
@@ -1087,11 +1090,12 @@
                 }).openTooltip();
 
                 // Conteúdo do popup (clicável)
+                // CORRIGIDO: Usando as chaves exatas do Apps Script
                 marker.bindPopup(`
                   <strong>Nome:</strong> ${location['NOME/EQUIPE']}<br>
                   <strong>Data/Hora:</strong> ${formatDateTime(location.DATAHORA)}<br>
-                  <strong>Latitude:</strong> ${location.Latitude}<br>
-                  <strong>Longitude:</strong> ${location.Longitude}<br>
+                  <strong>Latitude:</strong> ${location.LATITUDE}<br>
+                  <strong>Longitude:</strong> ${location.LONGITUDE}<br>
                   <strong>Endereço:</strong> ${location['ENDERECO ATUAL']}<br>
                   <strong>Estado do Técnico:</strong> ${location.ESTADO}<br>
                   <strong>Protocolo:</strong> ${location.PROTOCOLO}<br>
@@ -1099,8 +1103,9 @@
                   <strong>Observações:</strong> ${location.OBSERVAÇÕES}
                 `);
 
-                allMarkers.push({ marker, nome: location['NOME/EQUIPE'], lat: location.Latitude, lng: location.Longitude, estado: location.ESTADO, protocolo: location.PROTOCOLO }); // Adicionado protocolo ao allMarkers
-                bounds.extend([location.Latitude, location.Longitude]); // Estende o limite para o zoom
+                // CORRIGIDO: Usando as chaves exatas do Apps Script
+                allMarkers.push({ marker, nome: location['NOME/EQUIPE'], lat: location.LATITUDE, lng: location.LONGITUDE, estado: location.ESTADO, protocolo: location.PROTOCOLO }); // Adicionado protocolo ao allMarkers
+                bounds.extend([location.LATITUDE, location.LONGITUDE]); // Estende o limite para o zoom
             });
 
             // Ajusta o mapa para mostrar todos os marcadores, se houver
@@ -1198,6 +1203,7 @@
 
         } else {
             // Se for nome da equipe
+            // CORRIGIDO: Usando 'NOME/EQUIPE' para buscar
             const foundMarkerData = allMarkers.find(m => m.nome.toLowerCase() === searchTerm.toLowerCase());
 
             if (foundMarkerData) {
