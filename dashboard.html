@@ -680,8 +680,11 @@
     // URL da sua API do Google Apps Script para ATUALIZAR PERFIL.
     // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU SCRIPT DE ATUALIZAÇÃO DE PERFIL PUBLICADO!**
     const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brgSr5mAYMNOj9eXDdixQ/exec"; // URL fornecida pelo usuário
-    // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
+    // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES ATUAIS.
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
+    // NOVO: URL da sua API do Google Apps Script para BUSCAR HISTÓRICO DE LOCALIZAÇÕES.
+    // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU NOVO SCRIPT DE HISTÓRICO PUBLICADO!**
+    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxHipBLC_iUGR6ZHJvZdZHkG8nKLWJwBQ5Dzt1EKm4CKY9rQ0mkNZAP8_1mR948W4Q/exec"; // Substitua com a URL do Apps Script de histórico
 
     // Variáveis globais para o mapa Leaflet
     let map;
@@ -770,6 +773,9 @@
       if (tempCoordMarkerLayer) {
           tempCoordMarkerLayer.clearLayers();
       }
+      // Limpa marcadores de histórico ao mudar de view
+      historicoMarkers.forEach(m => map.removeLayer(m));
+      historicoMarkers = [];
 
       // Desativa todos os botões de função
       document.querySelectorAll('.sidebar button').forEach(button => {
@@ -806,30 +812,23 @@
         document.getElementById('btn-historico').classList.add('active');
         historicoPlaceholder.innerHTML = `
           <div id="historico-container" style="display: flex;">
-            <input type="text" id="hist-latlng" placeholder="Coordenadas de referência" />
             <input type="datetime-local" id="hist-date-start" title="Data/Hora Inicial" />
             <input type="datetime-local" id="hist-date-end" title="Data/Hora Final" />
             <button id="btn-historico-buscar">Buscar Histórico</button>
             <button id="btn-historico-pdf">Gerar PDF do Histórico</button>
           </div>
         `;
-        // Adicionar listeners básicos para o layout
-        document.getElementById('hist-latlng').focus();
-        showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
-        document.getElementById('btn-historico-buscar').onclick = () => showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
+        // Adicionar listeners para os campos de data e botão de busca
+        document.getElementById('hist-date-start').focus();
+        document.getElementById('btn-historico-buscar').onclick = fetchHistorico; // Chama a nova função
         document.getElementById('btn-historico-pdf').onclick = () => showMessageModal('Funcionalidade de PDF', 'A geração de PDF será implementada em breve.');
-        ['hist-latlng','hist-date-start','hist-date-end'].forEach(id => {
-          document.getElementById(id).addEventListener('keyup', e => {
-            if (e.key === 'Enter') showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
-          });
-        });
+        
         // Para a atualização do mapa ao sair da view "Localizar Equipe"
         stopMapUpdates();
-        // Limpa os marcadores do mapa
+        // Limpa os marcadores do mapa de localização atual
         markersLayer.clearLayers();
         allMarkers = [];
-        historicoMarkers.forEach(m => map.removeLayer(m));
-        historicoMarkers = [];
+
 
       } else if (view === 'rota') {
         document.getElementById('btn-rota').classList.add('active');
@@ -1061,14 +1060,14 @@
             let bounds = L.latLngBounds([]); // Para ajustar o zoom do mapa
 
             result.data.forEach(location => {
-                if (location.latitude == null || location.longitude == null || isNaN(location.latitude) || isNaN(location.longitude)) {
-                    console.warn(`Pulando localização inválida para ${location.nome}: Latitude/Longitude inválidas.`);
+                if (location.Latitude == null || location.Longitude == null || isNaN(location.Latitude) || isNaN(location.Longitude)) {
+                    console.warn(`Pulando localização inválida para ${location['NOME/EQUIPE']}: Latitude/Longitude inválidas.`);
                     return;
                 }
 
                 let color = '#757575'; // Cor padrão (cinza)
-                // Usando EXCLUSIVAMENTE location.estado para determinar a cor do marcador
-                const lowerEstado = String(location.estado || '').toLowerCase(); // Garante que 'estado' é usado
+                // Usando EXCLUSIVAMENTE location.ESTADO para determinar a cor do marcador
+                const lowerEstado = String(location.ESTADO || '').toLowerCase(); // Garante que 'estado' é usado
 
                 if    (lowerEstado === 'ativo')      color = '#5A73D4'; // Azul (cor secundária)
                 else if (lowerEstado === 'atencao' || lowerEstado === 'atenção') color = '#FFC107'; // Laranja
@@ -1077,10 +1076,10 @@
                 // Se o estado não corresponder a nenhum dos acima, ele permanecerá cinza (padrão)
 
                 const pinIcon = createPinIcon(color);
-                const marker = L.marker([location.latitude, location.longitude], { icon: pinIcon }).addTo(markersLayer);
+                const marker = L.marker([location.Latitude, location.Longitude], { icon: pinIcon }).addTo(markersLayer);
 
                 // Conteúdo do tooltip (rótulo permanente)
-                marker.bindTooltip(`<div class="marker-label-popup">${location.nome}</div>`, {
+                marker.bindTooltip(`<div class="marker-label-popup">${location['NOME/EQUIPE']}</div>`, {
                   permanent: true,
                   direction: 'top',
                   offset: [0, -55], // Ajusta offset para o novo tamanho do pin
@@ -1089,19 +1088,19 @@
 
                 // Conteúdo do popup (clicável)
                 marker.bindPopup(`
-                  <strong>Nome:</strong> ${location.nome}<br>
-                  <strong>Data/Hora:</strong> ${formatDateTime(location.dataHora)}<br>
-                  <strong>Latitude:</strong> ${location.latitude}<br>
-                  <strong>Longitude:</strong> ${location.longitude}<br>
-                  <strong>Endereço:</strong> ${location.endereco}<br>
-                  <strong>Estado do Técnico:</strong> ${location.estado}<br>
-                  <strong>Protocolo:</strong> ${location.protocolo}<br>
-                  <strong>Status do Dispositivo:</strong> ${location.statusDispositivo}<br>
-                  <strong>Observações:</strong> ${location.observacoes}
+                  <strong>Nome:</strong> ${location['NOME/EQUIPE']}<br>
+                  <strong>Data/Hora:</strong> ${formatDateTime(location.DATAHORA)}<br>
+                  <strong>Latitude:</strong> ${location.Latitude}<br>
+                  <strong>Longitude:</strong> ${location.Longitude}<br>
+                  <strong>Endereço:</strong> ${location['ENDERECO ATUAL']}<br>
+                  <strong>Estado do Técnico:</strong> ${location.ESTADO}<br>
+                  <strong>Protocolo:</strong> ${location.PROTOCOLO}<br>
+                  <strong>Status do Dispositivo:</strong> ${location.STATUS}<br>
+                  <strong>Observações:</strong> ${location.OBSERVAÇÕES}
                 `);
 
-                allMarkers.push({ marker, nome: location.nome, lat: location.latitude, lng: location.longitude, estado: location.estado, protocolo: location.protocolo }); // Adicionado protocolo ao allMarkers
-                bounds.extend([location.latitude, location.longitude]); // Estende o limite para o zoom
+                allMarkers.push({ marker, nome: location['NOME/EQUIPE'], lat: location.Latitude, lng: location.Longitude, estado: location.ESTADO, protocolo: location.PROTOCOLO }); // Adicionado protocolo ao allMarkers
+                bounds.extend([location.Latitude, location.Longitude]); // Estende o limite para o zoom
             });
 
             // Ajusta o mapa para mostrar todos os marcadores, se houver
@@ -1211,6 +1210,120 @@
         }
         searchInput.value = ''; // Limpa o campo de busca
     }
+
+    /**
+     * Busca os dados de histórico da planilha e os exibe no mapa.
+     */
+    async function fetchHistorico() {
+        if (!map) {
+            console.warn("Mapa não inicializado. Pulando fetchHistorico.");
+            return;
+        }
+
+        const startDateInput = document.getElementById('hist-date-start');
+        const endDateInput = document.getElementById('hist-date-end');
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+
+        if (!startDate || !endDate) {
+            showMessageModal("Atenção", "Por favor, selecione um intervalo de datas para o histórico.");
+            return;
+        }
+
+        // Limpa marcadores de histórico anteriores
+        historicoMarkers.forEach(m => map.removeLayer(m));
+        historicoMarkers = [];
+        // Limpa marcadores de localização atual também, para evitar sobreposição
+        markersLayer.clearLayers();
+        allMarkers = [];
+
+        const userDataString = localStorage.getItem('vigion_user_data');
+        if (!userDataString) {
+            console.error("Dados do usuário não encontrados no localStorage para buscar histórico.");
+            showMessageModal("Erro", "Sua sessão expirou. Por favor, faça login novamente.");
+            logout();
+            return;
+        }
+        const userData = JSON.parse(userDataString);
+        const username = userData.id;
+        const password = userData.password;
+
+        if (!username || !password) {
+            console.error("Username ou password ausentes nos dados do usuário para buscar histórico.");
+            showMessageModal("Erro", "Dados de login incompletos. Por favor, faça login novamente.");
+            logout();
+            return;
+        }
+
+        const params = new URLSearchParams({
+            username: username,
+            password: password,
+            startDate: startDate,
+            endDate: endDate
+        });
+
+        try {
+            const response = await fetch(`${APPS_SCRIPT_FETCH_HISTORICO_URL}?${params.toString()}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
+            }
+            const result = await response.json();
+
+            if (result.status === "sucesso") {
+                let bounds = L.latLngBounds([]);
+
+                if (result.data.length === 0) {
+                    showMessageModal("Histórico Vazio", "Nenhum dado de histórico encontrado para o período selecionado.");
+                    map.setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM); // Volta para a visão padrão
+                    return;
+                }
+
+                result.data.forEach(item => {
+                    if (item.LATITUDE == null || item.LONGITUDE == null || isNaN(item.LATITUDE) || isNaN(item.LONGITUDE)) {
+                        console.warn(`Pulando item de histórico inválido para ${item['NOME/EQUIPE']}: Latitude/Longitude inválidas.`);
+                        return;
+                    }
+
+                    // Cor do marcador para histórico (ex: um cinza mais claro ou azul claro)
+                    const pinIcon = createPinIcon('#80CBC4'); // Um tom de azul esverdeado para histórico
+
+                    const marker = L.marker([item.LATITUDE, item.LONGITUDE], { icon: pinIcon }).addTo(map);
+                    historicoMarkers.push(marker); // Adiciona à lista de marcadores de histórico
+
+                    marker.bindPopup(`
+                        <strong>Nome/Equipe:</strong> ${item['NOME/EQUIPE']}<br>
+                        <strong>Data/Hora:</strong> ${formatDateTime(item.DATAHORA)}<br>
+                        <strong>Latitude:</strong> ${item.LATITUDE}<br>
+                        <strong>Longitude:</strong> ${item.LONGITUDE}<br>
+                        <strong>Endereço:</strong> ${item['ENDERECO ATUAL']}<br>
+                        <strong>Velocidade:</strong> ${item.Velocidade} km/h<br>
+                        <strong>Estado:</strong> ${item.ESTADO}<br>
+                        <strong>Protocolo:</strong> ${item.PROTOCOLO}<br>
+                        <strong>Status:</strong> ${item.STATUS}<br>
+                        <strong>Observações:</strong> ${item.OBSERVAÇÕES || 'N/A'}
+                    `);
+                    bounds.extend([item.LATITUDE, item.LONGITUDE]);
+                });
+
+                if (historicoMarkers.length > 0) {
+                    map.fitBounds(bounds, { padding: [20, 20] });
+                    showMessageModal("Histórico Carregado", `Foram encontrados ${historicoMarkers.length} registros de histórico para o período.`);
+                } else {
+                    showMessageModal("Histórico Vazio", "Nenhum dado de histórico encontrado para o período selecionado.");
+                    map.setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM);
+                }
+
+            } else {
+                console.error("Erro no Apps Script ao buscar histórico:", result.message);
+                showMessageModal("Erro na Busca de Histórico", result.message || "Não foi possível carregar o histórico.");
+            }
+        } catch (error) {
+            console.error("Erro ao buscar histórico:", error);
+            showMessageModal("Erro de Conexão", `Não foi possível carregar o histórico: ${error.message}.`);
+        }
+    }
+
 
     // --- Funções do Modal de Edição de Perfil ---
     function openProfileEditModal() {
