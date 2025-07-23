@@ -565,10 +565,10 @@
         </button>
       </li>
 
-      <!-- Botão de Controles -->
+      <!-- Botão de Atalhos (anteriormente "Controles") -->
       <li>
-        <button onclick="openShortcutsModal()" id="btn-controles">
-          Controles
+        <button onclick="openShortcutsModal()" id="btn-atalhos"> <!-- ID alterado para btn-atalhos -->
+          Atalhos <!-- Texto alterado para Atalhos -->
         </button>
       </li>
 
@@ -686,7 +686,8 @@
     // Variáveis globais para o mapa Leaflet
     let map;
     let currentTileLayer; // Para gerenciar a camada de tiles atual
-    let markersLayer; // Camada para marcadores de localização atual
+    let markersLayer; // Camada para marcadores de localização atual (equipes)
+    let tempCoordMarkerLayer; // NOVA: Camada para marcadores temporários de coordenadas
     let allMarkers = []; // Armazena todos os dados de marcadores atuais (Localizações)
     let historicoMarkers = []; // Armazena marcadores do histórico
 
@@ -765,6 +766,11 @@
       historicoPlaceholder.innerHTML = '';
       rotaPlaceholder.innerHTML = '';
 
+      // Limpa marcadores temporários de coordenadas ao mudar de view
+      if (tempCoordMarkerLayer) {
+          tempCoordMarkerLayer.clearLayers();
+      }
+
       // Desativa todos os botões de função
       document.querySelectorAll('.sidebar button').forEach(button => {
           if (button.id.startsWith('btn-')) {
@@ -777,7 +783,7 @@
         document.getElementById('btn-localizar').classList.add('active');
         searchPlaceholder.innerHTML = `
           <div id="search-container" style="display: flex;">
-            <input type="text" id="search-input" placeholder="Nome da equipe" />
+            <input type="text" id="search-input" placeholder="Nome da equipe ou Lat,Lon" />
             <button id="btn-search">Buscar</button>
           </div>
         `;
@@ -788,9 +794,10 @@
             searchInput.value = ''; // Campo vazio
         }
         document.getElementById('search-input').focus();
-        document.getElementById('btn-search').onclick = () => showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo e atualizando!');
+        // ATUALIZADO: Chama a nova função handleSearch()
+        document.getElementById('btn-search').onclick = handleSearch;
         document.getElementById('search-input').addEventListener('keyup', (e) => {
-          if (e.key === 'Enter') showMessageModal('Funcionalidade de Busca', 'A busca por nome/coordenadas será implementada em breve. O mapa já está ativo!');
+          if (e.key === 'Enter') handleSearch();
         });
         // Inicia a atualização do mapa para a view "Localizar Equipe"
         startMapUpdates(true); // Inicia com recentralização
@@ -838,7 +845,7 @@
         document.getElementById('btn-rota-buscar').onclick = () => showMessageModal('Funcionalidade de Rota', 'A funcionalidade de criação de rotas será implementada em breve. O mapa já está ativo!');
         document.getElementById('rota-latlng').addEventListener('keyup', e => {
           if (e.key === 'Enter') showMessageModal('Funcionalidade de Rota', 'A funcionalidade de criação de rotas será implementada em breve. O mapa já está ativo!');
-        });
+          });
         // Para a atualização do mapa ao sair da view "Localizar Equipe"
         stopMapUpdates();
         // Limpa os marcadores do mapa
@@ -933,7 +940,8 @@
       // Conforme a imagem, apenas "Leaflet" é o link, "leaflet" é texto simples sem link.
       map.attributionControl.setPrefix('<a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> | leaflet');
 
-      markersLayer = L.layerGroup().addTo(map); // Inicializa a camada de marcadores
+      markersLayer = L.layerGroup().addTo(map); // Inicializa a camada de marcadores para equipes
+      tempCoordMarkerLayer = L.layerGroup().addTo(map); // NOVA: Inicializa a camada para marcadores temporários de coordenadas
 
       // Garante que o mapa se redimensione corretamente se o contêiner mudar de tamanho
       map.invalidateSize(); 
@@ -1065,7 +1073,7 @@
                 if    (lowerEstado === 'ativo')      color = '#5A73D4'; // Azul (cor secundária)
                 else if (lowerEstado === 'atencao' || lowerEstado === 'atenção') color = '#FFC107'; // Laranja
                 else if (lowerEstado === 'critico'  || lowerEstado === 'crítico') color = '#F44336'; // Vermelho
-                else if (lowerEstado === 'inativo')  color = '#757575'; // Cinza
+                else if (lowerEstado === 'inativo')  color = '#757576'; // Cinza (alterado para evitar conflito com padrão)
                 // Se o estado não corresponder a nenhum dos acima, ele permanecerá cinza (padrão)
 
                 const pinIcon = createPinIcon(color);
@@ -1141,6 +1149,67 @@
             mapUpdateInterval = null;
             console.log("Atualização automática do mapa parada.");
         }
+    }
+
+    /**
+     * Lógica para lidar com a busca de equipe ou coordenadas.
+     * Centraliza o mapa no marcador da equipe ou insere um novo marcador de alfinete.
+     */
+    function handleSearch() {
+        const searchInput = document.getElementById('search-input');
+        const searchTerm = searchInput.value.trim();
+
+        // Limpa qualquer marcador temporário anterior
+        if (tempCoordMarkerLayer) {
+            tempCoordMarkerLayer.clearLayers();
+        }
+
+        if (!searchTerm) {
+            showMessageModal("Atenção", "Por favor, insira o nome da equipe ou coordenadas.");
+            return;
+        }
+
+        // Tenta parsear como coordenadas (Lat,Lon)
+        const coordsMatch = searchTerm.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+        
+        if (coordsMatch) {
+            // Se for coordenadas
+            const lat = parseFloat(coordsMatch[1]);
+            const lon = parseFloat(coordsMatch[2]);
+
+            if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                showMessageModal("Erro", "Coordenadas inválidas. Use o formato 'Latitude, Longitude'.");
+                return;
+            }
+
+            // Cria um marcador de alfinete simples para as coordenadas
+            const pinIcon = createPinIcon('#6200EE'); // Cor primária para o alfinete
+            const tempMarker = L.marker([lat, lon], { icon: pinIcon }).addTo(tempCoordMarkerLayer);
+            
+            tempMarker.bindPopup(`<strong>Coordenadas:</strong> ${lat}, ${lon}`).openPopup();
+            tempMarker.bindTooltip(`Lat: ${lat}, Lon: ${lon}`, {
+                permanent: true,
+                direction: 'top',
+                offset: [0, -55],
+                opacity: 0.9
+            }).openTooltip();
+
+            map.setView([lat, lon], 15); // Centraliza o mapa e ajusta o zoom
+            // REMOVIDO: showMessageModal("Sucesso", `Mapa centralizado nas coordenadas: ${lat}, ${lon}.`);
+
+        } else {
+            // Se for nome da equipe
+            const foundMarkerData = allMarkers.find(m => m.nome.toLowerCase() === searchTerm.toLowerCase());
+
+            if (foundMarkerData) {
+                map.setView(foundMarkerData.marker.getLatLng(), 15); // Centraliza no marcador da equipe
+                foundMarkerData.marker.openPopup(); // Abre o popup do marcador
+                showMessageModal("Sucesso", `Mapa centralizado na equipe: ${foundMarkerData.nome}.`);
+            } else {
+                showMessageModal("Não Encontrado", `Equipe "${searchTerm}" não encontrada no mapa.`);
+            }
+        }
+        searchInput.value = ''; // Limpa o campo de busca
     }
 
     // --- Funções do Modal de Edição de Perfil ---
@@ -1363,8 +1432,14 @@
         // Verifica se é 'r' ou 'R' e se Ctrl (Windows/Linux) ou Cmd (Mac) está pressionado
         if ((event.key === 'r' || event.key === 'R') && (event.ctrlKey || event.metaKey)) {
             event.preventDefault(); // Previne o comportamento padrão do navegador (recarregar a página)
-            console.log("Atualização manual acionada (Ctrl+R). Atualizando marcadores sem recentralizar.");
-            fetchLocalizacoes(false); // Atualiza os marcadores sem recentralizar o mapa
+            console.log("Atualização manual acionada (Ctrl+R). Limpando marcador de coordenadas e atualizando marcadores de equipe.");
+            
+            // Limpa o marcador temporário de coordenadas
+            if (tempCoordMarkerLayer) {
+                tempCoordMarkerLayer.clearLayers();
+            }
+
+            fetchLocalizacoes(false); // Atualiza os marcadores das equipes sem recentralizar o mapa
         }
         // Listener para detectar Ctrl+P e exibir mensagem de "Em desenvolvimento"
         if ((event.key === 'p' || event.key === 'P') && (event.ctrlKey || event.metaKey)) {
