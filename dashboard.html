@@ -1565,11 +1565,15 @@
     const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brgSr5mAYMNOj9eXDdixQ/exec"; // URL fornecida pelo usuário
     // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
+    // NOVO: URL da sua API do Google Apps Script para BUSCAR HISTÓRICO DE LOCALIZAÇÕES.
+    // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU NOVO SCRIPT DE HISTÓRICO PUBLICADO!**
+    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxgLtx18zJcbD_UJZ5gv9Yhn_gcN7XSJPGLL5xFaDbHTKlZcIFd0Wc4jYh8YrYuxZK5/exec"; // URL fornecida pelo usuário
 
     // Variáveis globais para o mapa Leaflet
     let map;
     let currentTileLayer; // Para gerenciar a camada de tiles atual
     let markersLayer; // Camada para marcadores de localização atual
+    let tempCoordMarkerLayer; // NOVA: Camada para marcadores temporários de coordenadas (CORRIGIDO: Inicialização adicionada)
     let allMarkers = []; // Armazena todos os dados de marcadores atuais (Localizações)
     let historicoMarkers = []; // Armazena marcadores do histórico
 
@@ -1651,6 +1655,15 @@
       historicoPlaceholder.innerHTML = '';
       rotaPlaceholder.innerHTML = '';
 
+      // Limpa marcadores temporários de coordenadas ao mudar de view
+      if (tempCoordMarkerLayer) {
+          tempCoordMarkerLayer.clearLayers();
+      }
+      // Limpa marcadores de histórico ao mudar de view
+      historicoMarkers.forEach(m => map.removeLayer(m));
+      historicoMarkers = [];
+
+
       // Desativa todos os botões de função
       document.querySelectorAll('.sidebar button').forEach(button => {
           if (button.id.startsWith('btn-')) {
@@ -1685,30 +1698,23 @@
         document.getElementById('btn-historico').classList.add('active');
         historicoPlaceholder.innerHTML = `
           <div id="historico-container" style="display: flex;">
-            <input type="text" id="hist-latlng" placeholder="Coordenadas de referência" />
             <input type="datetime-local" id="hist-date-start" title="Data/Hora Inicial" />
             <input type="datetime-local" id="hist-date-end" title="Data/Hora Final" />
             <button id="btn-historico-buscar">Buscar Histórico</button>
             <button id="btn-historico-pdf">Gerar PDF do Histórico</button>
           </div>
         `;
-        // Adicionar listeners básicos para o layout
-        document.getElementById('hist-latlng').focus();
-        showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
-        document.getElementById('btn-historico-buscar').onclick = () => showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
+        // Adicionar listeners para os campos de data e botão de busca
+        document.getElementById('hist-date-start').focus();
+        document.getElementById('btn-historico-buscar').onclick = fetchHistorico; // Chama a nova função
         document.getElementById('btn-historico-pdf').onclick = () => showMessageModal('Funcionalidade de PDF', 'A geração de PDF será implementada em breve.');
-        ['hist-latlng','hist-date-start','hist-date-end'].forEach(id => {
-          document.getElementById(id).addEventListener('keyup', e => {
-            if (e.key === 'Enter') showMessageModal('Funcionalidade de Histórico', 'A busca e exibição do histórico serão implementadas em breve. O mapa já está ativo!');
-          });
-        });
+        
         // Para a atualização do mapa ao sair da view "Localizar Equipe"
         stopMapUpdates();
-        // Limpa os marcadores do mapa
+        // Limpa os marcadores do mapa de localização atual
         markersLayer.clearLayers();
         allMarkers = [];
-        historicoMarkers.forEach(m => map.removeLayer(m));
-        historicoMarkers = [];
+
 
       } else if (view === 'rota') {
         document.getElementById('btn-rota').classList.add('active');
@@ -1807,6 +1813,7 @@
       map.attributionControl.setPrefix('<a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> | leaflet');
 
       markersLayer = L.layerGroup().addTo(map); // Inicializa a camada de marcadores
+      tempCoordMarkerLayer = L.layerGroup().addTo(map); // CORRIGIDO: Inicializa a camada para marcadores temporários de coordenadas
 
       // Garante que o mapa se redimensione corretamente se o contêiner mudar de tamanho
       map.invalidateSize(); 
@@ -1926,6 +1933,7 @@
             let bounds = L.latLngBounds([]); // Para ajustar o zoom do mapa
 
             result.data.forEach(location => {
+                // CORRIGIDO: Acessando as propriedades com as chaves exatas do Apps Script (case-sensitive)
                 if (location.latitude == null || location.longitude == null || isNaN(location.latitude) || isNaN(location.longitude)) {
                     console.warn(`Pulando localização inválida para ${location.nome}: Latitude/Longitude inválidas.`);
                     return;
