@@ -1562,7 +1562,7 @@
     const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
     // URL da sua API do Google Apps Script para ATUALIZAR PERFIL.
     // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU SCRIPT DE ATUALIZAÇÃO DE PERFIL PUBLICADO!**
-    const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brgSr5mAYMNOj9eXDdixQ/exec"; // URL fornecida pelo usuário
+    const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brSrs5mAYMNOj9eXDdixQ/exec"; // URL fornecida pelo usuário
     // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
     // NOVO: URL da sua API do Google Apps Script para BUSCAR HISTÓRICO DE LOCALIZAÇÕES.
@@ -1706,7 +1706,8 @@
         `;
         // Adicionar listeners para os campos de data e botão de busca
         document.getElementById('hist-date-start').focus();
-        document.getElementById('btn-historico-buscar').onclick = fetchHistorico; // Chama a nova função
+        // CORRIGIDO: O onclick do botão "Buscar Histórico" agora chama a função fetchHistorico
+        document.getElementById('btn-historico-buscar').onclick = fetchHistorico; 
         document.getElementById('btn-historico-pdf').onclick = () => showMessageModal('Funcionalidade de PDF', 'A geração de PDF será implementada em breve.');
         
         // Para a atualização do mapa ao sair da view "Localizar Equipe"
@@ -1998,6 +1999,116 @@
         showMessageModal("Erro de Conexão", `Não foi possível carregar as localizações: ${error.message}.`);
       }
     }
+
+    /**
+     * Busca os dados de histórico via Google Apps Script e atualiza os marcadores no mapa.
+     * Esta função é chamada pelo botão "Buscar Histórico".
+     */
+    async function fetchHistorico() {
+        if (!map) {
+            console.warn("Mapa não inicializado. Pulando fetchHistorico.");
+            showMessageModal("Erro", "Mapa não está pronto para exibir o histórico.");
+            return;
+        }
+
+        const startDateInput = document.getElementById('hist-date-start');
+        const endDateInput = document.getElementById('hist-date-end');
+
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+
+        if (!startDate || !endDate) {
+            showMessageModal("Atenção", "Por favor, selecione as datas de início e fim para buscar o histórico.");
+            return;
+        }
+
+        const userDataString = localStorage.getItem('vigion_user_data');
+        if (!userDataString) {
+            console.error("Dados do usuário não encontrados no localStorage para buscar histórico.");
+            showMessageModal("Erro", "Sua sessão expirou. Por favor, faça login novamente.");
+            logout();
+            return;
+        }
+        const userData = JSON.parse(userDataString);
+        const username = userData.id;
+        const password = userData.password;
+
+        if (!username || !password) {
+            console.error("Username ou password ausentes nos dados do usuário para buscar histórico.");
+            showMessageModal("Erro", "Dados de login incompletos. Por favor, faça login novamente.");
+            logout();
+            return;
+        }
+
+        // Limpa os marcadores de localização atual e histórico antes de carregar novos dados
+        markersLayer.clearLayers();
+        allMarkers = [];
+        historicoMarkers.forEach(m => map.removeLayer(m));
+        historicoMarkers = [];
+
+        const params = new URLSearchParams({
+            username: username,
+            password: password,
+            startDate: startDate,
+            endDate: endDate
+        });
+
+        showMessageModal("Buscando Histórico", "Carregando dados, por favor aguarde...");
+
+        try {
+            const response = await fetch(`${APPS_SCRIPT_FETCH_HISTORICO_URL}?${params.toString()}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
+            }
+            const result = await response.json();
+
+            if (result.status === "sucesso") {
+                if (result.data && result.data.length > 0) {
+                    let bounds = L.latLngBounds([]);
+
+                    result.data.forEach(item => {
+                        if (item.LATITUDE == null || item.LONGITUDE == null || isNaN(item.LATITUDE) || isNaN(item.LONGITUDE)) {
+                            console.warn(`Pulando item de histórico inválido para ${item.NOME_EQUIPE}: Latitude/Longitude inválidas.`);
+                            return;
+                        }
+
+                        // Usar uma cor diferente para marcadores de histórico, por exemplo, roxo
+                        const pinIcon = createPinIcon('#6200EE'); // Cor primária do VigiOn para histórico
+
+                        const marker = L.marker([item.LATITUDE, item.LONGITUDE], { icon: pinIcon }).addTo(map);
+                        historicoMarkers.push(marker); // Adiciona ao array de histórico para fácil remoção
+
+                        marker.bindPopup(`
+                            <strong>ID:</strong> ${item.ID}<br>
+                            <strong>Nome/Equipe:</strong> ${item.NOME_EQUIPE}<br>
+                            <strong>Data/Hora:</strong> ${formatDateTime(item.DATAHORA)}<br>
+                            <strong>Latitude:</strong> ${item.LATITUDE}<br>
+                            <strong>Longitude:</strong> ${item.LONGITUDE}<br>
+                            <strong>Endereço:</strong> ${item.ENDERECO_ATUAL}<br>
+                            <strong>Velocidade:</strong> ${item.Velocidade} km/h<br>
+                            <strong>Estado:</strong> ${item.ESTADO}<br>
+                            <strong>Protocolo:</strong> ${item.PROTOCOLO}<br>
+                            <strong>Status:</strong> ${item.STATUS}<br>
+                            <strong>Observações:</strong> ${item.OBSERVACOES}
+                        `);
+                        bounds.extend([item.LATITUDE, item.LONGITUDE]);
+                    });
+
+                    map.fitBounds(bounds, { padding: [50, 50] }); // Ajusta o mapa para os marcadores de histórico
+                    showMessageModal("Sucesso", `Histórico carregado com ${historicoMarkers.length} pontos.`);
+                } else {
+                    showMessageModal("Informação", "Nenhum dado de histórico encontrado para o período selecionado.");
+                }
+            } else {
+                showMessageModal("Erro na Busca de Histórico", result.message || "Não foi possível carregar o histórico.");
+            }
+        } catch (error) {
+            console.error("Erro ao buscar histórico:", error);
+            showMessageModal("Erro de Conexão", `Não foi possível carregar o histórico: ${error.message}.`);
+        }
+    }
+
 
     /**
      * Inicia o temporizador para atualização do mapa.
