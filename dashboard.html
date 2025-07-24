@@ -1562,7 +1562,7 @@
     const APPS_SCRIPT_AUTH_URL = "https://script.google.com/macros/s/AKfycbwgVmJNqjF5K67jeCHsNxMvEoa7llHrUECUUw87zZB78BvENWIlc1iipVA2_UdP-a3n/exec";
     // URL da sua API do Google Apps Script para ATUALIZAR PERFIL.
     // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU SCRIPT DE ATUALIZAÇÃO DE PERFIL PUBLICADO!**
-    const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brSrs5mAYMNOj9eXDdixQ/exec"; // URL fornecida pelo usuário
+    const APPS_SCRIPT_UPDATE_PROFILE_URL = "https://script.google.com/macros/s/AKfycbzccQni56-0Yrt44G4JLebbphHAKRfMM95eleOrekkwRVdE6brSrs5mAYMNOj9eXDixQ/exec"; // URL fornecida pelo usuário
     // NOVO: URL da sua API do Google Apps Script para BUSCAR LOCALIZAÇÕES.
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
     // NOVO: URL da sua API do Google Apps Script para BUSCAR HISTÓRICO DE LOCALIZAÇÕES.
@@ -1706,7 +1706,7 @@
         `;
         // Adicionar listeners para os campos de data e botão de busca
         document.getElementById('hist-date-start').focus();
-        // CORRIGIDO: O onclick do botão "Buscar Histórico" agora chama a função fetchHistorico
+        // O onclick do botão "Buscar Histórico" agora chama a função fetchHistorico
         document.getElementById('btn-historico-buscar').onclick = fetchHistorico; 
         document.getElementById('btn-historico-pdf').onclick = () => showMessageModal('Funcionalidade de PDF', 'A geração de PDF será implementada em breve.');
         
@@ -2014,21 +2014,11 @@
         const startDateInput = document.getElementById('hist-date-start');
         const endDateInput = document.getElementById('hist-date-end');
 
-        const startDateValue = startDateInput.value; // Ex: "2025-07-02T22:17"
-        const endDateValue = endDateInput.value;   // Ex: "2025-07-09T22:17"
+        const startDate = startDateInput.value; // Ex: "2025-07-02T22:17"
+        const endDate = endDateInput.value;   // Ex: "2025-07-09T22:17"
 
-        if (!startDateValue || !endDateValue) {
+        if (!startDate || !endDate) {
             showMessageModal("Atenção", "Por favor, selecione as datas de início e fim para buscar o histórico.");
-            return;
-        }
-
-        // Convertendo as strings datetime-local para objetos Date e depois para milissegundos (timestamp Unix)
-        const startDateTimeMillis = new Date(startDateValue).getTime();
-        const endDateTimeMillis = new Date(endDateValue).getTime();
-
-        // Validação básica para garantir que as datas são válidas
-        if (isNaN(startDateTimeMillis) || isNaN(endDateTimeMillis)) {
-            showMessageModal("Erro de Data", "Formato de data/hora inválido. Por favor, verifique as datas selecionadas.");
             return;
         }
 
@@ -2059,9 +2049,8 @@
         const params = new URLSearchParams({
             username: username,
             password: password,
-            // Enviando timestamps em vez das strings originais
-            startDate: startDateTimeMillis,
-            endDate: endDateTimeMillis
+            startDate: startDate, // Enviando a string original
+            endDate: endDate      // Enviando a string original
         });
 
         showMessageModal("Buscando Histórico", "Carregando dados, por favor aguarde...");
