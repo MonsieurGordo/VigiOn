@@ -1567,7 +1567,7 @@
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
     // NOVO: URL da sua API do Google Apps Script para BUSCAR HISTÓRICO DE LOCALIZAÇÕES.
     // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU NOVO SCRIPT DE HISTÓRICO PUBLICADO!**
-    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxgLtx18zJcbD_UJZ5gv9Yhn_gcN7XSJPGLL5xFaDbHTKlZcIFd0Wc4jYh8YrYuxZK5/exec"; // URL fornecida pelo usuário
+    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxgLtx18zJcb_UJZ5gv9Yhn_gcN7XSJPGLL5xFaDbHTKlZcIFd0Wc4jYh8YrYuxZK5/exec"; // URL fornecida pelo usuário
 
     // Variáveis globais para o mapa Leaflet
     let map;
@@ -2014,11 +2014,21 @@
         const startDateInput = document.getElementById('hist-date-start');
         const endDateInput = document.getElementById('hist-date-end');
 
-        const startDate = startDateInput.value;
-        const endDate = endDateInput.value;
+        const startDateValue = startDateInput.value; // Ex: "2025-07-02T22:17"
+        const endDateValue = endDateInput.value;   // Ex: "2025-07-09T22:17"
 
-        if (!startDate || !endDate) {
+        if (!startDateValue || !endDateValue) {
             showMessageModal("Atenção", "Por favor, selecione as datas de início e fim para buscar o histórico.");
+            return;
+        }
+
+        // Convertendo as strings datetime-local para objetos Date e depois para milissegundos (timestamp Unix)
+        const startDateTimeMillis = new Date(startDateValue).getTime();
+        const endDateTimeMillis = new Date(endDateValue).getTime();
+
+        // Validação básica para garantir que as datas são válidas
+        if (isNaN(startDateTimeMillis) || isNaN(endDateTimeMillis)) {
+            showMessageModal("Erro de Data", "Formato de data/hora inválido. Por favor, verifique as datas selecionadas.");
             return;
         }
 
@@ -2049,8 +2059,9 @@
         const params = new URLSearchParams({
             username: username,
             password: password,
-            startDate: startDate,
-            endDate: endDate
+            // Enviando timestamps em vez das strings originais
+            startDate: startDateTimeMillis,
+            endDate: endDateTimeMillis
         });
 
         showMessageModal("Buscando Histórico", "Carregando dados, por favor aguarde...");
