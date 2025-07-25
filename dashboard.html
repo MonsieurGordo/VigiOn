@@ -8,7 +8,7 @@
   <!-- Leaflet CSS para exibir o mapa -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  <!-- jsPDF + AutoTable (para geração de PDF) - Permanecem nos links, mas as funções JS serão implementadas depois -->
+  <!-- jsPDF + AutoTable (para geração de PDF) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
@@ -1159,7 +1159,7 @@
               </li>
               <li>
                   <span class="shortcut-key">Ctrl + P</span>
-                  <span class="shortcut-description">Imprime o relatório de histórico (Em desenvolvimento).</span>
+                  <span class="shortcut-description">Imprime o relatório de histórico.</span>
               </li>
               <!-- Adicionar mais atalhos aqui no futuro -->
           </ul>
@@ -1456,6 +1456,7 @@
     let tempCoordMarkerLayer; // NOVA: Camada para marcadores temporários de coordenadas (CORRIGIDO: Inicialização adicionada)
     let allMarkers = []; // Armazena todos os dados de marcadores atuais (Localizações)
     let historicoMarkers = []; // Armazena marcadores do histórico
+    let currentHistoricoData = []; // NOVO: Armazena os dados brutos do histórico para geração de PDF
 
     // Definição das camadas de mapa
     const tileLayers = {
@@ -1542,6 +1543,7 @@
       // Limpa marcadores de histórico ao mudar de view
       historicoMarkers.forEach(m => map.removeLayer(m));
       historicoMarkers = [];
+      currentHistoricoData = []; // Limpa os dados de histórico para PDF também
 
 
       // Desativa todos os botões de função
@@ -1591,7 +1593,8 @@
         document.getElementById('hist-date-start').focus();
         // O onclick do botão "Buscar Histórico" agora chama a função fetchHistorico
         document.getElementById('btn-historico-buscar').onclick = fetchHistorico; 
-        document.getElementById('btn-historico-pdf').onclick = () => showMessageModal('Funcionalidade de PDF', 'A geração de PDF será implementada em breve.');
+        // Conecta o botão de PDF à nova função de geração de PDF
+        document.getElementById('btn-historico-pdf').onclick = generateHistoricoPdf;
         
         // Para a atualização do mapa ao sair da view "Localizar Equipe"
         stopMapUpdates();
@@ -1622,6 +1625,7 @@
         allMarkers = [];
         historicoMarkers.forEach(m => map.removeLayer(m));
         historicoMarkers = [];
+        currentHistoricoData = []; // Limpa os dados de histórico para PDF também
       }
     }
 
@@ -1972,6 +1976,7 @@
         allMarkers = [];
         historicoMarkers.forEach(m => map.removeLayer(m));
         historicoMarkers = [];
+        currentHistoricoData = []; // Limpa os dados de histórico anteriores para PDF
 
         const params = new URLSearchParams({
             username: username,
@@ -1994,10 +1999,12 @@
             const result = await response.json();
 
             if (result.status === "sucesso") {
-                if (result.data && result.data.length > 0) {
+                currentHistoricoData = result.data; // Armazena os dados brutos para PDF
+
+                if (currentHistoricoData && currentHistoricoData.length > 0) {
                     let bounds = L.latLngBounds([]);
 
-                    result.data.forEach(item => {
+                    currentHistoricoData.forEach(item => {
                         if (item.LATITUDE == null || item.LONGITUDE == null || isNaN(item.LATITUDE) || isNaN(item.LONGITUDE)) {
                             console.warn(`Pulando item de histórico inválido para ${item.NOME_EQUIPE}: Latitude/Longitude inválidas.`);
                             return;
@@ -2043,6 +2050,92 @@
             console.error("Erro ao buscar histórico:", error);
             showMessageModal("Erro de Conexão", `Não foi possível carregar o histórico: ${error.message}.`);
         }
+    }
+
+    /**
+     * Gera um relatório PDF com os dados do histórico atual.
+     */
+    function generateHistoricoPdf() {
+        if (currentHistoricoData.length === 0) {
+            showMessageModal("Atenção", "Nenhum dado de histórico para gerar o PDF. Por favor, realize uma busca primeiro.");
+            return;
+        }
+
+        // Cria uma nova instância do jsPDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Título do relatório
+        doc.setFontSize(18);
+        doc.text("Relatório de Histórico VigiOn", 14, 22);
+
+        doc.setFontSize(10);
+        const startDateInput = document.getElementById('hist-date-start');
+        const endDateInput = document.getElementById('hist-date-end');
+        const centerLatInput = document.getElementById('hist-center-lat');
+        const centerLonInput = document.getElementById('hist-center-lon');
+        const radiusKmInput = document.getElementById('hist-radius-km');
+
+        const formattedStartDate = startDateInput.value ? new Date(startDateInput.value).toLocaleString('pt-BR') : 'N/A';
+        const formattedEndDate = endDateInput.value ? new Date(endDateInput.value).toLocaleString('pt-BR') : 'N/A';
+        const centerLat = centerLatInput.value || 'N/A';
+        const centerLon = centerLonInput.value || 'N/A';
+        const radiusKm = radiusKmInput.value || 'N/A';
+
+        doc.text(`Período: ${formattedStartDate} a ${formattedEndDate}`, 14, 32);
+        doc.text(`Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, 14, 38);
+        doc.text(`Total de Registros: ${currentHistoricoData.length}`, 14, 44);
+
+
+        // Define os cabeçalhos da tabela
+        const headers = [
+            ["ID", "NOME/EQUIPE", "DATA/HORA", "LATITUDE", "LONGITUDE", "ENDEREÇO", "VELOCIDADE", "ESTADO", "PROTOCOLO", "STATUS", "OBSERVAÇÕES"]
+        ];
+
+        // Mapeia os dados do histórico para o formato da tabela
+        const data = currentHistoricoData.map(item => [
+            item.ID,
+            item.NOME_EQUIPE,
+            formatDateTime(item.DATAHORA), // Garante formatação consistente
+            item.LATITUDE,
+            item.LONGITUDE,
+            item.ENDERECO_ATUAL,
+            `${item.Velocidade} km/h`,
+            item.ESTADO,
+            item.PROTOCOLO,
+            item.STATUS,
+            item.OBSERVACOES
+        ]);
+
+        // Configurações da tabela (autoTable)
+        doc.autoTable({
+            startY: 50, // Posição inicial da tabela após o título e informações
+            head: headers,
+            body: data,
+            theme: 'striped', // Estilo da tabela
+            headStyles: { fillColor: [90, 115, 212] }, // Cor do cabeçalho (azul secundário do VigiOn)
+            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' }, // Tamanho da fonte e padding
+            columnStyles: {
+                // Ajustes de largura para colunas específicas
+                0: { cellWidth: 15 }, // ID
+                1: { cellWidth: 25 }, // NOME/EQUIPE
+                2: { cellWidth: 25 }, // DATA/HORA
+                3: { cellWidth: 18 }, // LATITUDE
+                4: { cellWidth: 18 }, // LONGITUDE
+                5: { cellWidth: 'auto' }, // ENDEREÇO (ajusta automaticamente)
+                6: { cellWidth: 18 }, // VELOCIDADE
+                7: { cellWidth: 18 }, // ESTADO
+                8: { cellWidth: 18 }, // PROTOCOLO
+                9: { cellWidth: 18 }, // STATUS
+                10: { cellWidth: 'auto' } // OBSERVAÇÕES (ajusta automaticamente)
+            }
+        });
+
+        // Nome do arquivo PDF
+        const filename = `Historico_VigiOn_${new Date().toISOString().slice(0, 10)}.pdf`;
+        doc.save(filename);
+
+        showMessageModal("PDF Gerado!", `O relatório de histórico foi gerado com sucesso como "${filename}".`);
     }
 
 
@@ -2469,11 +2562,11 @@
             console.log("Atualização manual acionada (Ctrl+R). Atualizando marcadores sem recentralizar.");
             fetchLocalizacoes(false); // Atualiza os marcadores sem recentralizar o mapa
         }
-        // Listener para detectar Ctrl+P e exibir mensagem de "Em desenvolvimento"
+        // Listener para detectar Ctrl+P e chamar generateHistoricoPdf()
         if ((event.key === 'p' || event.key === 'P') && (event.ctrlKey || event.metaKey)) {
             event.preventDefault(); // Previne o comportamento padrão do navegador (imprimir)
-            console.log("Atalho para Imprimir Relatório acionado (Ctrl+P). Funcionalidade em desenvolvimento.");
-            showMessageModal("Funcionalidade em Desenvolvimento", "A impressão de relatórios de histórico está em desenvolvimento e será disponibilizada em breve.", null, false);
+            console.log("Atalho para Imprimir Relatório acionado (Ctrl+P). Gerando PDF do histórico.");
+            generateHistoricoPdf(); // Chama a função para gerar o PDF
         }
         // Nota: Interceptar a tecla F5 diretamente para impedir o recarregamento total da página
         // não é possível na maioria dos navegadores por razões de segurança e controle do navegador.
