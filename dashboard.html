@@ -714,9 +714,6 @@
         transition: background-color 0.2s ease;
         margin: 0 0.2rem;
     }
-    .cadastros-pagination-buttons button:hover {
-        background-color: #E2E8F0;
-    }
     .cadastros-pagination-buttons button.active {
         background-color: #6200EE;
         color: white;
@@ -1312,123 +1309,6 @@
                   </table>
               </div>
               <div class="cadastros-pagination">
-                  <span>Mostrando 1 a 5 de 5 resultados</span>
-                  <div class="cadastros-pagination-buttons">
-                      <button>&lt;</button>
-                      <button class="active">1</button>
-                      <button disabled>&gt;</button>
-                  </div>
-              </div>
-          </div>
-
-          <div id="cadastrosCompaniesContent" class="cadastros-tab-content hidden">
-              <div class="cadastros-filters">
-                  <input type="text" placeholder="Pesquisar por nome..." />
-                  <label for="statusFilterCompanies">Status:</label>
-                  <select id="statusFilterCompanies">
-                      <option value="ativos">Ativos</option>
-                      <option value="inativos">Inativos</option>
-                      <option value="bloqueados">Bloqueados</option>
-                      <option value="todos">Todos</option>
-                  </select>
-              </div>
-              <div class="cadastros-table-container">
-                  <table class="cadastros-table">
-                      <thead>
-                          <tr>
-                              <th>CNPJ</th>
-                              <th>NOME</th>
-                              <th>PROPRIETÁRIO</th>
-                              <th>STATUS</th>
-                              <th>AÇÕES</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <!-- Exemplo de dados de Empresas (atualizados) -->
-                          <tr>
-                              <td>01.234.567/0001-89</td>
-                              <td><span class="user-avatar">TS</span> Tech Solutions Ltda</td>
-                              <td>João da Silva</td>
-                              <td><span class="status-badge ativo">Ativo</span></td>
-                              <td class="action-buttons">
-                                  <button title="Visualizar">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                  </button>
-                                  <button title="Editar">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
-                                  </button>
-                                  <button title="Bloquear">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                  </button>
-                                  <button title="Excluir">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                                  </button>
-                              </td>
-                          </tr>
-                          <tr>
-                              <td>98.765.432/0001-10</td>
-                              <td><span class="user-avatar">IS</span> Inova Sistemas SA</td>
-                              <td>Maria Oliveira</td>
-                              <td><span class="status-badge ativo">Ativo</span></td>
-                              <td class="action-buttons">
-                                  <button title="Visualizar">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                  </button>
-                                  <button title="Editar">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
-                                  </button>
-                                  <button title="Bloquear">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                  </button>
-                                  <button title="Excluir">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                                  </button>
-                              </td>
-                          </tr>
-                          <tr>
-                              <td>12.345.678/0001-23</td>
-                              <td><span class="user-avatar">DM</span> Digital Marketing ME</td>
-                              <td>Pedro Almeida</td>
-                              <td><span class="status-badge inativo">Inativo</span></td>
-                              <td class="action-buttons">
-                                  <button title="Visualizar">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                  </button>
-                                  <button title="Editar">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
-                                  </button>
-                                  <button title="Bloquear">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                  </button>
-                                  <button title="Excluir">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                                  </button>
-                              </td>
-                          </tr>
-                          <tr>
-                              <td>54.321.098/0001-45</td>
-                              <td><span class="user-avatar">CS</span> Cloud Services EIRELI</td>
-                              <td>Carla Santos</td>
-                              <td><span class="status-badge bloqueado">Bloqueado</span></td>
-                              <td class="action-buttons">
-                                  <button title="Visualizar">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                  </button>
-                                  <button title="Editar">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
-                                  </button>
-                                  <button title="Bloquear">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                  </button>
-                                  <button title="Excluir">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                                  </button>
-                              </td>
-                          </tr>
-                      </tbody>
-                  </table>
-              </div>
-              <div class="cadastros-pagination">
                   <span>Mostrando 1 a 4 de 4 resultados</span>
                   <div class="cadastros-pagination-buttons">
                       <button>&lt;</button>
@@ -2001,6 +1881,23 @@
     }
 
     /**
+     * Converte uma string de data/hora do formato "YYYY-MM-DDTHH:mm" (datetime-local)
+     * para "DD/MM/YYYY HH:mm:ss".
+     * Adiciona ":00" para segundos, pois o input datetime-local não os fornece.
+     */
+    function convertDatetimeLocalToSheetFormat(datetimeLocalString) {
+        if (!datetimeLocalString) return '';
+        // Exemplo: "2025-07-14T16:40"
+        const [datePart, timePart] = datetimeLocalString.split('T'); // ["2025-07-14", "16:40"]
+        const [year, month, day] = datePart.split('-'); // ["2025", "07", "14"]
+        
+        // Adiciona ":00" para os segundos
+        const formattedTime = `${timePart}:00`; // "16:40:00"
+
+        return `${day}/${month}/${year} ${formattedTime}`; // "14/07/2025 16:40:00"
+    }
+
+    /**
      * Busca os dados de histórico via Google Apps Script e atualiza os marcadores no mapa.
      * Esta função é chamada pelo botão "Buscar Histórico".
      */
@@ -2014,13 +1911,18 @@
         const startDateInput = document.getElementById('hist-date-start');
         const endDateInput = document.getElementById('hist-date-end');
 
-        const startDate = startDateInput.value; // Ex: "2025-07-02T22:17"
-        const endDate = endDateInput.value;   // Ex: "2025-07-09T22:17"
+        // Obtém os valores dos inputs datetime-local
+        const rawStartDate = startDateInput.value; 
+        const rawEndDate = endDateInput.value;   
 
-        if (!startDate || !endDate) {
+        if (!rawStartDate || !rawEndDate) {
             showMessageModal("Atenção", "Por favor, selecione as datas de início e fim para buscar o histórico.");
             return;
         }
+
+        // Converte os valores para o formato esperado pelo Apps Script (DD/MM/YYYY HH:mm:ss)
+        const formattedStartDate = convertDatetimeLocalToSheetFormat(rawStartDate);
+        const formattedEndDate = convertDatetimeLocalToSheetFormat(rawEndDate);
 
         const userDataString = localStorage.getItem('vigion_user_data');
         if (!userDataString) {
@@ -2049,8 +1951,8 @@
         const params = new URLSearchParams({
             username: username,
             password: password,
-            startDate: startDate, // Enviando a string original
-            endDate: endDate      // Enviando a string original
+            startDate: formattedStartDate, // Enviando a string formatada
+            endDate: formattedEndDate      // Enviando a string formatada
         });
 
         showMessageModal("Buscando Histórico", "Carregando dados, por favor aguarde...");
