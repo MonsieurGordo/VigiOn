@@ -1686,8 +1686,8 @@
       // Cria o mapa e centraliza em Cuiabá-MT
       // Remove os controles de zoom padrão ao inicializar o mapa
       map = L.map('map', { 
-        zoomControl: false,
-        maxZoom: 19 // Permite zoom até o nível 19
+        zoomControl: false
+        // A linha maxZoom: 19 foi removida para retornar ao comportamento padrão
       }).setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM);
 
       // Define a camada padrão ao iniciar, ou a salva no localStorage
@@ -1876,6 +1876,12 @@
                 }
             }
             console.log(`Localizações atualizadas. ${markersLayer.getLayers().length} marcadores exibidos.`);
+        } else if (result.status === "erro" && result.message && result.message.includes("Autenticação falhou")) {
+            // Se a autenticação falhou, loga o usuário
+            console.error("Autenticação falhou durante fetchLocalizacoes. Deslogando...");
+            showMessageModal("Sessão Expirada", "Sua sessão expirou ou suas credenciais são inválidas. Por favor, faça login novamente.", () => {
+                logout();
+            });
         } else {
             console.error("Erro no Apps Script ao buscar localizações:", result.message);
             showMessageModal("Erro na Busca", result.message || "Não foi possível carregar as localizações.");
@@ -2024,6 +2030,12 @@
                 } else {
                     showMessageModal("Informação", "Nenhum dado de histórico encontrado para o período selecionado ou dentro do raio especificado.");
                 }
+            } else if (result.status === "erro" && result.message && result.message.includes("Autenticação falhou")) {
+                // Se a autenticação falhou, loga o usuário
+                console.error("Autenticação falhou durante fetchHistorico. Deslogando...");
+                showMessageModal("Sessão Expirada", "Sua sessão expirou ou suas credenciais são inválidas. Por favor, faça login novamente.", () => {
+                    logout();
+                });
             } else {
                 showMessageModal("Erro na Busca de Histórico", result.message || "Não foi possível carregar o histórico.");
             }
@@ -2156,6 +2168,12 @@
                 // Exibir mensagem de sucesso e depois deslogar
                 showMessageModal("Sucesso", "Seu perfil foi atualizado! Por favor, faça login novamente.", () => {
                     logout(); // Limpa o localStorage e redireciona
+                });
+            } else if (responseData.status === "erro" && responseData.message && responseData.message.includes("Autenticação falhou")) {
+                // Se a autenticação falhou, loga o usuário
+                console.error("Autenticação falhou durante updateProfileButton. Deslogando...");
+                showMessageModal("Sessão Expirada", "Sua sessão expirou ou suas credenciais são inválidas. Por favor, faça login novamente.", () => {
+                    logout();
                 });
             } else {
                 showMessageModal("Erro na Atualização", responseData.message || "Ocorreu um erro ao atualizar o perfil. Tente novamente.");
