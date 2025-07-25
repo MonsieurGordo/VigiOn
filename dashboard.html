@@ -1580,6 +1580,9 @@
           <div id="historico-container" style="display: flex;">
             <input type="datetime-local" id="hist-date-start" title="Data/Hora Inicial" />
             <input type="datetime-local" id="hist-date-end" title="Data/Hora Final" />
+            <input type="text" id="hist-center-lat" placeholder="Latitude (ex: -15.67097)" />
+            <input type="text" id="hist-center-lon" placeholder="Longitude (ex: -56.0416)" />
+            <input type="number" id="hist-radius-km" placeholder="Raio (km, ex: 2)" value="2" min="0.1" step="0.1" />
             <button id="btn-historico-buscar">Buscar Histórico</button>
             <button id="btn-historico-pdf">Gerar PDF do Histórico</button>
           </div>
@@ -1682,7 +1685,10 @@
     function initMap() {
       // Cria o mapa e centraliza em Cuiabá-MT
       // Remove os controles de zoom padrão ao inicializar o mapa
-      map = L.map('map', { zoomControl: false }).setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM);
+      map = L.map('map', { 
+        zoomControl: false,
+        maxZoom: 19 // Permite zoom até o nível 19
+      }).setView([CUIABA_LAT, CUIABA_LON], INITIAL_ZOOM);
 
       // Define a camada padrão ao iniciar, ou a salva no localStorage
       const savedMapType = localStorage.getItem('vigion_map_type') || 'default';
@@ -1910,17 +1916,30 @@
 
         const startDateInput = document.getElementById('hist-date-start');
         const endDateInput = document.getElementById('hist-date-end');
+        const centerLatInput = document.getElementById('hist-center-lat');
+        const centerLonInput = document.getElementById('hist-center-lon');
+        const radiusKmInput = document.getElementById('hist-radius-km');
 
-        // Obtém os valores dos inputs datetime-local
+        // Obtém os valores dos inputs
         const rawStartDate = startDateInput.value; 
         const rawEndDate = endDateInput.value;   
+        const centerLat = parseFloat(centerLatInput.value);
+        const centerLon = parseFloat(centerLonInput.value);
+        const radiusKm = parseFloat(radiusKmInput.value);
 
+        // Validação dos campos de data
         if (!rawStartDate || !rawEndDate) {
             showMessageModal("Atenção", "Por favor, selecione as datas de início e fim para buscar o histórico.");
             return;
         }
 
-        // Converte os valores para o formato esperado pelo Apps Script (DD/MM/YYYY HH:mm:ss)
+        // Validação dos campos de coordenada e raio
+        if (isNaN(centerLat) || isNaN(centerLon) || isNaN(radiusKm) || radiusKm <= 0) {
+            showMessageModal("Atenção", "Por favor, insira coordenadas válidas (Latitude, Longitude) e um Raio positivo para a pesquisa de proximidade.");
+            return;
+        }
+
+        // Converte os valores de data para o formato esperado pelo Apps Script (DD/MM/YYYY HH:mm:ss)
         const formattedStartDate = convertDatetimeLocalToSheetFormat(rawStartDate);
         const formattedEndDate = convertDatetimeLocalToSheetFormat(rawEndDate);
 
@@ -1951,8 +1970,11 @@
         const params = new URLSearchParams({
             username: username,
             password: password,
-            startDate: formattedStartDate, // Enviando a string formatada
-            endDate: formattedEndDate      // Enviando a string formatada
+            startDate: formattedStartDate, 
+            endDate: formattedEndDate,
+            centerLat: centerLat,    // Novo parâmetro
+            centerLon: centerLon,    // Novo parâmetro
+            radiusKm: radiusKm       // Novo parâmetro
         });
 
         showMessageModal("Buscando Histórico", "Carregando dados, por favor aguarde...");
@@ -2000,7 +2022,7 @@
                     map.fitBounds(bounds, { padding: [50, 50] }); // Ajusta o mapa para os marcadores de histórico
                     showMessageModal("Sucesso", `Histórico carregado com ${historicoMarkers.length} pontos.`);
                 } else {
-                    showMessageModal("Informação", "Nenhum dado de histórico encontrado para o período selecionado.");
+                    showMessageModal("Informação", "Nenhum dado de histórico encontrado para o período selecionado ou dentro do raio especificado.");
                 }
             } else {
                 showMessageModal("Erro na Busca de Histórico", result.message || "Não foi possível carregar o histórico.");
