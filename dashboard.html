@@ -1566,8 +1566,6 @@
     // Variável para armazenar a aba ativa no modal de cadastros
     let activeCadastrosTab = 'users'; // 'users' ou 'companies'
 
-    // REMOVIDO: permissionsData array (agora será gerenciado na nova tela de permissões)
-
     /** Funções do Modal de Mensagens */
     function showMessageModal(title, message, callback = null) {
         const modalOverlay = document.getElementById('messageModal');
@@ -2072,7 +2070,10 @@
         showMessageModal("Buscando Histórico", "Carregando dados, por favor aguarde...");
 
         try {
-            const response = await fetch(`${APPS_SCRIPT_FETCH_HISTORICO_URL}?${params.toString()}`);
+            const fullUrl = `${APPS_SCRIPT_FETCH_HISTORICO_URL}?${params.toString()}`;
+            console.log("URL de requisição de histórico:", fullUrl); // Log da URL completa para depuração
+
+            const response = await fetch(fullUrl);
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
@@ -2152,7 +2153,6 @@
         // Título principal
         doc.setFontSize(18);
         doc.setFont(undefined, 'bold');
-        // Removido o emoji para evitar problemas de codificação
         doc.text("Relatório de Histórico VigiOn", startX, startY);
         doc.setFont(undefined, 'normal'); // Reset font style
         startY += 10;
@@ -2173,12 +2173,10 @@
         const totalRegistros = currentHistoricoData.length;
 
         // Período
-        // Removido o emoji
         doc.text(`Período: ${formattedStartDate} a ${formattedEndDate}`, startX, startY);
         startY += 6;
 
         // Filtro de Proximidade
-        // Removido o emoji
         doc.text(`Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, startX, startY);
         startY += 10; // Espaço para a caixa de total de registros
 
@@ -2192,7 +2190,6 @@
         doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 2, 2, 'F'); // Retângulo arredondado preenchido
         doc.setTextColor(50, 70, 100); // Cor do texto (azul escuro)
         doc.setFontSize(9);
-        // Removido o emoji
         doc.text(`Total de Registros: ${totalRegistros}`, boxX + boxWidth / 2, boxY + boxHeight / 2 + 1, { align: 'center' });
         doc.setTextColor(0, 0, 0); // Reset text color
 
