@@ -1021,6 +1021,76 @@
             width: 100%;
         }
     }
+
+    /* NOVO: Estilos para o Modal de Pré-visualização de PDF */
+    .pdf-preview-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .pdf-preview-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    .pdf-preview-content {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        max-width: 90%;
+        width: 1000px; /* Largura fixa para telas maiores */
+        height: 90%; /* Altura fixa para o modal */
+        display: flex;
+        flex-direction: column;
+        transform: translateY(-30px);
+        opacity: 0;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .pdf-preview-overlay.show .pdf-preview-content {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    .pdf-preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #E2E8F0;
+        margin-bottom: 1rem;
+    }
+    .pdf-preview-header h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    .pdf-preview-header button {
+        background: none;
+        border: none;
+        font-size: 2rem;
+        color: #718096;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+    .pdf-preview-header button:hover {
+        color: #4A5568;
+    }
+    .pdf-viewer-iframe {
+        flex-grow: 1;
+        width: 100%;
+        border: 1px solid #E2E8F0;
+        border-radius: 0.5rem;
+    }
   </style>
 </head>
 
@@ -1433,6 +1503,17 @@
 
   <!-- REMOVIDO: Modal de Permissões (agora é uma tela separada) -->
   <!-- REMOVIDO: Modal para Adicionar Nova Permissão (agora é uma tela separada) -->
+
+  <!-- NOVO: Modal de Pré-visualização de PDF -->
+  <div id="pdfPreviewModal" class="pdf-preview-overlay">
+      <div class="pdf-preview-content">
+          <div class="pdf-preview-header">
+              <h3>Pré-visualização do Relatório de Histórico</h3>
+              <button onclick="closePdfPreviewModal()">×</button>
+          </div>
+          <iframe id="pdfViewer" class="pdf-viewer-iframe"></iframe>
+      </div>
+  </div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -2053,7 +2134,7 @@
     }
 
     /**
-     * Gera um relatório PDF com os dados do histórico atual.
+     * Gera um relatório PDF com os dados do histórico atual e o exibe em um modal de pré-visualização.
      */
     function generateHistoricoPdf() {
         if (currentHistoricoData.length === 0) {
@@ -2061,13 +2142,19 @@
             return;
         }
 
-        // Cria uma nova instância do jsPDF
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Título do relatório
+        // Coordenadas e informações para o cabeçalho
+        const startX = 14;
+        let startY = 20;
+
+        // Título principal
         doc.setFontSize(18);
-        doc.text("Relatório de Histórico VigiOn", 14, 22);
+        doc.setFont(undefined, 'bold');
+        doc.text("🛡️ Relatório de Histórico VigiOn", startX, startY);
+        doc.setFont(undefined, 'normal'); // Reset font style
+        startY += 10;
 
         doc.setFontSize(10);
         const startDateInput = document.getElementById('hist-date-start');
@@ -2076,68 +2163,73 @@
         const centerLonInput = document.getElementById('hist-center-lon');
         const radiusKmInput = document.getElementById('hist-radius-km');
 
-        const formattedStartDate = startDateInput.value ? new Date(startDateInput.value).toLocaleString('pt-BR') : 'N/A';
-        const formattedEndDate = endDateInput.value ? new Date(endDateInput.value).toLocaleString('pt-BR') : 'N/A';
+        // Garante que as datas sejam formatadas corretamente para exibição
+        const formattedStartDate = startDateInput.value ? new Date(startDateInput.value).toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
+        const formattedEndDate = endDateInput.value ? new Date(endDateInput.value).toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
         const centerLat = centerLatInput.value || 'N/A';
         const centerLon = centerLonInput.value || 'N/A';
         const radiusKm = radiusKmInput.value || 'N/A';
+        const totalRegistros = currentHistoricoData.length;
 
-        doc.text(`Período: ${formattedStartDate} a ${formattedEndDate}`, 14, 32);
-        doc.text(`Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, 14, 38);
-        doc.text(`Total de Registros: ${currentHistoricoData.length}`, 14, 44);
+        // Período
+        doc.text(`📅 Período: ${formattedStartDate} a ${formattedEndDate}`, startX, startY);
+        startY += 6;
 
+        // Filtro de Proximidade
+        doc.text(`📍 Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, startX, startY);
+        startY += 10; // Espaço para a caixa de total de registros
 
-        // Define os cabeçalhos da tabela
+        // Caixa "Total de Registros"
+        const boxWidth = 50;
+        const boxHeight = 8;
+        const boxX = doc.internal.pageSize.width - startX - boxWidth; // Alinha à direita
+        const boxY = 30; // Ajuste Y para ficar ao lado do período/filtro
+
+        doc.setFillColor(220, 230, 240); // Cor de fundo da caixa (azul claro)
+        doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 2, 2, 'F'); // Retângulo arredondado preenchido
+        doc.setTextColor(50, 70, 100); // Cor do texto (azul escuro)
+        doc.setFontSize(9);
+        doc.text(`🗄️ Total de Registros: ${totalRegistros}`, boxX + boxWidth / 2, boxY + boxHeight / 2 + 1, { align: 'center' });
+        doc.setTextColor(0, 0, 0); // Reset text color
+
+        // Define os cabeçalhos da tabela (colunas restantes)
         const headers = [
-            ["ID", "NOME/EQUIPE", "DATA/HORA", "LATITUDE", "LONGITUDE", "ENDEREÇO", "VELOCIDADE", "ESTADO", "PROTOCOLO", "STATUS", "OBSERVAÇÕES"]
+            ["NOME/EQUIPE", "DATA/HORA", "LATITUDE", "LONGITUDE", "ENDEREÇO"]
         ];
 
-        // Mapeia os dados do histórico para o formato da tabela
+        // Mapeia os dados do histórico para o formato da tabela, removendo as colunas solicitadas
         const data = currentHistoricoData.map(item => [
-            item.ID,
             item.NOME_EQUIPE,
             formatDateTime(item.DATAHORA), // Garante formatação consistente
             item.LATITUDE,
             item.LONGITUDE,
-            item.ENDERECO_ATUAL,
-            `${item.Velocidade} km/h`,
-            item.ESTADO,
-            item.PROTOCOLO,
-            item.STATUS,
-            item.OBSERVACOES
+            item.ENDERECO_ATUAL
         ]);
 
         // Configurações da tabela (autoTable)
         doc.autoTable({
-            startY: 50, // Posição inicial da tabela após o título e informações
+            startY: startY + 10, // Posição inicial da tabela após o cabeçalho
             head: headers,
             body: data,
             theme: 'striped', // Estilo da tabela
             headStyles: { fillColor: [90, 115, 212] }, // Cor do cabeçalho (azul secundário do VigiOn)
             styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' }, // Tamanho da fonte e padding
             columnStyles: {
-                // Ajustes de largura para colunas específicas
-                0: { cellWidth: 15 }, // ID
-                1: { cellWidth: 25 }, // NOME/EQUIPE
-                2: { cellWidth: 25 }, // DATA/HORA
-                3: { cellWidth: 18 }, // LATITUDE
-                4: { cellWidth: 18 }, // LONGITUDE
-                5: { cellWidth: 'auto' }, // ENDEREÇO (ajusta automaticamente)
-                6: { cellWidth: 18 }, // VELOCIDADE
-                7: { cellWidth: 18 }, // ESTADO
-                8: { cellWidth: 18 }, // PROTOCOLO
-                9: { cellWidth: 18 }, // STATUS
-                10: { cellWidth: 'auto' } // OBSERVAÇÕES (ajusta automaticamente)
+                // Ajustes de largura para colunas restantes
+                0: { cellWidth: 35 }, // NOME/EQUIPE
+                1: { cellWidth: 30 }, // DATA/HORA
+                2: { cellWidth: 25 }, // LATITUDE
+                3: { cellWidth: 25 }, // LONGITUDE
+                4: { cellWidth: 'auto' } // ENDEREÇO (ajusta automaticamente)
             }
         });
 
-        // Nome do arquivo PDF
-        const filename = `Historico_VigiOn_${new Date().toISOString().slice(0, 10)}.pdf`;
-        doc.save(filename);
+        // Gera o PDF como Data URI
+        const pdfDataUri = doc.output('datauristring');
 
-        showMessageModal("PDF Gerado!", `O relatório de histórico foi gerado com sucesso como "${filename}".`);
+        // Abre o modal de pré-visualização com o PDF
+        openPdfPreviewModal(pdfDataUri);
     }
-
 
     /**
      * Inicia o temporizador para atualização do mapa.
@@ -2520,6 +2612,23 @@
     // NOVO: Função para redirecionar para a tela de Permissões
     function redirectToPermissionsPanel() {
         window.location.href = 'permissions_panel.html';
+    }
+
+    // --- Funções do Modal de Pré-visualização de PDF ---
+    function openPdfPreviewModal(pdfDataUri) {
+        resetInactivityTimer(); // Redefine o temporizador de inatividade
+        const pdfPreviewModal = document.getElementById('pdfPreviewModal');
+        const pdfViewer = document.getElementById('pdfViewer');
+        pdfViewer.src = pdfDataUri; // Define o Data URI como a fonte do iframe
+        pdfPreviewModal.classList.add('show');
+    }
+
+    function closePdfPreviewModal() {
+        const pdfPreviewModal = document.getElementById('pdfPreviewModal');
+        const pdfViewer = document.getElementById('pdfViewer');
+        pdfViewer.src = ''; // Limpa a fonte do iframe para liberar memória
+        pdfPreviewModal.classList.remove('show');
+        resetInactivityTimer(); // Reinicia o temporizador ao fechar o modal
     }
 
     // --- Inicialização ao Carregar a Página ---
