@@ -1528,7 +1528,7 @@
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
     // NOVO: URL da sua API do Google Apps Script para BUSCAR HISTÓRICO DE LOCALIZAÇÕES.
     // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU NOVO SCRIPT DE HISTÓRICO PUBLICADO!**
-    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxgLtx18zJcbD_UJZ5gv9Yhn_gcN7XSJPGLL5xFaDbHTKlZcIFd0Wc4jYh8YrYuxZK5/exec"; // URL fornecida pelo usuário
+    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxgLtx18zJcbD_UJZ5gv9Yhn_gcN7XSJPGLL5xFaDbHTKlZcIFd0Wc4jYh8YrUuxZK5/exec"; // URL fornecida pelo usuário
 
     // Variáveis globais para o mapa Leaflet
     let map;
@@ -2152,7 +2152,8 @@
         // Título principal
         doc.setFontSize(18);
         doc.setFont(undefined, 'bold');
-        doc.text("🛡️ Relatório de Histórico VigiOn", startX, startY);
+        // Removido o emoji para evitar problemas de codificação
+        doc.text("Relatório de Histórico VigiOn", startX, startY);
         doc.setFont(undefined, 'normal'); // Reset font style
         startY += 10;
 
@@ -2172,11 +2173,13 @@
         const totalRegistros = currentHistoricoData.length;
 
         // Período
-        doc.text(`📅 Período: ${formattedStartDate} a ${formattedEndDate}`, startX, startY);
+        // Removido o emoji
+        doc.text(`Período: ${formattedStartDate} a ${formattedEndDate}`, startX, startY);
         startY += 6;
 
         // Filtro de Proximidade
-        doc.text(`📍 Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, startX, startY);
+        // Removido o emoji
+        doc.text(`Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, startX, startY);
         startY += 10; // Espaço para a caixa de total de registros
 
         // Caixa "Total de Registros"
@@ -2189,21 +2192,23 @@
         doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 2, 2, 'F'); // Retângulo arredondado preenchido
         doc.setTextColor(50, 70, 100); // Cor do texto (azul escuro)
         doc.setFontSize(9);
-        doc.text(`🗄️ Total de Registros: ${totalRegistros}`, boxX + boxWidth / 2, boxY + boxHeight / 2 + 1, { align: 'center' });
+        // Removido o emoji
+        doc.text(`Total de Registros: ${totalRegistros}`, boxX + boxWidth / 2, boxY + boxHeight / 2 + 1, { align: 'center' });
         doc.setTextColor(0, 0, 0); // Reset text color
 
         // Define os cabeçalhos da tabela (colunas restantes)
         const headers = [
-            ["NOME/EQUIPE", "DATA/HORA", "LATITUDE", "LONGITUDE", "ENDEREÇO"]
+            ["NOME/EQUIPE", "DATA/HORA", "LATITUDE", "LONGITUDE", "ENDEREÇO", "PROTOCOLO"]
         ];
 
-        // Mapeia os dados do histórico para o formato da tabela, removendo as colunas solicitadas
+        // Mapeia os dados do histórico para o formato da tabela, incluindo o PROTOCOLO
         const data = currentHistoricoData.map(item => [
             item.NOME_EQUIPE,
             formatDateTime(item.DATAHORA), // Garante formatação consistente
             item.LATITUDE,
             item.LONGITUDE,
-            item.ENDERECO_ATUAL
+            item.ENDERECO_ATUAL,
+            item.PROTOCOLO // Adicionado de volta
         ]);
 
         // Configurações da tabela (autoTable)
@@ -2216,11 +2221,12 @@
             styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' }, // Tamanho da fonte e padding
             columnStyles: {
                 // Ajustes de largura para colunas restantes
-                0: { cellWidth: 35 }, // NOME/EQUIPE
-                1: { cellWidth: 30 }, // DATA/HORA
-                2: { cellWidth: 25 }, // LATITUDE
-                3: { cellWidth: 25 }, // LONGITUDE
-                4: { cellWidth: 'auto' } // ENDEREÇO (ajusta automaticamente)
+                0: { cellWidth: 30 }, // NOME/EQUIPE
+                1: { cellWidth: 25 }, // DATA/HORA
+                2: { cellWidth: 20 }, // LATITUDE
+                3: { cellWidth: 20 }, // LONGITUDE
+                4: { cellWidth: 50 }, // ENDEREÇO (ajusta automaticamente)
+                5: { cellWidth: 25 }  // PROTOCOLO (ajuste de largura)
             }
         });
 
@@ -2230,6 +2236,7 @@
         // Abre o modal de pré-visualização com o PDF
         openPdfPreviewModal(pdfDataUri);
     }
+
 
     /**
      * Inicia o temporizador para atualização do mapa.
