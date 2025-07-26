@@ -1558,7 +1558,7 @@
         document.getElementById('btn-localizar').classList.add('active');
         searchPlaceholder.innerHTML = `
           <div id="search-container" style="display: flex;">
-            <input type="text" id="search-input" placeholder="Nome ou Coord" />
+            <input type="text" id="search-input" placeholder="Nome ou Lat,Lon" />
             <button id="btn-search">Buscar</button>
           </div>
         `;
@@ -1840,7 +1840,8 @@
             // Se houver um termo de busca ativo, aplica o filtro.
             const searchInput = document.getElementById('search-input');
             if (searchInput && searchInput.value.trim() !== '') {
-                performLocalSearch(false); // Re-aplica o filtro se houver termo de busca
+                // Se houver um termo de busca, re-aplica o filtro para manter o foco
+                performLocalSearch(false); 
             } else {
                 // Caso contrário, exibe todos os marcadores recém-carregados
                 renderMarkers(allMarkers, recenterMap);
@@ -1934,12 +1935,16 @@
         const searchInput = document.getElementById('search-input');
         const searchTerm = searchInput.value.trim().toLowerCase();
 
-        let filteredMarkers = [];
+        // Sempre renderiza todos os marcadores existentes primeiro
+        renderMarkers(allMarkers, false); // Não recentraliza ainda, foco será ajustado depois
+
+        // Limpa qualquer marcador temporário de busca por coordenada
+        tempCoordMarkerLayer.clearLayers();
 
         if (searchTerm === '') {
-            // Se o campo de busca estiver vazio, exibe todos os marcadores
-            filteredMarkers = allMarkers;
+            // Se o campo de busca estiver vazio, apenas exibe todos os marcadores e recentraliza
             showMessageModal("Busca", "Exibindo todas as equipes.");
+            renderMarkers(allMarkers, true); // Recentraliza para todos os marcadores
         } else {
             // Tenta parsear como coordenadas (Lat,Lon)
             const latLngMatch = searchTerm.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
@@ -1947,42 +1952,51 @@
                 const searchLat = parseFloat(latLngMatch[1]);
                 const searchLon = parseFloat(latLngMatch[2]);
 
-                // Define um raio de busca pequeno para coordenadas exatas
-                const searchRadiusKm = 0.1; // 100 metros
+                if (isNaN(searchLat) || isNaN(searchLon)) {
+                    showMessageModal("Atenção", "Formato de coordenada inválido. Use 'Latitude,Longitude'.");
+                    return;
+                }
 
-                filteredMarkers = allMarkers.filter(location => {
+                // Adiciona um marcador roxo temporário na coordenada pesquisada
+                const purplePinIcon = createPinIcon('#6200EE'); // Cor primária do VigiOn (roxo)
+                L.marker([searchLat, searchLon], { icon: purplePinIcon }).addTo(tempCoordMarkerLayer)
+                    .bindPopup(`<strong>Coordenada Pesquisada:</strong><br>Lat: ${searchLat}<br>Lon: ${searchLon}`)
+                    .openPopup();
+
+                // Centraliza o mapa na coordenada pesquisada
+                map.setView([searchLat, searchLon], Math.max(map.getZoom(), 15)); // Aumenta o zoom se for muito baixo
+
+                // Calcula a distância para encontrar equipes próximas (para mensagem)
+                const searchRadiusKm = 0.5; // Raio de 500 metros para considerar "próximo"
+                const nearbyTeams = allMarkers.filter(location => {
                     const lat = parseFloat(location.latitude);
                     const lon = parseFloat(location.longitude);
-
                     if (isNaN(lat) || isNaN(lon)) return false;
-
-                    // Calcula a distância entre o ponto de busca e o marcador
                     const distance = map.distance([searchLat, searchLon], [lat, lon]) / 1000; // Distância em km
                     return distance <= searchRadiusKm;
                 });
 
-                if (filteredMarkers.length > 0) {
-                    showMessageModal("Busca por Coordenadas", `Encontradas ${filteredMarkers.length} equipes próximas a ${searchLat}, ${searchLon}.`);
+                if (nearbyTeams.length > 0) {
+                    showMessageModal("Busca por Coordenadas", `Local da coordenada marcado. ${nearbyTeams.length} equipes encontradas em um raio de ${searchRadiusKm} km.`);
                 } else {
-                    showMessageModal("Busca por Coordenadas", `Nenhuma equipe encontrada próxima a ${searchLat}, ${searchLon}.`);
+                    showMessageModal("Busca por Coordenadas", `Local da coordenada marcado. Nenhuma equipe encontrada em um raio de ${searchRadiusKm} km.`);
                 }
 
             } else {
                 // Se não for coordenada, busca por nome da equipe
-                filteredMarkers = allMarkers.filter(location => 
+                const foundLocation = allMarkers.find(location => 
                     String(location.nome).toLowerCase().includes(searchTerm)
                 );
 
-                if (filteredMarkers.length > 0) {
-                    showMessageModal("Busca por Nome", `Encontradas ${filteredMarkers.length} equipes com o nome "${searchTerm}".`);
+                if (foundLocation) {
+                    // Centraliza o mapa no marcador da equipe encontrada
+                    map.flyTo([foundLocation.latitude, foundLocation.longitude], 16); // Voa para a localização com zoom 16
+                    showMessageModal("Busca por Nome", `Equipe "${foundLocation.nome}" encontrada e focada no mapa.`);
                 } else {
                     showMessageModal("Busca por Nome", `Nenhuma equipe encontrada com o nome "${searchTerm}".`);
                 }
             }
         }
-        
-        // Renderiza apenas os marcadores filtrados e ajusta o mapa para eles
-        renderMarkers(filteredMarkers, true); // Sempre recentraliza na busca
     }
 
 
@@ -2247,7 +2261,7 @@
 
     /**
      * Inicia o temporizador para atualização do mapa.
-     * @param {boolean} initialRecenter - Se true, força a recentralização na primeira chamada.
+     * @param {boolean} initialRecenter - Se true, o mapa será recentralizado e ajustado aos marcadores.
      */
     function startMapUpdates(initialRecenter = false) {
         // Limpa qualquer intervalo existente para evitar duplicação
