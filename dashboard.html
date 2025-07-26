@@ -1583,7 +1583,7 @@
         document.getElementById('btn-localizar').classList.add('active');
         searchPlaceholder.innerHTML = `
           <div id="search-container" style="display: flex;">
-            <input type="text" id="search-input" placeholder="Nomes ou Coordenadas" />
+            <input type="text" id="search-input" placeholder="Nome ou Lat,Lon" />
             <button id="btn-search">Buscar</button>
           </div>
         `;
@@ -1655,6 +1655,7 @@
         markersLayer.clearLayers();
         allMarkers = [];
         historicoMarkers.forEach(m => map.removeLayer(m));
+  
         historicoMarkers = [];
         currentHistoricoData = []; // Limpa os dados de histórico para PDF também
         currentActiveView = 'rota'; // Define a view ativa
