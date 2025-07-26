@@ -1434,17 +1434,6 @@
   <!-- REMOVIDO: Modal de Permissões (agora é uma tela separada) -->
   <!-- REMOVIDO: Modal para Adicionar Nova Permissão (agora é uma tela separada) -->
 
-  <!-- NOVO: Modal de Pré-visualização de PDF (mantido para a funcionalidade de prévia do PDF) -->
-  <div id="pdfPreviewModal" class="pdf-preview-overlay">
-      <div class="pdf-preview-content">
-          <div class="pdf-preview-header">
-              <h3>Pré-visualização do Relatório de Histórico</h3>
-              <button onclick="closePdfPreviewModal()">×</button>
-          </div>
-          <iframe id="pdfViewer" class="pdf-viewer-iframe"></iframe>
-      </div>
-  </div>
-
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -1458,7 +1447,7 @@
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
     // NOVO: URL da sua API do Google Apps Script para BUSCAR HISTÓRICO DE LOCALIZAÇÕES.
     // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU NOVO SCRIPT DE HISTÓRICO PUBLICADO!**
-    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxgLtx18zJcbD_UJZ5gv9Yhn_gcN7XSJPGLL5xFaDbHTKlZcIFd0Wc4jYh8YrUuxZK5/exec"; // URL fornecida pelo usuário
+    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxgLtx18zJcbD_UJZ5gv9Yhn_gcN7XSJPGLL5xFaDbHTKlZcIFd0Wc4jYh8YrYuxZK5/exec"; // URL fornecida pelo usuário
 
     // Variáveis globais para o mapa Leaflet
     let map;
@@ -1495,6 +1484,8 @@
 
     // Variável para armazenar a aba ativa no modal de cadastros
     let activeCadastrosTab = 'users'; // 'users' ou 'companies'
+
+    // REMOVIDO: permissionsData array (agora será gerenciado na nova tela de permissões)
 
     /** Funções do Modal de Mensagens */
     function showMessageModal(title, message, callback = null) {
@@ -1909,7 +1900,6 @@
      * Converte uma string de data/hora do formato "YYYY-MM-DDTHH:mm" (datetime-local)
      * para "DD/MM/YYYY HH:mm:ss".
      * Adiciona ":00" para segundos, pois o input datetime-local não os fornece.
-     * **IMPORTANTE:** Retorna a string com espaços literais, sem codificação de URL.
      */
     function convertDatetimeLocalToSheetFormat(datetimeLocalString) {
         if (!datetimeLocalString) return '';
@@ -1920,8 +1910,7 @@
         // Adiciona ":00" para os segundos
         const formattedTime = `${timePart}:00`; // "16:40:00"
 
-        // Retorna a string formatada com espaços literais
-        return `${day}/${month}/${year} ${formattedTime}`; // ALTERAÇÃO AQUI: Removido .replace(/ /g, '+')
+        return `${day}/${month}/${year} ${formattedTime}`; // "14/07/2025 16:40:00"
     }
 
     /**
@@ -1961,7 +1950,6 @@
         }
 
         // Converte os valores de data para o formato esperado pelo Apps Script (DD/MM/YYYY HH:mm:ss)
-        // convertDatetimeLocalToSheetFormat AGORA RETORNA COM ESPAÇOS LITERAIS
         const formattedStartDate = convertDatetimeLocalToSheetFormat(rawStartDate);
         const formattedEndDate = convertDatetimeLocalToSheetFormat(rawEndDate);
 
@@ -1990,24 +1978,20 @@
         historicoMarkers = [];
         currentHistoricoData = []; // Limpa os dados de histórico anteriores para PDF
 
-        // CONSTRUÇÃO MANUAL DA QUERY STRING PARA USAR ESPAÇOS LITERAIS NAS DATAS
-        // **IMPORTANTE:** Não usar encodeURIComponent para startDate e endDate
-        let queryString = `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-        queryString += `&startDate=${formattedStartDate}`; // formattedStartDate já contém espaços literais
-        queryString += `&endDate=${formattedEndDate}`;     // formattedEndDate já contém espaços literais
-        queryString += `&centerLat=${encodeURIComponent(centerLat)}`;
-        queryString += `&centerLon=${encodeURIComponent(centerLon)}`;
-        queryString += `&radiusKm=${encodeURIComponent(radiusKm)}`;
+        const params = new URLSearchParams({
+            username: username,
+            password: password,
+            startDate: formattedStartDate, 
+            endDate: formattedEndDate,
+            centerLat: centerLat,    // Novo parâmetro
+            centerLon: centerLon,    // Novo parâmetro
+            radiusKm: radiusKm       // Novo parâmetro
+        });
 
         showMessageModal("Buscando Histórico", "Carregando dados, por favor aguarde...");
 
-        console.log("URL de requisição de histórico:", `${APPS_SCRIPT_FETCH_HISTORICO_URL}?${queryString}`); // Para depuração
-
         try {
-            // A requisição fetch tentará enviar a URL com os espaços literais.
-            // O navegador pode ou não codificá-los automaticamente para %20,
-            // mas o Apps Script pode estar configurado para lidar com isso.
-            const response = await fetch(`${APPS_SCRIPT_FETCH_HISTORICO_URL}?${queryString}`);
+            const response = await fetch(`${APPS_SCRIPT_FETCH_HISTORICO_URL}?${params.toString()}`);
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
@@ -2077,93 +2061,78 @@
             return;
         }
 
+        // Cria uma nova instância do jsPDF
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Título principal
+        // Título do relatório
         doc.setFontSize(18);
-        doc.setFont(undefined, 'bold');
-        doc.text("Relatório de Histórico VigiOn", 14, 20);
-        doc.setFont(undefined, 'normal'); // Reset font style
+        doc.text("Relatório de Histórico VigiOn", 14, 22);
 
-        // Data de Geração
         doc.setFontSize(10);
-        const now = new Date();
-        const generatedDateText = `Gerado em: ${now.toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
-        doc.text(generatedDateText, doc.internal.pageSize.width - 14, 20, { align: 'right' });
-
-        let currentY = 30; // Posição Y inicial para as informações de filtro
-
-        // Seção de Filtros e Resumo
-        doc.setFillColor(249, 249, 249); // Cor de fundo para o bloco de resumo
-        doc.setDrawColor(224, 224, 224); // Cor da borda
-        doc.roundedRect(14, currentY, doc.internal.pageSize.width - 28, 30, 2, 2, 'FD'); // Retângulo arredondado preenchido e com borda
-        
-        doc.setTextColor(85, 85, 85); // Cor do texto para as informações de filtro
-        doc.setFontSize(10);
-        
         const startDateInput = document.getElementById('hist-date-start');
         const endDateInput = document.getElementById('hist-date-end');
         const centerLatInput = document.getElementById('hist-center-lat');
         const centerLonInput = document.getElementById('hist-center-lon');
         const radiusKmInput = document.getElementById('hist-radius-km');
 
-        // Note: Aqui estamos usando os valores dos inputs diretamente, que podem ser diferentes dos formatados para a URL
-        const formattedStartDate = startDateInput.value ? new Date(startDateInput.value).toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
-        const formattedEndDate = endDateInput.value ? new Date(endDateInput.value).toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
+        const formattedStartDate = startDateInput.value ? new Date(startDateInput.value).toLocaleString('pt-BR') : 'N/A';
+        const formattedEndDate = endDateInput.value ? new Date(endDateInput.value).toLocaleString('pt-BR') : 'N/A';
         const centerLat = centerLatInput.value || 'N/A';
         const centerLon = centerLonInput.value || 'N/A';
         const radiusKm = radiusKmInput.value || 'N/A';
-        const totalRegistros = currentHistoricoData.length;
 
-        doc.text(`Período: ${formattedStartDate} a ${formattedEndDate}`, 18, currentY + 7);
-        doc.text(`Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, 18, currentY + 14);
-        doc.text(`Total de Registros: ${totalRegistros}`, 18, currentY + 21);
-        doc.setTextColor(0, 0, 0); // Reset text color
-        currentY += 40; // Ajusta Y para a tabela
+        doc.text(`Período: ${formattedStartDate} a ${formattedEndDate}`, 14, 32);
+        doc.text(`Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, 14, 38);
+        doc.text(`Total de Registros: ${currentHistoricoData.length}`, 14, 44);
+
 
         // Define os cabeçalhos da tabela
         const headers = [
-            ["EQUIPE", "DATA/HORA", "LAT", "LON", "ENDEREÇO", "PROT."]
+            ["ID", "NOME/EQUIPE", "DATA/HORA", "LATITUDE", "LONGITUDE", "ENDEREÇO", "VELOCIDADE", "ESTADO", "PROTOCOLO", "STATUS", "OBSERVAÇÕES"]
         ];
 
         // Mapeia os dados do histórico para o formato da tabela
         const data = currentHistoricoData.map(item => [
+            item.ID,
             item.NOME_EQUIPE,
             formatDateTime(item.DATAHORA), // Garante formatação consistente
             item.LATITUDE,
             item.LONGITUDE,
             item.ENDERECO_ATUAL,
-            item.PROTOCOLO
+            `${item.Velocidade} km/h`,
+            item.ESTADO,
+            item.PROTOCOLO,
+            item.STATUS,
+            item.OBSERVACOES
         ]);
 
         // Configurações da tabela (autoTable)
         doc.autoTable({
-            startY: currentY,
+            startY: 50, // Posição inicial da tabela após o título e informações
             head: headers,
             body: data,
-            theme: 'striped',
-            headStyles: { fillColor: [90, 115, 212], font: 'Poppins', fontStyle: 'bold', fontSize: 10 }, // Cor e fonte do cabeçalho
-            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak', font: 'Poppins' }, // Tamanho da fonte e padding
+            theme: 'striped', // Estilo da tabela
+            headStyles: { fillColor: [90, 115, 212] }, // Cor do cabeçalho (azul secundário do VigiOn)
+            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' }, // Tamanho da fonte e padding
             columnStyles: {
-                0: { cellWidth: 35 }, // EQUIPE
-                1: { cellWidth: 30 }, // DATA/HORA
-                2: { cellWidth: 15 }, // LAT
-                3: { cellWidth: 15 }, // LON
-                4: { cellWidth: 'auto' }, // ENDEREÇO (ajusta automaticamente)
-                5: { cellWidth: 20 }  // PROT.
-            },
-            didDrawPage: function (data) {
-                // Rodapé com número da página e direitos autorais
-                let pageNumber = doc.internal.getNumberOfPages();
-                doc.setFontSize(10);
-                doc.setTextColor(136, 136, 136); // Cor cinza para o rodapé
-                doc.text(`Página ${pageNumber} de ${doc.internal.getNumberOfPages()} | VigiOn © 2025`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+                // Ajustes de largura para colunas específicas
+                0: { cellWidth: 15 }, // ID
+                1: { cellWidth: 25 }, // NOME/EQUIPE
+                2: { cellWidth: 25 }, // DATA/HORA
+                3: { cellWidth: 18 }, // LATITUDE
+                4: { cellWidth: 18 }, // LONGITUDE
+                5: { cellWidth: 'auto' }, // ENDEREÇO (ajusta automaticamente)
+                6: { cellWidth: 18 }, // VELOCIDADE
+                7: { cellWidth: 18 }, // ESTADO
+                8: { cellWidth: 18 }, // PROTOCOLO
+                9: { cellWidth: 18 }, // STATUS
+                10: { cellWidth: 'auto' } // OBSERVAÇÕES (ajusta automaticamente)
             }
         });
 
         // Nome do arquivo PDF
-        const filename = `Historico_VigiOn_${now.toISOString().slice(0, 10)}.pdf`;
+        const filename = `Historico_VigiOn_${new Date().toISOString().slice(0, 10)}.pdf`;
         doc.save(filename);
 
         showMessageModal("PDF Gerado!", `O relatório de histórico foi gerado com sucesso como "${filename}".`);
@@ -2172,8 +2141,7 @@
 
     /**
      * Inicia o temporizador para atualização do mapa.
-     * @param {boolean} initialRecenter - Se true, o mapa será recentralizado e ajustado aos marcadores.
-     * Se false, apenas os marcadores serão atualizados sem mudar o foco do mapa.
+     * @param {boolean} initialRecenter - Se true, força a recentralização na primeira chamada.
      */
     function startMapUpdates(initialRecenter = false) {
         // Limpa qualquer intervalo existente para evitar duplicação
@@ -2553,10 +2521,6 @@
     function redirectToPermissionsPanel() {
         window.location.href = 'permissions_panel.html';
     }
-
-    // --- Funções do Modal de Pré-visualização de PDF ---
-    // REMOVIDO: openPdfPreviewModal e closePdfPreviewModal não são mais necessários
-    // pois o PDF será gerado e baixado diretamente.
 
     // --- Inicialização ao Carregar a Página ---
     window.addEventListener('load', async () => {
