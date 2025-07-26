@@ -1558,7 +1558,7 @@
         document.getElementById('btn-localizar').classList.add('active');
         searchPlaceholder.innerHTML = `
           <div id="search-container" style="display: flex;">
-            <input type="text" id="search-input" placeholder="Nome ou Lat,Lon" />
+            <input type="text" id="search-input" placeholder="Nome ou Coordenada" />
             <button id="btn-search">Buscar</button>
           </div>
         `;
@@ -1966,8 +1966,8 @@
                 // Centraliza o mapa na coordenada pesquisada
                 map.setView([searchLat, searchLon], Math.max(map.getZoom(), 15)); // Aumenta o zoom se for muito baixo
 
-                // Calcula a distância para encontrar equipes próximas (para mensagem)
-                const searchRadiusKm = 0.5; // Raio de 500 metros para considerar "próximo"
+                // Define o raio de busca para 2km
+                const searchRadiusKm = 2; 
                 const nearbyTeams = allMarkers.filter(location => {
                     const lat = parseFloat(location.latitude);
                     const lon = parseFloat(location.longitude);
