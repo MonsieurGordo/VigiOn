@@ -1065,10 +1065,10 @@
         </button>
       </li>
 
-      <!-- Botão de Controles -->
+      <!-- Botão de Atalhos (anteriormente "Controles") -->
       <li>
-        <button onclick="openShortcutsModal()" id="btn-controles">
-          Controles
+        <button onclick="openShortcutsModal()" id="btn-atalhos">
+          Atalhos
         </button>
       </li>
 
@@ -1161,7 +1161,11 @@
                   <span class="shortcut-key">Ctrl + P</span>
                   <span class="shortcut-description">Imprime o relatório de histórico.</span>
               </li>
-              <!-- Adicionar mais atalhos aqui no futuro -->
+              <!-- NOVO ATALHO ADICIONADO AQUI -->
+              <li>
+                  <span class="shortcut-key">Ctrl + F</span>
+                  <span class="shortcut-description">Ativa a função "Localizar Equipe" e foca no campo de busca.</span>
+              </li>
           </ul>
           <button onclick="closeShortcutsModal()">Fechar</button>
       </div>
@@ -1458,6 +1462,9 @@
     let historicoMarkers = []; // Armazena marcadores do histórico
     let currentHistoricoData = []; // NOVO: Armazena os dados brutos do histórico para geração de PDF
 
+    // Variável global para rastrear a view ativa (localizar, historico, rota)
+    let currentActiveView = null; // Inicialmente nenhuma view está ativa
+
     // Definição das camadas de mapa
     const tileLayers = {
         default: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1525,13 +1532,32 @@
     /**
      * Troca de “view” no dashboard:
      * Controla a exibição dos formulários de cada seção (Localizar, Histórico, Rota).
+     * Se a view clicada já estiver ativa, esconde seus subcampos.
      */
     function loadView(view) {
-      // Limpa placeholders (onde os formulários serão injetados)
       const searchPlaceholder = document.getElementById('search-placeholder');
       const historicoPlaceholder = document.getElementById('historico-placeholder');
       const rotaPlaceholder = document.getElementById('rota-placeholder');
       
+      // Se a view clicada já é a view ativa, esconde-a
+      if (view === currentActiveView) {
+          if (view === 'localizar') {
+              searchPlaceholder.innerHTML = '';
+              stopMapUpdates(); // Para as atualizações do mapa se for a view Localizar Equipe
+          } else if (view === 'historico') {
+              historicoPlaceholder.innerHTML = '';
+              historicoMarkers.forEach(m => map.removeLayer(m));
+              historicoMarkers = [];
+              currentHistoricoData = [];
+          } else if (view === 'rota') {
+              rotaPlaceholder.innerHTML = '';
+          }
+          document.getElementById(`btn-${view}`).classList.remove('active');
+          currentActiveView = null; // Nenhuma view está ativa agora
+          return; // Sai da função
+      }
+
+      // Limpa todos os placeholders (onde os formulários serão injetados)
       searchPlaceholder.innerHTML = '';
       historicoPlaceholder.innerHTML = '';
       rotaPlaceholder.innerHTML = '';
@@ -1545,7 +1571,6 @@
       historicoMarkers = [];
       currentHistoricoData = []; // Limpa os dados de histórico para PDF também
 
-
       // Desativa todos os botões de função
       document.querySelectorAll('.sidebar button').forEach(button => {
           if (button.id.startsWith('btn-')) {
@@ -1558,7 +1583,7 @@
         document.getElementById('btn-localizar').classList.add('active');
         searchPlaceholder.innerHTML = `
           <div id="search-container" style="display: flex;">
-            <input type="text" id="search-input" placeholder="Nome ou Coordenada" />
+            <input type="text" id="search-input" placeholder="Nome ou Coordenadas" />
             <button id="btn-search">Buscar</button>
           </div>
         `;
@@ -1580,6 +1605,7 @@
         }
         // Inicia a atualização do mapa para a view "Localizar Equipe"
         startMapUpdates(true); // Inicia com recentralização
+        currentActiveView = 'localizar'; // Define a view ativa
 
       } else if (view === 'historico') {
         document.getElementById('btn-historico').classList.add('active');
@@ -1606,7 +1632,7 @@
         // Limpa os marcadores do mapa de localização atual
         markersLayer.clearLayers();
         allMarkers = [];
-
+        currentActiveView = 'historico'; // Define a view ativa
 
       } else if (view === 'rota') {
         document.getElementById('btn-rota').classList.add('active');
@@ -1631,6 +1657,7 @@
         historicoMarkers.forEach(m => map.removeLayer(m));
         historicoMarkers = [];
         currentHistoricoData = []; // Limpa os dados de histórico para PDF também
+        currentActiveView = 'rota'; // Define a view ativa
       }
     }
 
@@ -2687,6 +2714,17 @@
             event.preventDefault(); // Previne o comportamento padrão do navegador (imprimir)
             console.log("Atalho para Imprimir Relatório acionado (Ctrl+P). Gerando PDF do histórico.");
             generateHistoricoPdf(); // Chama a função para gerar o PDF
+        }
+        // NOVO: Listener para detectar Ctrl+F e chamar a função Localizar Equipe e focar no input
+        if ((event.key === 'f' || event.key === 'F') && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault(); // Previne o comportamento padrão do navegador (abrir busca do navegador)
+            console.log("Atalho para Localizar Equipe acionado (Ctrl+F).");
+            loadView('localizar'); // Chama a função "Localizar Equipe"
+            // Garante que o input de busca esteja focado após a view ser carregada
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.focus();
+            }
         }
         // Nota: Interceptar a tecla F5 diretamente para impedir o recarregamento total da página
         // não é possível na maioria dos navegadores por razões de segurança e controle do navegador.
