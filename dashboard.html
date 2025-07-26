@@ -1909,7 +1909,7 @@
      * Converte uma string de data/hora do formato "YYYY-MM-DDTHH:mm" (datetime-local)
      * para "DD/MM/YYYY HH:mm:ss".
      * Adiciona ":00" para segundos, pois o input datetime-local não os fornece.
-     * Substitui espaços por '+' para compatibilidade com o Apps Script.
+     * **IMPORTANTE:** Retorna a string com espaços literais, sem codificação de URL.
      */
     function convertDatetimeLocalToSheetFormat(datetimeLocalString) {
         if (!datetimeLocalString) return '';
@@ -1920,8 +1920,8 @@
         // Adiciona ":00" para os segundos
         const formattedTime = `${timePart}:00`; // "16:40:00"
 
-        // Retorna a string formatada, substituindo espaços por '+'
-        return `${day}/${month}/${year} ${formattedTime}`.replace(/ /g, '+'); // ALTERAÇÃO AQUI
+        // Retorna a string formatada com espaços literais
+        return `${day}/${month}/${year} ${formattedTime}`; // ALTERAÇÃO AQUI: Removido .replace(/ /g, '+')
     }
 
     /**
@@ -1961,7 +1961,7 @@
         }
 
         // Converte os valores de data para o formato esperado pelo Apps Script (DD/MM/YYYY HH:mm:ss)
-        // Agora, convertDatetimeLocalToSheetFormat já retorna com '+' no lugar dos espaços
+        // convertDatetimeLocalToSheetFormat AGORA RETORNA COM ESPAÇOS LITERAIS
         const formattedStartDate = convertDatetimeLocalToSheetFormat(rawStartDate);
         const formattedEndDate = convertDatetimeLocalToSheetFormat(rawEndDate);
 
@@ -1990,18 +1990,23 @@
         historicoMarkers = [];
         currentHistoricoData = []; // Limpa os dados de histórico anteriores para PDF
 
-        // CONSTRUÇÃO MANUAL DA QUERY STRING PARA USAR '+' NO LUGAR DE ESPAÇOS NAS DATAS
-        // Os parâmetros de data já virão com '+' da função convertDatetimeLocalToSheetFormat
+        // CONSTRUÇÃO MANUAL DA QUERY STRING PARA USAR ESPAÇOS LITERAIS NAS DATAS
+        // **IMPORTANTE:** Não usar encodeURIComponent para startDate e endDate
         let queryString = `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-        queryString += `&startDate=${formattedStartDate}`; // formattedStartDate já contém '+'
-        queryString += `&endDate=${formattedEndDate}`;     // formattedEndDate já contém '+'
+        queryString += `&startDate=${formattedStartDate}`; // formattedStartDate já contém espaços literais
+        queryString += `&endDate=${formattedEndDate}`;     // formattedEndDate já contém espaços literais
         queryString += `&centerLat=${encodeURIComponent(centerLat)}`;
         queryString += `&centerLon=${encodeURIComponent(centerLon)}`;
         queryString += `&radiusKm=${encodeURIComponent(radiusKm)}`;
 
         showMessageModal("Buscando Histórico", "Carregando dados, por favor aguarde...");
 
+        console.log("URL de requisição de histórico:", `${APPS_SCRIPT_FETCH_HISTORICO_URL}?${queryString}`); // Para depuração
+
         try {
+            // A requisição fetch tentará enviar a URL com os espaços literais.
+            // O navegador pode ou não codificá-los automaticamente para %20,
+            // mas o Apps Script pode estar configurado para lidar com isso.
             const response = await fetch(`${APPS_SCRIPT_FETCH_HISTORICO_URL}?${queryString}`);
             if (!response.ok) {
                 const errorText = await response.text();
@@ -2153,7 +2158,7 @@
                 let pageNumber = doc.internal.getNumberOfPages();
                 doc.setFontSize(10);
                 doc.setTextColor(136, 136, 136); // Cor cinza para o rodapé
-                doc.text(`Página ${pageNumber} de ${doc.internal.pageSize.getNumberOfPages()} | VigiOn © 2025`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+                doc.text(`Página ${pageNumber} de ${doc.internal.getNumberOfPages()} | VigiOn © 2025`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
             }
         });
 
@@ -2428,7 +2433,7 @@
         const addUserUsernameInput = document.getElementById('addUserUsername');
         const addUserFullNameInput = document.getElementById('addUserFullName');
         const addUserCompanySelect = document.getElementById('addUserCompany');
-        const addUserAuthenticationToggle = document = document.getElementById('addUserAuthentication');
+        const addUserAuthenticationToggle = document.getElementById('addUserAuthentication');
         const authStatusText = document.getElementById('authStatusText');
         const addUserAccessSelect = document.getElementById('addUserAccess');
         const addUserPasswordInput = document.getElementById('addUserPassword');
