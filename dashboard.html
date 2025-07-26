@@ -1434,6 +1434,17 @@
   <!-- REMOVIDO: Modal de Permissões (agora é uma tela separada) -->
   <!-- REMOVIDO: Modal para Adicionar Nova Permissão (agora é uma tela separada) -->
 
+  <!-- NOVO: Modal de Pré-visualização de PDF (mantido para a funcionalidade de prévia do PDF) -->
+  <div id="pdfPreviewModal" class="pdf-preview-overlay">
+      <div class="pdf-preview-content">
+          <div class="pdf-preview-header">
+              <h3>Pré-visualização do Relatório de Histórico</h3>
+              <button onclick="closePdfPreviewModal()">×</button>
+          </div>
+          <iframe id="pdfViewer" class="pdf-viewer-iframe"></iframe>
+      </div>
+  </div>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -1447,7 +1458,7 @@
     const APPS_SCRIPT_FETCH_LOCATIONS_URL = "https://script.google.com/macros/s/AKfycbyQP3LZRKaPQzX-HZ_EHi3ENBlEATgKlZeTDE541sts1UoOODJuNkLecFeLKFhDJkJfPw/exec"; 
     // NOVO: URL da sua API do Google Apps Script para BUSCAR HISTÓRICO DE LOCALIZAÇÕES.
     // **ATENÇÃO: SUBSTITUA ESTA URL PELA URL DO SEU NOVO SCRIPT DE HISTÓRICO PUBLICADO!**
-    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxgLtx18zJcbD_UJZ5gv9Yhn_gcN7XSJPGLL5xFaDbHTKlZcIFd0Wc4jYh8YrYuxZK5/exec"; // URL fornecida pelo usuário
+    const APPS_SCRIPT_FETCH_HISTORICO_URL = "https://script.google.com/macros/s/AKfycbxgLtx18zJcbD_UJZ5gv9Yhn_gcN7XSJPGLL5xFaDbHTKlZcIFd0Wc4jYh8YrUuxZK5/exec"; // URL fornecida pelo usuário
 
     // Variáveis globais para o mapa Leaflet
     let map;
@@ -1484,8 +1495,6 @@
 
     // Variável para armazenar a aba ativa no modal de cadastros
     let activeCadastrosTab = 'users'; // 'users' ou 'companies'
-
-    // REMOVIDO: permissionsData array (agora será gerenciado na nova tela de permissões)
 
     /** Funções do Modal de Mensagens */
     function showMessageModal(title, message, callback = null) {
@@ -2061,78 +2070,92 @@
             return;
         }
 
-        // Cria uma nova instância do jsPDF
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Título do relatório
+        // Título principal
         doc.setFontSize(18);
-        doc.text("Relatório de Histórico VigiOn", 14, 22);
+        doc.setFont(undefined, 'bold');
+        doc.text("Relatório de Histórico VigiOn", 14, 20);
+        doc.setFont(undefined, 'normal'); // Reset font style
 
+        // Data de Geração
         doc.setFontSize(10);
+        const now = new Date();
+        const generatedDateText = `Gerado em: ${now.toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+        doc.text(generatedDateText, doc.internal.pageSize.width - 14, 20, { align: 'right' });
+
+        let currentY = 30; // Posição Y inicial para as informações de filtro
+
+        // Seção de Filtros e Resumo
+        doc.setFillColor(249, 249, 249); // Cor de fundo para o bloco de resumo
+        doc.setDrawColor(224, 224, 224); // Cor da borda
+        doc.roundedRect(14, currentY, doc.internal.pageSize.width - 28, 30, 2, 2, 'FD'); // Retângulo arredondado preenchido e com borda
+        
+        doc.setTextColor(85, 85, 85); // Cor do texto para as informações de filtro
+        doc.setFontSize(10);
+        
         const startDateInput = document.getElementById('hist-date-start');
         const endDateInput = document.getElementById('hist-date-end');
         const centerLatInput = document.getElementById('hist-center-lat');
         const centerLonInput = document.getElementById('hist-center-lon');
         const radiusKmInput = document.getElementById('hist-radius-km');
 
-        const formattedStartDate = startDateInput.value ? new Date(startDateInput.value).toLocaleString('pt-BR') : 'N/A';
-        const formattedEndDate = endDateInput.value ? new Date(endDateInput.value).toLocaleString('pt-BR') : 'N/A';
+        const formattedStartDate = startDateInput.value ? new Date(startDateInput.value).toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
+        const formattedEndDate = endDateInput.value ? new Date(endDateInput.value).toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
         const centerLat = centerLatInput.value || 'N/A';
         const centerLon = centerLonInput.value || 'N/A';
         const radiusKm = radiusKmInput.value || 'N/A';
+        const totalRegistros = currentHistoricoData.length;
 
-        doc.text(`Período: ${formattedStartDate} a ${formattedEndDate}`, 14, 32);
-        doc.text(`Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, 14, 38);
-        doc.text(`Total de Registros: ${currentHistoricoData.length}`, 14, 44);
-
+        doc.text(`Período: ${formattedStartDate} a ${formattedEndDate}`, 18, currentY + 7);
+        doc.text(`Filtro de Proximidade: Lat ${centerLat}, Lon ${centerLon}, Raio ${radiusKm} km`, 18, currentY + 14);
+        doc.text(`Total de Registros: ${totalRegistros}`, 18, currentY + 21);
+        doc.setTextColor(0, 0, 0); // Reset text color
+        currentY += 40; // Ajusta Y para a tabela
 
         // Define os cabeçalhos da tabela
         const headers = [
-            ["ID", "NOME/EQUIPE", "DATA/HORA", "LATITUDE", "LONGITUDE", "ENDEREÇO", "VELOCIDADE", "ESTADO", "PROTOCOLO", "STATUS", "OBSERVAÇÕES"]
+            ["EQUIPE", "DATA/HORA", "LAT", "LON", "ENDEREÇO", "PROT."]
         ];
 
         // Mapeia os dados do histórico para o formato da tabela
         const data = currentHistoricoData.map(item => [
-            item.ID,
             item.NOME_EQUIPE,
             formatDateTime(item.DATAHORA), // Garante formatação consistente
             item.LATITUDE,
             item.LONGITUDE,
             item.ENDERECO_ATUAL,
-            `${item.Velocidade} km/h`,
-            item.ESTADO,
-            item.PROTOCOLO,
-            item.STATUS,
-            item.OBSERVACOES
+            item.PROTOCOLO
         ]);
 
         // Configurações da tabela (autoTable)
         doc.autoTable({
-            startY: 50, // Posição inicial da tabela após o título e informações
+            startY: currentY,
             head: headers,
             body: data,
-            theme: 'striped', // Estilo da tabela
-            headStyles: { fillColor: [90, 115, 212] }, // Cor do cabeçalho (azul secundário do VigiOn)
-            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' }, // Tamanho da fonte e padding
+            theme: 'striped',
+            headStyles: { fillColor: [90, 115, 212], font: 'Poppins', fontStyle: 'bold', fontSize: 10 }, // Cor e fonte do cabeçalho
+            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak', font: 'Poppins' }, // Tamanho da fonte e padding
             columnStyles: {
-                // Ajustes de largura para colunas específicas
-                0: { cellWidth: 15 }, // ID
-                1: { cellWidth: 25 }, // NOME/EQUIPE
-                2: { cellWidth: 25 }, // DATA/HORA
-                3: { cellWidth: 18 }, // LATITUDE
-                4: { cellWidth: 18 }, // LONGITUDE
-                5: { cellWidth: 'auto' }, // ENDEREÇO (ajusta automaticamente)
-                6: { cellWidth: 18 }, // VELOCIDADE
-                7: { cellWidth: 18 }, // ESTADO
-                8: { cellWidth: 18 }, // PROTOCOLO
-                9: { cellWidth: 18 }, // STATUS
-                10: { cellWidth: 'auto' } // OBSERVAÇÕES (ajusta automaticamente)
+                0: { cellWidth: 35 }, // EQUIPE
+                1: { cellWidth: 30 }, // DATA/HORA
+                2: { cellWidth: 15 }, // LAT
+                3: { cellWidth: 15 }, // LON
+                4: { cellWidth: 'auto' }, // ENDEREÇO (ajusta automaticamente)
+                5: { cellWidth: 20 }  // PROT.
+            },
+            didDrawPage: function (data) {
+                // Rodapé com número da página e direitos autorais
+                let pageNumber = doc.internal.getNumberOfPages();
+                doc.setFontSize(10);
+                doc.setTextColor(136, 136, 136); // Cor cinza para o rodapé
+                doc.text(`Página ${pageNumber} de ${doc.internal.getNumberOfPages()} | VigiOn © 2025`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
             }
         });
 
         // Nome do arquivo PDF
-        const filename = `Historico_VigiOn_${new Date().toISOString().slice(0, 10)}.pdf`;
+        const filename = `Historico_VigiOn_${now.toISOString().slice(0, 10)}.pdf`;
         doc.save(filename);
 
         showMessageModal("PDF Gerado!", `O relatório de histórico foi gerado com sucesso como "${filename}".`);
@@ -2521,6 +2544,10 @@
     function redirectToPermissionsPanel() {
         window.location.href = 'permissions_panel.html';
     }
+
+    // --- Funções do Modal de Pré-visualização de PDF ---
+    // REMOVIDO: openPdfPreviewModal e closePdfPreviewModal não são mais necessários
+    // pois o PDF será gerado e baixado diretamente.
 
     // --- Inicialização ao Carregar a Página ---
     window.addEventListener('load', async () => {
