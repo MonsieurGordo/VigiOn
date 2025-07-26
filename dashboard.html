@@ -1987,20 +1987,18 @@
         historicoMarkers = [];
         currentHistoricoData = []; // Limpa os dados de histórico anteriores para PDF
 
-        const params = new URLSearchParams({
-            username: username,
-            password: password,
-            startDate: formattedStartDate, 
-            endDate: formattedEndDate,
-            centerLat: centerLat,    // Novo parâmetro
-            centerLon: centerLon,    // Novo parâmetro
-            radiusKm: radiusKm       // Novo parâmetro
-        });
+        // CONSTRUÇÃO MANUAL DA QUERY STRING PARA EVITAR ENCODING INDESEJADO DE DATAS
+        let queryString = `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+        queryString += `&startDate=${formattedStartDate}`; // Insere a data formatada DIRETAMENTE
+        queryString += `&endDate=${formattedEndDate}`;     // Insere a data formatada DIRETAMENTE
+        queryString += `&centerLat=${encodeURIComponent(centerLat)}`;
+        queryString += `&centerLon=${encodeURIComponent(centerLon)}`;
+        queryString += `&radiusKm=${encodeURIComponent(radiusKm)}`;
 
         showMessageModal("Buscando Histórico", "Carregando dados, por favor aguarde...");
 
         try {
-            const response = await fetch(`${APPS_SCRIPT_FETCH_HISTORICO_URL}?${params.toString()}`);
+            const response = await fetch(`${APPS_SCRIPT_FETCH_HISTORICO_URL}?${queryString}`);
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
