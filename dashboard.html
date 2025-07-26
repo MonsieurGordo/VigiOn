@@ -1909,6 +1909,7 @@
      * Converte uma string de data/hora do formato "YYYY-MM-DDTHH:mm" (datetime-local)
      * para "DD/MM/YYYY HH:mm:ss".
      * Adiciona ":00" para segundos, pois o input datetime-local não os fornece.
+     * Substitui espaços por '+' para compatibilidade com o Apps Script.
      */
     function convertDatetimeLocalToSheetFormat(datetimeLocalString) {
         if (!datetimeLocalString) return '';
@@ -1919,7 +1920,8 @@
         // Adiciona ":00" para os segundos
         const formattedTime = `${timePart}:00`; // "16:40:00"
 
-        return `${day}/${month}/${year} ${formattedTime}`; // "14/07/2025 16:40:00"
+        // Retorna a string formatada, substituindo espaços por '+'
+        return `${day}/${month}/${year} ${formattedTime}`.replace(/ /g, '+'); // ALTERAÇÃO AQUI
     }
 
     /**
@@ -1959,6 +1961,7 @@
         }
 
         // Converte os valores de data para o formato esperado pelo Apps Script (DD/MM/YYYY HH:mm:ss)
+        // Agora, convertDatetimeLocalToSheetFormat já retorna com '+' no lugar dos espaços
         const formattedStartDate = convertDatetimeLocalToSheetFormat(rawStartDate);
         const formattedEndDate = convertDatetimeLocalToSheetFormat(rawEndDate);
 
@@ -1987,10 +1990,11 @@
         historicoMarkers = [];
         currentHistoricoData = []; // Limpa os dados de histórico anteriores para PDF
 
-        // CONSTRUÇÃO MANUAL DA QUERY STRING PARA EVITAR ENCODING INDESEJADO DE DATAS
+        // CONSTRUÇÃO MANUAL DA QUERY STRING PARA USAR '+' NO LUGAR DE ESPAÇOS NAS DATAS
+        // Os parâmetros de data já virão com '+' da função convertDatetimeLocalToSheetFormat
         let queryString = `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-        queryString += `&startDate=${formattedStartDate}`; // Insere a data formatada DIRETAMENTE
-        queryString += `&endDate=${formattedEndDate}`;     // Insere a data formatada DIRETAMENTE
+        queryString += `&startDate=${formattedStartDate}`; // formattedStartDate já contém '+'
+        queryString += `&endDate=${formattedEndDate}`;     // formattedEndDate já contém '+'
         queryString += `&centerLat=${encodeURIComponent(centerLat)}`;
         queryString += `&centerLon=${encodeURIComponent(centerLon)}`;
         queryString += `&radiusKm=${encodeURIComponent(radiusKm)}`;
@@ -2099,6 +2103,7 @@
         const centerLonInput = document.getElementById('hist-center-lon');
         const radiusKmInput = document.getElementById('hist-radius-km');
 
+        // Note: Aqui estamos usando os valores dos inputs diretamente, que podem ser diferentes dos formatados para a URL
         const formattedStartDate = startDateInput.value ? new Date(startDateInput.value).toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
         const formattedEndDate = endDateInput.value ? new Date(endDateInput.value).toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
         const centerLat = centerLatInput.value || 'N/A';
@@ -2148,7 +2153,7 @@
                 let pageNumber = doc.internal.getNumberOfPages();
                 doc.setFontSize(10);
                 doc.setTextColor(136, 136, 136); // Cor cinza para o rodapé
-                doc.text(`Página ${pageNumber} de ${doc.internal.getNumberOfPages()} | VigiOn © 2025`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+                doc.text(`Página ${pageNumber} de ${doc.internal.pageSize.getNumberOfPages()} | VigiOn © 2025`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
             }
         });
 
@@ -2162,7 +2167,8 @@
 
     /**
      * Inicia o temporizador para atualização do mapa.
-     * @param {boolean} initialRecenter - Se true, força a recentralização na primeira chamada.
+     * @param {boolean} initialRecenter - Se true, o mapa será recentralizado e ajustado aos marcadores.
+     * Se false, apenas os marcadores serão atualizados sem mudar o foco do mapa.
      */
     function startMapUpdates(initialRecenter = false) {
         // Limpa qualquer intervalo existente para evitar duplicação
@@ -2422,7 +2428,7 @@
         const addUserUsernameInput = document.getElementById('addUserUsername');
         const addUserFullNameInput = document.getElementById('addUserFullName');
         const addUserCompanySelect = document.getElementById('addUserCompany');
-        const addUserAuthenticationToggle = document.getElementById('addUserAuthentication');
+        const addUserAuthenticationToggle = document = document.getElementById('addUserAuthentication');
         const authStatusText = document.getElementById('authStatusText');
         const addUserAccessSelect = document.getElementById('addUserAccess');
         const addUserPasswordInput = document.getElementById('addUserPassword');
