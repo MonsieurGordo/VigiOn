@@ -1583,7 +1583,7 @@
         document.getElementById('btn-localizar').classList.add('active');
         searchPlaceholder.innerHTML = `
           <div id="search-container" style="display: flex;">
-            <input type="text" id="search-input" placeholder="Nome ou Lat,Lon" />
+            <input type="text" id="search-input" placeholder="Nomes ou Coordenadas" />
             <button id="btn-search">Buscar</button>
           </div>
         `;
@@ -1655,7 +1655,6 @@
         markersLayer.clearLayers();
         allMarkers = [];
         historicoMarkers.forEach(m => map.removeLayer(m));
-  
         historicoMarkers = [];
         currentHistoricoData = []; // Limpa os dados de histórico para PDF também
         currentActiveView = 'rota'; // Define a view ativa
@@ -2199,9 +2198,9 @@
 
         // Título principal
         doc.setFontSize(18);
-        doc.setFont('Poppins', 'bold'); // Define a fonte Poppins e negrito
+        doc.setFont('helvetica', 'bold'); // Usando 'helvetica' pois 'Poppins' requer carregamento de fonte
         doc.text("Relatório de Histórico VigiOn", 14, 20);
-        doc.setFont('Poppins', 'normal'); // Reseta para normal
+        doc.setFont('helvetica', 'normal'); // Reseta para normal
 
         // Data de Geração
         doc.setFontSize(10);
@@ -2260,24 +2259,33 @@
             head: headers,
             body: data,
             theme: 'striped',
-            headStyles: { fillColor: [90, 115, 212], font: 'Poppins', fontStyle: 'bold', fontSize: 10 }, // Cor e fonte do cabeçalho
-            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak', font: 'Poppins' }, // Tamanho da fonte e padding
+            headStyles: { fillColor: [90, 115, 212], font: 'helvetica', fontStyle: 'bold', fontSize: 10 }, // Cor e fonte do cabeçalho
+            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak', font: 'helvetica' }, // Tamanho da fonte e padding
             columnStyles: {
                 0: { cellWidth: 35 }, // EQUIPE
                 1: { cellWidth: 30 }, // DATA/HORA
-                2: { cellWidth: 15 }, // LAT
-                3: { cellWidth: 15 }, // LON
+                2: { cellWidth: 20 }, // LAT - Aumentado para evitar quebra de linha
+                3: { cellWidth: 20 }, // LON - Aumentado para evitar quebra de linha
                 4: { cellWidth: 'auto' }, // ENDEREÇO (ajusta automaticamente)
                 5: { cellWidth: 20 }  // PROT.
             },
-            didDrawPage: function (data) {
-                // Rodapé com número da página e direitos autorais
-                doc.setFontSize(10);
-                doc.setTextColor(136, 136, 136); // Cor cinza para o rodapé
-                // CORRIGIDO: Usando data.pageNumber para o número da página atual
-                doc.text(`Página ${data.pageNumber} de ${doc.internal.getNumberOfPages()} | VigiOn © 2025`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
-            }
+            // Removido o didDrawPage daqui para adicionar o rodapé em um loop separado
         });
+
+        // Substitui o placeholder __TOTAL_PAGES__ pelo número total de páginas geradas
+        doc.putTotalPages('__TOTAL_PAGES__');
+
+        // Agora, itera por cada página para adicionar o rodapé centralizado
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i); // Define a página atual
+            doc.setFontSize(10);
+            doc.setTextColor(136, 136, 136); // Cor cinza para o rodapé
+            const footerText = `Página ${i} de ${totalPages} | VigiOn © 2025`;
+            const centerX = doc.internal.pageSize.width / 2;
+            // Adiciona o texto do rodapé centralizado
+            doc.text(footerText, centerX, doc.internal.pageSize.height - 10, { align: 'center' });
+        }
 
         // Nome do arquivo PDF
         const filename = `Historico_VigiOn_${now.toISOString().slice(0, 10)}.pdf`;
